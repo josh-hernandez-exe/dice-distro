@@ -213,31 +213,6 @@ python dice_distro.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3
 4,4,4:   5.08 % |==========
 ```
 
-Here is same output with sort order to be based of the probabilities.
-```
-➔ python dice_distro.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3 --sort value
-1,1,1:   0.39 % |
-2,1,1:   1.56 % |===
-3,1,1:   1.56 % |===
-4,1,1:   1.56 % |===
-2,2,2:   1.95 % |===
-2,2,1:   2.34 % |====
-3,3,1:   2.34 % |====
-4,4,1:   2.34 % |====
-3,3,3:   3.52 % |=======
-3,2,1:   4.69 % |=========
-4,2,1:   4.69 % |=========
-4,3,1:   4.69 % |=========
-4,4,4:   5.08 % |==========
-3,2,2:   6.25 % |============
-4,2,2:   6.25 % |============
-3,3,2:   7.03 % |==============
-4,4,2:   7.03 % |==============
-4,3,3:  10.94 % |=====================
-4,4,3:  11.72 % |=======================
-4,3,2:  14.06 % |============================
-```
-
 #### Selecting the Three Highest Values from Four D6 and Summing
 ```
 ➔ python dice_distro.py -d 6 -n 4 --op-func multi-select-apply --op-params -1 -2 -3 sum
