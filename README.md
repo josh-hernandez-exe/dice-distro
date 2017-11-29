@@ -80,7 +80,7 @@ You can also change the sort order.
  7:  16.67 % |=================================
 ```
 
-If you don't want to see the bars you can turn them off.
+If you don't want to see the bars, you can turn them off.
 ```
 ➔ python dice_distro.py -d 6 -n 2 --bar-size 0
  2:   2.78 % 
