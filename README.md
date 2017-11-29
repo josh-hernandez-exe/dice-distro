@@ -7,7 +7,7 @@ This should work for all versions that are `Python 3.x`.
 
 There is a lot of explanation in the `--help` output. which you can see using:
 ```
-➔ python distro_dice.py --help
+➔ python dice_distro.py --help
 ```
 
 ### Examples
@@ -15,7 +15,7 @@ There is a lot of explanation in the `--help` output. which you can see using:
 #### Rolling Two D6 (and Changing the Output)
 The default operation applied is to sum all the values of what is rolled.
 ```
-➔ python distro_dice.py -d 6 -n 2
+➔ python dice_distro.py -d 6 -n 2
  2:   2.78 % |=====
  3:   5.56 % |===========
  4:   8.33 % |================
@@ -32,7 +32,7 @@ The default operation applied is to sum all the values of what is rolled.
 You can also change the output to show the counts.
 The modules trying every combination of output, treating each die as distinguishable.
 ```
-➔ python distro_dice.py -d 6 -n 2 --show-counts
+➔ python dice_distro.py -d 6 -n 2 --show-counts
  2: 1 |=====
  3: 2 |===========
  4: 3 |================
@@ -48,7 +48,7 @@ The modules trying every combination of output, treating each die as distinguish
 
 You can also change the sort order.
 ```
-➔ python distro_dice.py -d 6 -n 2 --sort value 
+➔ python dice_distro.py -d 6 -n 2 --sort value 
  2:   2.78 % |=====
 12:   2.78 % |=====
  3:   5.56 % |===========
@@ -64,7 +64,7 @@ You can also change the sort order.
 
 If you don't want to see the bars you can turn them off.
 ```
-➔ python distro_dice.py -d 6 -n 2 --bar-size 0 
+➔ python dice_distro.py -d 6 -n 2 --bar-size 0 
  2:   2.78 % 
  3:   5.56 % 
  4:   8.33 % 
@@ -80,7 +80,7 @@ If you don't want to see the bars you can turn them off.
 
 Or you can drastically change how the bars get rendered.
 ```
-➔ python distro_dice.py -d 6 -n 2 --bar-size 2 --bar-char '@#' --bar-prefix '<|' 
+➔ python dice_distro.py -d 6 -n 2 --bar-size 2 --bar-char '@#' --bar-prefix '<|' 
  2:   2.78 % <|@#@#@#@#@#
  3:   5.56 % <|@#@#@#@#@#@#@#@#@#@#@#
  4:   8.33 % <|@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#
@@ -96,7 +96,7 @@ Or you can drastically change how the bars get rendered.
 
 #### Advantage (Rolling Two D20 Taking Max)
 ```
-➔ python distro_dice.py -d 20 -n 2 --op-func max
+➔ python dice_distro.py -d 20 -n 2 --op-func max
  1:   0.25 % |
  2:   0.75 % |=
  3:   1.25 % |==
@@ -122,7 +122,7 @@ Or you can drastically change how the bars get rendered.
 
 #### Disadvantage (Rolling Two D20 Taking Min)
 ```
-➔ python distro_dice.py -d 20 -n 2 --op-func min
+➔ python dice_distro.py -d 20 -n 2 --op-func min
  1:   9.75 % |===================
  2:   9.25 % |==================
  3:   8.75 % |=================
@@ -147,7 +147,7 @@ Or you can drastically change how the bars get rendered.
 
 #### Selecting the Second Highest Value from Four D6
 ```
-➔ python distro_dice.py -d 6 -n 4 --op-func select --op-param -2
+➔ python dice_distro.py -d 6 -n 4 --op-func select --op-param -2
 1:   1.62 % |===
 2:   9.49 % |==================
 3:  20.14 % |========================================
@@ -159,7 +159,7 @@ Or you can drastically change how the bars get rendered.
 #### Selecting the Second Lowest Value from Four D6
 Note that the select index parameter is zero-indexed.
 ```
-➔ python distro_dice.py -d 6 -n 4 --op-func select --op-param 1
+➔ python dice_distro.py -d 6 -n 4 --op-func select --op-param 1
 1:  13.19 % |==========================
 2:  27.55 % |=======================================================
 3:  28.01 % |========================================================
@@ -172,7 +172,7 @@ Note that the select index parameter is zero-indexed.
 The same as excluding the lowest.
 The key sorting is lexicographic.
 ```
-python distro_dice.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3
+python dice_distro.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3
 1,1,1:   0.39 % |
 2,1,1:   1.56 % |===
 2,2,1:   2.34 % |====
@@ -197,7 +197,7 @@ python distro_dice.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3
 
 Here is same output with sort order to be based of the probabilities.
 ```
-➔ python distro_dice.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3 --sort value
+➔ python dice_distro.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3 --sort value
 1,1,1:   0.39 % |
 2,1,1:   1.56 % |===
 3,1,1:   1.56 % |===
@@ -224,7 +224,7 @@ Here is same output with sort order to be based of the probabilities.
 This program by default will treat a D10 to begin at `1` and have values all the way up to `10`.
 If we want the lowest value to start at `0` we can do the following.
 ```
-➔ python distro_dice.py -d 10 -n 2 --die-start 0
+➔ python dice_distro.py -d 10 -n 2 --die-start 0
  0:   1.00 % |==
  1:   2.00 % |====
  2:   3.00 % |======
@@ -248,7 +248,7 @@ If we want the lowest value to start at `0` we can do the following.
 
 Or other type of D10 (some refer to as a D100, but does not have 100 sides)
 ```
-➔ python distro_dice.py -d 10 -n 2 --die-start 0 --die-step 10
+➔ python dice_distro.py -d 10 -n 2 --die-start 0 --die-step 10
   0:   1.00 % |==
  10:   2.00 % |====
  20:   3.00 % |======
@@ -273,7 +273,7 @@ Or other type of D10 (some refer to as a D100, but does not have 100 sides)
 #### Rolling Custom Values
 You can manually set the values on the sides of the die.
 ```
-➔ python distro_dice.py -n 2 --die-values 0 10 100 -1000
+➔ python dice_distro.py -n 2 --die-values 0 10 100 -1000
 -2000:   6.25 % |============
 -1000:  12.50 % |=========================
  -990:  12.50 % |=========================
@@ -288,7 +288,7 @@ You can manually set the values on the sides of the die.
 
 #### Rolling a D12 D8 and D6
 ```
-➔ python distro_dice.py --multi-die-sides 12 8 6
+➔ python dice_distro.py --multi-die-sides 12 8 6
  3:   0.17 % |
  4:   0.52 % |=
  5:   1.04 % |==
@@ -321,7 +321,7 @@ This can be changed with `--multi-die-start` and `--multi-die-step`.
 Both flags are optional, but when using one, the values you pass are in parallel with the values given
 in relation to `--multi-die-sides`.
 ```
-➔ python distro_dice.py --multi-die-sides 4 3 2 --multi-die-start -1 0 1 --multi-die-step 3 2 1
+➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-start -1 0 1 --multi-die-step 3 2 1
  0:   4.17 % |========
  1:   4.17 % |========
  2:   4.17 % |========
@@ -347,7 +347,7 @@ One D3 with values of 10, 20, 30.
 One D2 with values of 100 and 200.
 
 ```
-➔ python distro_dice.py --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200
+➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200
 110:   4.17 % |========
 111:   4.17 % |========
 112:   4.17 % |========
