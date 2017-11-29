@@ -351,8 +351,7 @@ def find_max_digits(iterable):
             math.log10(max_abs)
     ))
 
-def get_operation(operation_str, param_list = [], should_memorize = True):
-    _operator = operations_dict[operation_str]
+def get_operator(operation_str, param_list = [], should_memorize = True):
 
     if operation_str == 'select':
         if len(param_list) != 1:
@@ -371,7 +370,7 @@ def get_operation(operation_str, param_list = [], should_memorize = True):
 
         _operator = signle_select_func
 
-    if operation_str in 'multi-select':
+    elif operation_str == 'multi-select':
         if len(param_list) < 1:
             raise Exception("The 'select' operation requires at least one parameter which is the select index.")
 
@@ -387,7 +386,7 @@ def get_operation(operation_str, param_list = [], should_memorize = True):
 
         _operator = multi_select_func
 
-    if operation_str == 'multi-select-apply':
+    elif operation_str == 'multi-select-apply':
         multi_select_params = list(takewhile(lambda xx: xx not in operations_dict, param_list))
         assert len(multi_select_params) < len(param_list), "multi-select-apply requires an operation to be passed"
 
@@ -397,13 +396,19 @@ def get_operation(operation_str, param_list = [], should_memorize = True):
             # there are other parameters
             other_params = param_list[len(multi_select_params)+1:]
 
-        multi_select_operator = get_operation('multi-select', param_list = multi_select_params, should_memorize = False)
-        other_operator = get_operation(other_operator_str, param_list = other_params, should_memorize = False)
+        multi_select_operator = get_operator('multi-select', param_list = multi_select_params, should_memorize = False)
+        other_operator = get_operator(other_operator_str, param_list = other_params, should_memorize = False)
 
         def wrapper(xx):
             return other_operator(multi_select_operator(xx))
 
         _operator = wrapper
+
+    elif operation_str in operations_dict:
+        _operator = operations_dict[operation_str]
+
+    else:
+        raise Exception("operation string passed is not valid")
 
     # return an function that cashes the results to speed up runtime at the cost of memory
     if should_memorize:
@@ -415,7 +420,7 @@ def get_operation(operation_str, param_list = [], should_memorize = True):
 def main():
     count = Counter()
 
-    _operator = get_operation(args.op_func, args.op_params)
+    _operator = get_operator(args.op_func, args.op_params)
 
     # the next two lines is the majority of the program run time for larger values
     for item in get_outcome_generator():
