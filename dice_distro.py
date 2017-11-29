@@ -4,10 +4,10 @@ import math
 import argparse
 import operator
 import functools
-from itertools import product
+from itertools import product, takewhile
 from collections import Counter
 
-operations = {
+operations_dict = {
     'sum':sum,
     'min':min,
     'max':max,
@@ -17,6 +17,7 @@ operations = {
     'and':lambda xx: functools.reduce(operator.and_, xx),
     'select': None, # This will get defined later if used
     'multi-select': None, # This will get defined later if used
+    'multi-select-apply': None, # This will get defined later if used
 }
 
 parser = argparse.ArgumentParser(
@@ -173,7 +174,7 @@ op_group = parser.add_argument_group(
 op_group.add_argument(
     "--op-func",
     type=str,
-    choices=sorted(operations.keys()),
+    choices=sorted(operations_dict.keys()),
     default = 'sum',
     help=" ".join([
         "The operation that will be applied to the values rolled.",
@@ -181,6 +182,9 @@ op_group.add_argument(
         "The 'select' operation requires an integer parameter (use '--op-params')."
         "The 'multi-select' operation at least one integer parameter,",
         "the meaning behind the parameter is the same as 'select' (use '--op-params')."
+        "The 'multi-select-apply' is the same as 'multi-select' but will then apply",
+        "an operation afterwards specified by an additional argument at the end",
+        "(if that operation requires parameters, pass them in after the name of the function).",
         "Note: that bit-wise operations are available, not logical operations.",
     ]),
 )
@@ -347,53 +351,71 @@ def find_max_digits(iterable):
             math.log10(max_abs)
     ))
 
-def get_operation(operation_str):
-    _operator = operations[args.op_func]
+def get_operation(operation_str, param_list = [], should_memorize = True):
+    _operator = operations_dict[operation_str]
 
-    if args.op_func == 'select':
-        if len(args.op_params) != 1:
+    if operation_str == 'select':
+        if len(param_list) != 1:
             raise Exception("The 'select' operation requires a single parameter which is the select index.")
 
         try:
-            select_index = int(args.op_params[0])
+            select_index = int(param_list[0])
         except:
             raise Exception("The parameter passed must be in integer")
 
-        def select_func(xx):
+        def signle_select_func(xx):
             """
             this could be sped up with the quick select algorithm
             """
             return sorted(list(xx))[select_index]
 
-        _operator = select_func
+        _operator = signle_select_func
 
-    if args.op_func == 'multi-select':
-        if len(args.op_params) < 1:
+    if operation_str in 'multi-select':
+        if len(param_list) < 1:
             raise Exception("The 'select' operation requires at least one parameter which is the select index.")
 
         try:
-            select_indices = tuple(int(item) for item in args.op_params)
+            select_indices = tuple(int(item) for item in param_list)
         except:
             raise Exception("The parameters passed must be in integers")
 
-        def select_func(xx):
-            """
-            this could be sped up with the quick select algorithm
-            """
+        def multi_select_func(xx):
             sorted_list = sorted(list(xx))
 
             return tuple(sorted_list[ii] for ii in select_indices)
 
-        _operator = select_func
+        _operator = multi_select_func
+
+    if operation_str == 'multi-select-apply':
+        multi_select_params = list(takewhile(lambda xx: xx not in operations_dict, param_list))
+        assert len(multi_select_params) < len(param_list), "multi-select-apply requires an operation to be passed"
+
+        other_operator_str = param_list[len(multi_select_params)]
+        other_params = []
+        if len(multi_select_params) + 1 < len(param_list):
+            # there are other parameters
+            other_params = param_list[len(multi_select_params)+1:]
+
+        multi_select_operator = get_operation('multi-select', param_list = multi_select_params, should_memorize = False)
+        other_operator = get_operation(other_operator_str, param_list = other_params, should_memorize = False)
+
+        def wrapper(xx):
+            return other_operator(multi_select_operator(xx))
+
+        _operator = wrapper
 
     # return an function that cashes the results to speed up runtime at the cost of memory
-    return Memorize(_operator)
+    if should_memorize:
+        _operator = Memorize(_operator)
+
+    return _operator
 
 
 def main():
     count = Counter()
 
-    _operator = get_operation(args.op_func)
+    _operator = get_operation(args.op_func, args.op_params)
 
     # the next two lines is the majority of the program run time for larger values
     for item in get_outcome_generator():
@@ -401,7 +423,11 @@ def main():
 
     total = sum(count.values())
 
-    if args.op_func == 'multi-select':
+    _temp_key = list(count.keys())[0]
+    is_key_array_like = isinstance(_temp_key, (tuple,list))
+    num_items_in_key = 1*(not is_key_array_like) or len(_temp_key)
+
+    if is_key_array_like:
         all_keys = []
         for key_set in count:
             all_keys.extend(key_set)
@@ -414,12 +440,12 @@ def main():
         num_key_digits=num_key_digits
     )
 
-    if args.op_func == 'multi-select':
+    if is_key_array_like:
         sub_key_formater = key_formater
         key_formater = "{{key:>{num_char}s}}".format(
             num_char=sum([
-                len(args.op_params)*num_key_digits, # room for all the digits
-                (len(args.op_params) - 1)*len(","), # room for all the seperators
+                num_items_in_key*num_key_digits, # room for all the digits
+                (num_items_in_key - 1)*len(","), # room for all the seperators
             ]),
         )
 
@@ -446,7 +472,7 @@ def main():
         value_string = ""
         bar_string = ""
 
-        if args.op_func == 'multi-select':
+        if is_key_array_like:
             key_string = key_formater.format(
                 key=",".join(sub_key_formater.format(key=_key) for _key in key)
             )

@@ -48,7 +48,7 @@ The modules trying every combination of output, treating each die as distinguish
 
 You can also change the sort order.
 ```
-➔ python dice_distro.py -d 6 -n 2 --sort value 
+➔ python dice_distro.py -d 6 -n 2 --sort value
  2:   2.78 % |=====
 12:   2.78 % |=====
  3:   5.56 % |===========
@@ -64,7 +64,7 @@ You can also change the sort order.
 
 If you don't want to see the bars you can turn them off.
 ```
-➔ python dice_distro.py -d 6 -n 2 --bar-size 0 
+➔ python dice_distro.py -d 6 -n 2 --bar-size 0
  2:   2.78 % 
  3:   5.56 % 
  4:   8.33 % 
@@ -80,7 +80,7 @@ If you don't want to see the bars you can turn them off.
 
 Or you can drastically change how the bars get rendered.
 ```
-➔ python dice_distro.py -d 6 -n 2 --bar-size 2 --bar-char '@#' --bar-prefix '<|' 
+➔ python dice_distro.py -d 6 -n 2 --bar-size 2 --bar-char '@#' --bar-prefix '<|'
  2:   2.78 % <|@#@#@#@#@#
  3:   5.56 % <|@#@#@#@#@#@#@#@#@#@#@#
  4:   8.33 % <|@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#
@@ -218,6 +218,27 @@ Here is same output with sort order to be based of the probabilities.
 4,3,3:  10.94 % |=====================
 4,4,3:  11.72 % |=======================
 4,3,2:  14.06 % |============================
+```
+
+#### Selecting the Three Highest Values from Four D6 and Summing
+```
+➔ python dice_distro.py -d 6 -n 4 --op-func multi-select-apply --op-params -1 -2 -3 sum
+ 3:   0.08 % |
+ 4:   0.31 % |
+ 5:   0.77 % |=
+ 6:   1.62 % |===
+ 7:   2.93 % |=====
+ 8:   4.78 % |=========
+ 9:   7.02 % |==============
+10:   9.41 % |==================
+11:  11.42 % |======================
+12:  12.89 % |=========================
+13:  13.27 % |==========================
+14:  12.35 % |========================
+15:  10.11 % |====================
+16:   7.25 % |==============
+17:   4.17 % |========
+18:   1.62 % |===
 ```
 
 #### Rolling a True D10
@@ -372,4 +393,30 @@ One D2 with values of 100 and 200.
 231:   4.17 % |========
 232:   4.17 % |========
 233:   4.17 % |========
+```
+
+#### Nested Selecting
+
+This example rolls five D8 (with 1 as the lowest value) and applies the following instructions:
+- select the three highest values
+- of the selected values, select the two lowest values
+- sum the remaining values
+
+```
+➔ python dice_distro.py -d 8 -n 5 --op-func multi-select-apply --op-params -1 -2 -3 multi-select-apply 0 1 sum
+ 2:   0.11 % |
+ 3:   0.40 % |
+ 4:   1.39 % |==
+ 5:   2.62 % |=====
+ 6:   4.81 % |=========
+ 7:   6.87 % |=============
+ 8:   9.63 % |===================
+ 9:  11.47 % |======================
+10:  13.32 % |==========================
+11:  13.28 % |==========================
+12:  12.77 % |=========================
+13:  10.19 % |====================
+14:   7.65 % |===============
+15:   3.88 % |=======
+16:   1.61 % |===
 ```
