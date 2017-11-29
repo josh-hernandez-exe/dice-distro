@@ -190,7 +190,7 @@ Note that the select index parameter is zero-indexed.
 The same as excluding the lowest.
 The key sorting is lexicographic.
 ```
-python dice_distro.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3
+➔ python dice_distro.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3
 1,1,1:   0.39 % |
 2,1,1:   1.56 % |===
 2,2,1:   2.34 % |====
