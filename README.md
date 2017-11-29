@@ -1,9 +1,11 @@
 ### General Info
 
-This module was meant to be used as a command line tool.
-It only uses built-in modules to calculate everything.
-This has been tested with `Python 2.7.x` and `Python 3.5.x`.
-This should work for all versions that are `Python 3.x`.
+This program was meant to be used as a command line tool.
+It only uses built-in modules to calculate everything, but uses brute force calculations.
+This has been tested with `Python 2.7.x` and `Python 3.5.x`,
+though it should work for all versions that are `Python 3.x`.
+
+**Note**: This tool uses brute force calculations. This gives it the flexibility to calculated different kinds of distributions with many restrictions, but may take a while to compute when lots of dice are being rolled. For example six D20 calculations may take quite a while to compute depending on your machine.
 
 There is a lot of explanation in the `--help` output. which you can see using:
 ```
@@ -27,6 +29,22 @@ The default operation applied is to sum all the values of what is rolled.
 10:   8.33 % |================
 11:   5.56 % |===========
 12:   2.78 % |=====
+```
+
+You can change the output to show a different number of decimal places (default is 2).
+```
+➔ python dice_distro.py -d 6 -n 2 --percent-decimal-place 4
+ 2:   2.7778 % |=====
+ 3:   5.5556 % |===========
+ 4:   8.3333 % |================
+ 5:  11.1111 % |======================
+ 6:  13.8889 % |===========================
+ 7:  16.6667 % |=================================
+ 8:  13.8889 % |===========================
+ 9:  11.1111 % |======================
+10:   8.3333 % |================
+11:   5.5556 % |===========
+12:   2.7778 % |=====
 ```
 
 You can also change the output to show the counts.
@@ -363,9 +381,9 @@ in relation to `--multi-die-sides`.
 
 #### Roll Multiple Types of Dice with Specific Values
 
-One D4 with values from 0 to 3.
-One D3 with values of 10, 20, 30.
-One D2 with values of 100 and 200.
+- One D4 with values from 0 to 3.
+- One D3 with values of 10, 20, and 30.
+- One D2 with values of 100 and 200.
 
 ```
 ➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200
