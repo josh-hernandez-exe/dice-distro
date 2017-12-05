@@ -29,8 +29,9 @@ operations_dict = {
 parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     description="\n".join([
-        "This program is used to calculate the distributions of dice rolling (using brute force enumeration)",
-        "with operations applied to results of the roll (via brute force calculations).",
+        "This program is used to calculate the distributions of",
+        "dice rolling (using brute force enumeration) with operations",
+        "applied to results of the roll (via brute force calculations).",
     ]),
 )
 
@@ -72,7 +73,8 @@ single_type_group_side_option.add_argument(
     help=" ".join([
         "Number of sides the dice simulated should have.",
         "The value given must be a positive integer.",
-        "The values on the die will start from '--die-start' and fill up the sides of the die incrementing by '--die-step'.",
+        "The values on the die will start from '--die-start' and",
+        "fill up the sides of the die incrementing by '--die-step'.",
         "This and '--die-values' are mutually exclusive options."
     ]),
 )
@@ -128,7 +130,8 @@ multi_type_group.add_argument(
     help=" ".join([
         "Number of sides the dice simulated should have.",
         "The value given must be a positive integer.",
-        "The values on the die will start from '--die-start' and fill up the sides of the die incrementing by '--die-step'.",
+        "The values on the die will start from '--die-start' and fill up the sides of the die",
+        "incrementing by '--die-step'.",
     ]),
 )
 
@@ -214,8 +217,10 @@ op_group.add_argument(
     "--memorize",
     action='store_true',
     help=" ".join([
-        "An option for cashing results. This will hash the results of a roll, and save the result.",
-        "This speeds up some calculations, but adds overhead since you must calculate the hash of the input.",
+        "An option for cashing results.",
+        "This will hash the results of a roll, and save the result.",
+        "This speeds up some calculations, but adds overhead since you",
+        "must calculate the hash of the input.",
     ]),
 )
 
@@ -349,17 +354,25 @@ def get_dice():
                     dice.append(tuple(die))
                     die = []
 
-            assert len(dice) == len(args.multi_die_sides), "Not enough die values were given"
-            assert sum(len(item) for item in dice) == len(args.multi_die_values), "Not all die values were used"
+            if len(dice) != len(args.multi_die_sides):
+                raise Exception("Not enough die values were given")
+
+            if sum(len(item) for item in dice) != len(args.multi_die_values):
+                raise Exception("Not all die values were used")
+
         else:
             if isinstance(args.multi_die_start, (list,tuple)) and len(args.multi_die_start) > 0:
-                assert len(args.multi_die_start) == len(args.multi_die_sides), "Multi die starts must have parallel values to multi die sides"
+                if len(args.multi_die_start) != len(args.multi_die_sides):
+                    raise Exception("Multi die starts must have parallel values to multi die sides")
+
                 start_values = args.multi_die_start
             else:
                 start_values = tuple(1 for _ in args.multi_die_sides)
 
             if isinstance(args.multi_die_step, (list,tuple)) and len(args.multi_die_step) > 0:
-                assert len(args.multi_die_step) == len(args.multi_die_step), "Multi die steps must have parallel values to multi die sides"
+                if len(args.multi_die_step) != len(args.multi_die_step):
+                    raise Exception("Multi die steps must have parallel values to multi die sides")
+
                 step_values = args.multi_die_step
             else:
                 step_values = tuple(1 for _ in args.multi_die_sides)
@@ -451,7 +464,8 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
 
     elif operation_str == 'multi-select-apply':
         multi_select_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, param_list))
-        assert len(multi_select_params) < len(param_list), "multi-select-apply requires an operation to be passed"
+        if len(multi_select_params) >= len(param_list):
+            raise Exception("multi-select-apply requires an operation to be passed")
 
         other_operator_str = param_list[len(multi_select_params)]
         other_params = []
@@ -459,8 +473,14 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
             # there are other parameters
             other_params = param_list[len(multi_select_params)+1:]
 
-        multi_select_operator = get_operator('multi-select', param_list = multi_select_params, should_memorize=should_memorize)
-        other_operator = get_operator(other_operator_str, param_list = other_params, should_memorize=should_memorize)
+        multi_select_operator = get_operator('multi-select',
+            param_list = multi_select_params,
+            should_memorize=should_memorize
+        )
+        other_operator = get_operator(other_operator_str,
+            param_list = other_params,
+            should_memorize=should_memorize
+        )
 
         def wrapper(xx):
             return other_operator(multi_select_operator(xx))
