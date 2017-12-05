@@ -1,4 +1,4 @@
-### General Info
+## General Info
 
 This program was meant to be used as a command line tool.
 It only uses built-in modules to calculate everything, but uses brute force calculations.
@@ -9,15 +9,16 @@ though it should work for all versions that are `Python 3.x`.
 This gives it the flexibility to calculated different kinds of distributions with many restrictions,
 but may take a while to compute when lots of dice are being rolled.
 For example six D20 calculations may take quite a while to compute depending on your machine.
+There is a `--simulate` flag if you don't need exact probablitic values, but approximations are good enough for you use case.
 
 There is a lot of explanation in the `--help` output. Which you can see using:
 ```
 ➔ python dice_distro.py --help
 ```
 
-### Examples
+## Examples
 
-#### Rolling Two D6 (and Changing the Output)
+### Rolling Two D6 (and Changing the Output)
 The default operation applied is to sum all the values of what is rolled.
 ```
 ➔ python dice_distro.py -d 6 -n 2
@@ -115,7 +116,7 @@ Or you can drastically change how the bars get rendered.
 12:   2.78 % <|@#@#@#@#@#
 ```
 
-#### Advantage (Rolling Two D20 Taking Max)
+### Advantage (Rolling Two D20 Taking Max)
 ```
 ➔ python dice_distro.py -d 20 -n 2 --op-func max
  1:   0.25 % |
@@ -138,10 +139,9 @@ Or you can drastically change how the bars get rendered.
 18:   8.75 % |=================
 19:   9.25 % |==================
 20:   9.75 % |===================
-
 ```
 
-#### Disadvantage (Rolling Two D20 Taking Min)
+### Disadvantage (Rolling Two D20 Taking Min)
 ```
 ➔ python dice_distro.py -d 20 -n 2 --op-func min
  1:   9.75 % |===================
@@ -166,7 +166,7 @@ Or you can drastically change how the bars get rendered.
 20:   0.25 % |
 ```
 
-#### Selecting the Second Highest Value from Four D6
+### Selecting the Second Highest Value from Four D6
 ```
 ➔ python dice_distro.py -d 6 -n 4 --op-func select --op-param -2
 1:   1.62 % |===
@@ -177,7 +177,7 @@ Or you can drastically change how the bars get rendered.
 6:  13.19 % |==========================
 ```
 
-#### Selecting the Second Lowest Value from Four D6
+### Selecting the Second Lowest Value from Four D6
 Note that the select index parameter is zero-indexed.
 ```
 ➔ python dice_distro.py -d 6 -n 4 --op-func select --op-param 1
@@ -189,7 +189,7 @@ Note that the select index parameter is zero-indexed.
 6:   1.62 % |===
 ```
 
-#### Selecting the Three Highest Values from Four D4
+### Selecting the Three Highest Values from Four D4
 The same as excluding the lowest.
 The key sorting is lexicographic.
 ```
@@ -216,7 +216,7 @@ The key sorting is lexicographic.
 4,4,4:   5.08 % |==========
 ```
 
-#### Rolling Four D4 (Indistinguishable)
+### Rolling Four D4 (Indistinguishable)
 The possible outcomes treating the dice as indistinguishable.
 ```
 ➔ python dice_distro.py -d 4 -n 4 --op-func set
@@ -257,7 +257,7 @@ The possible outcomes treating the dice as indistinguishable.
 4,4,4,4:   0.39 % |
 ```
 
-#### Selecting the Three Highest Values from Four D6 and Summing
+### Selecting the Three Highest Values from Four D6 and Summing
 ```
 ➔ python dice_distro.py -d 6 -n 4 --op-func multi-select-apply --op-params -1 -2 -3 sum
  3:   0.08 % |
@@ -278,7 +278,7 @@ The possible outcomes treating the dice as indistinguishable.
 18:   1.62 % |===
 ```
 
-#### Rolling a True D10
+### Rolling a True D10
 This program by default will treat a D10 to begin at `1` and have values all the way up to `10`.
 If we want the lowest value to start at `0` we can do the following.
 ```
@@ -328,7 +328,7 @@ Or other type of D10 (some refer to as a D100, but does not have 100 sides)
 180:   1.00 % |==
 ```
 
-#### Rolling Custom Values
+### Rolling Custom Values
 You can manually set the values on the sides of the die.
 ```
 ➔ python dice_distro.py -n 2 --die-values 0 10 100 -1000
@@ -344,7 +344,7 @@ You can manually set the values on the sides of the die.
   200:   6.25 % |============
 ```
 
-#### Rolling a D12 D8 and D6
+### Rolling a D12 D8 and D6
 ```
 ➔ python dice_distro.py --multi-die-sides 12 8 6
  3:   0.17 % |
@@ -373,7 +373,7 @@ You can manually set the values on the sides of the die.
 26:   0.17 % |
 ```
 
-#### Roll Multiple Types of Dice with Non-Default Values
+### Roll Multiple Types of Dice with Non-Default Values
 When rolling multiple types of die, the default start and step will be `1`.
 This can be changed with `--multi-die-start` and `--multi-die-step`.
 Both flags are optional, but when using one, the values you pass are in parallel with the values given
@@ -397,12 +397,11 @@ in relation to `--multi-die-sides`.
 14:   4.17 % |========
 ```
 
-#### Roll Multiple Types of Dice with Specific Values
+### Roll Multiple Types of Dice with Specific Values
 
 - One D4 with values from 0 to 3.
 - One D3 with values of 10, 20, and 30.
 - One D2 with values of 100 and 200.
-
 ```
 ➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200
 110:   4.17 % |========
@@ -431,13 +430,12 @@ in relation to `--multi-die-sides`.
 233:   4.17 % |========
 ```
 
-#### Nested Selecting
+### Nested Selecting
 
 This example rolls five D8 (with 1 as the lowest value) and applies the following instructions:
 - select the three highest values
 - of the selected values, select the two lowest values
 - sum the remaining values
-
 ```
 ➔ python dice_distro.py -d 8 -n 5 --op-func multi-select-apply --op-params -1 -2 -3 multi-select-apply 0 1 sum
  2:   0.11 % |
@@ -457,7 +455,7 @@ This example rolls five D8 (with 1 as the lowest value) and applies the followin
 16:   1.61 % |===
 ```
 
-#### Simulating Dice Rolls
+### Simulating Dice Rolls
 
 If the enumeration of all outcomes takes too long, you can choose to simulate the dice rolls.
 This allows you get an idea for what the distribution looks like without have to wait for computation time
@@ -470,7 +468,6 @@ To get exact values, do not use simulated dice rolls.
 An example of simulating 100000 rolls of ten D30, taking the two largest values and summing them.
 Ten D30's has `30^10` or `5.904900e+14` distinct outcomes if you treat each die as distingishable.
 Enumerating all the outcomes would take quite a while.
-
 ```
 ➔ python dice_distro.py -d 30 -n 10 --op-func multi-select-apply --op-params -1 -2 sum --percent-decimal-place 3 --simulate 100000
 20:   0.001 % |
@@ -516,7 +513,7 @@ Enumerating all the outcomes would take quite a while.
 60:   4.096 % |========
 ```
 
-### Future Plans
+## Future Plans
 
 If I find time in the future, I plan to parallalize the work so that options with a large enumeration set can be computed faster,
 as well as allowing larger numbers of simulated dice throws.
