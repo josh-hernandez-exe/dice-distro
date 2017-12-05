@@ -463,7 +463,7 @@ This allows you get an idea for what the distribution looks like without have to
 of full enumeration.
 
 **NOTE:** This will only provide an approximation of the results,
-and the numbers can be slightly different each time (can be reduced with a large iteration count)
+and the numbers can be slightly different each time (can be reduced with a large iteration count).
 To get exact values, do not use simulated dice rolls.
 
 An example of simulating 100000 rolls of ten D30, taking the two largest values and summing them.
