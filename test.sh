@@ -20,6 +20,7 @@ python $dice_distro_file -d 6 -n 2 && \
     python $dice_distro_file -d 8 -n 5 --op-func multi-select-apply --op-params -1 -2 -3 multi-select 0 1 && \
     python $dice_distro_file -d 8 -n 5 --op-func multi-select-apply --op-params -1 -2 -3 multi-select-apply 0 1 sum && \
     python $dice_distro_file -d 8 -n 5 --op-func multi-select-apply --op-params -1 -2 -3 multi-select-apply 0 1 select 1 && \
+    python $dice_distro_file -d 8 -n 5 --op-func multi-select-apply --op-params -1 -2 -3 multi-select-apply 0 1 select 1 --memorize && \
     python $dice_distro_file -d 10 -n 2 --die-start 0 && \
     python $dice_distro_file -d 10 -n 2 --die-start 0 --die-step 10 && \
     python $dice_distro_file -n 2 --die-values 0 10 100 -1000 && \
