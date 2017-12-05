@@ -189,33 +189,6 @@ Note that the select index parameter is zero-indexed.
 6:   1.62 % |===
 ```
 
-### Selecting the Three Highest Values from Four D4
-The same as excluding the lowest.
-The key sorting is lexicographic.
-```
-➔ python dice_distro.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3
-1,1,1:   0.39 % |
-2,1,1:   1.56 % |===
-2,2,1:   2.34 % |====
-2,2,2:   1.95 % |===
-3,1,1:   1.56 % |===
-3,2,1:   4.69 % |=========
-3,2,2:   6.25 % |============
-3,3,1:   2.34 % |====
-3,3,2:   7.03 % |==============
-3,3,3:   3.52 % |=======
-4,1,1:   1.56 % |===
-4,2,1:   4.69 % |=========
-4,2,2:   6.25 % |============
-4,3,1:   4.69 % |=========
-4,3,2:  14.06 % |============================
-4,3,3:  10.94 % |=====================
-4,4,1:   2.34 % |====
-4,4,2:   7.03 % |==============
-4,4,3:  11.72 % |=======================
-4,4,4:   5.08 % |==========
-```
-
 ### Rolling Four D4 (Indistinguishable)
 The possible outcomes treating the dice as indistinguishable.
 ```
@@ -255,6 +228,33 @@ The possible outcomes treating the dice as indistinguishable.
 3,3,4,4:   2.34 % |====
 3,4,4,4:   1.56 % |===
 4,4,4,4:   0.39 % |
+```
+
+### Selecting the Three Highest Values from Four D4
+The same as excluding the lowest.
+The key sorting is lexicographic.
+```
+➔ python dice_distro.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3
+1,1,1:   0.39 % |
+2,1,1:   1.56 % |===
+2,2,1:   2.34 % |====
+2,2,2:   1.95 % |===
+3,1,1:   1.56 % |===
+3,2,1:   4.69 % |=========
+3,2,2:   6.25 % |============
+3,3,1:   2.34 % |====
+3,3,2:   7.03 % |==============
+3,3,3:   3.52 % |=======
+4,1,1:   1.56 % |===
+4,2,1:   4.69 % |=========
+4,2,2:   6.25 % |============
+4,3,1:   4.69 % |=========
+4,3,2:  14.06 % |============================
+4,3,3:  10.94 % |=====================
+4,4,1:   2.34 % |====
+4,4,2:   7.03 % |==============
+4,4,3:  11.72 % |=======================
+4,4,4:   5.08 % |==========
 ```
 
 ### Selecting the Three Highest Values from Four D6 and Summing
