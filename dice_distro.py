@@ -71,7 +71,7 @@ single_type_group_side_option.add_argument(
     type=int,
     help=" ".join([
         "Number of sides the dice simulated should have.",
-        "The value given must be a positive integer."
+        "The value given must be a positive integer.",
         "The values on the die will start from '--die-start' and fill up the sides of the die incrementing by '--die-step'.",
         "This and '--die-values' are mutually exclusive options."
     ]),
@@ -106,7 +106,7 @@ single_type_group_side_option.add_argument(
     help=" ".join([
         "The values the die should have.",
         "Values are expected to be integers.",
-        "This and '--die-sides' are mutually exclusive options."
+        "This and '--die-sides' are mutually exclusive options.",
     ]),
 )
 
@@ -127,7 +127,7 @@ multi_type_group.add_argument(
     nargs="+",
     help=" ".join([
         "Number of sides the dice simulated should have.",
-        "The value given must be a positive integer."
+        "The value given must be a positive integer.",
         "The values on the die will start from '--die-start' and fill up the sides of the die incrementing by '--die-step'.",
     ]),
 )
@@ -185,10 +185,10 @@ op_group.add_argument(
     help=" ".join([
         "The operation that will be applied to the values rolled.",
         "The operations available are both communitive and associative.",
-        "The 'set' enumerates the results, treating the dice is indistiguishable."
-        "The 'select' operation requires an integer parameter (use '--op-params')."
+        "The 'set' enumerates the results, treating the dice is indistiguishable.",
+        "The 'select' operation requires an integer parameter (use '--op-params').",
         "The 'multi-select' operation at least one integer parameter,",
-        "the meaning behind the parameter is the same as 'select' (use '--op-params')."
+        "the meaning behind the parameter is the same as 'select' (use '--op-params').",
         "The 'multi-select-apply' is the same as 'multi-select' but will then apply",
         "an operation afterwards specified by an additional argument at the end",
         "(if that operation requires parameters, pass them in after the name of the function).",
@@ -246,7 +246,7 @@ bar_group.add_argument(
     default = "=",
     help=" ".join([
         "The fill string used for the bar charts.",
-        "One percent is represented as this string repeated '--bar-size' times."
+        "One percent is represented as this string repeated '--bar-size' times.",
     ]),
 )
 
@@ -295,7 +295,7 @@ simulate_group = parser.add_argument_group(
     ' '.join([
         'Options related to simulating the dice rolls rather than enumerating all the outcomes.',
         'Useful if the compute time of calculating all the outcomes takes too long.',
-        'This will only provide an approximation of the results.'
+        'This will only provide an approximation of the results.',
     ]),
 )
 
