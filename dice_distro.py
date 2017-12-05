@@ -208,6 +208,15 @@ op_group.add_argument(
     ]),
 )
 
+op_group.add_argument(
+    "--memorize",
+    action='store_true',
+    help=" ".join([
+        "An option for cashing results. This will hash the results of a roll, and save the result.",
+        "This speeds up some calculations, but adds overhead since you must calculate the hash of the input.",
+    ]),
+)
+
 """
 ========================================================================================
 Bar Options
@@ -295,7 +304,7 @@ simulate_group.add_argument(
     default = None,
     help=" ".join([
         "The number of simulated dice rols that will occur.",
-        "If this option is not provided, then enumerating all outcomes will take place."
+        "If this option is not provided, then enumerating all outcomes will take place.",
     ]),
 )
 
@@ -448,8 +457,8 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
             # there are other parameters
             other_params = param_list[len(multi_select_params)+1:]
 
-        multi_select_operator = get_operator('multi-select', param_list = multi_select_params, should_memorize = False)
-        other_operator = get_operator(other_operator_str, param_list = other_params, should_memorize = False)
+        multi_select_operator = get_operator('multi-select', param_list = multi_select_params, should_memorize=should_memorize)
+        other_operator = get_operator(other_operator_str, param_list = other_params, should_memorize=should_memorize)
 
         def wrapper(xx):
             return other_operator(multi_select_operator(xx))
@@ -462,8 +471,8 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
     else:
         raise Exception("operation string passed is not valid")
 
-    # return an function that cashes the results to speed up runtime at the cost of memory
     if should_memorize:
+        # return an function that cashes the results to speed up runtime at the cost of memory
         _operator = Memorize(_operator)
 
     return _operator
@@ -472,7 +481,7 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
 def main():
     count = Counter()
 
-    _operator = get_operator(args.op_func, args.op_params)
+    _operator = get_operator(args.op_func, args.op_params, args.memorize)
 
     # the next two lines is the majority of the program run time for larger values
     for item in get_outcome_generator():
