@@ -5,9 +5,12 @@ It only uses built-in modules to calculate everything, but uses brute force calc
 This has been tested with `Python 2.7.x` and `Python 3.5.x`,
 though it should work for all versions that are `Python 3.x`.
 
-**Note**: This tool uses brute force calculations. This gives it the flexibility to calculated different kinds of distributions with many restrictions, but may take a while to compute when lots of dice are being rolled. For example six D20 calculations may take quite a while to compute depending on your machine.
+**Note**: This tool enumerates all possible outcomes (treating the dice as distinguishable).
+This gives it the flexibility to calculated different kinds of distributions with many restrictions,
+but may take a while to compute when lots of dice are being rolled.
+For example six D20 calculations may take quite a while to compute depending on your machine.
 
-There is a lot of explanation in the `--help` output. which you can see using:
+There is a lot of explanation in the `--help` output. Which you can see using:
 ```
 ➔ python dice_distro.py --help
 ```
@@ -413,3 +416,65 @@ This example rolls five D8 (with 1 as the lowest value) and applies the followin
 15:   3.88 % |=======
 16:   1.61 % |===
 ```
+
+#### Simulating Dice Rolls
+
+If the enumeration of all outcomes takes too long, you can choose to simulate the dice rolls.
+This allows you get an idea for what the distribution looks like without have to wait for computation time
+of full enumeration.
+
+**NOTE:** This will only provide an approximation of the results,
+and the numbers can be slightly different each time (can be reduced with a large iteration count)
+To get exact values, do not use simulated dice rolls.
+
+An example of simulating 100000 rolls of ten D30, taking the two largest values and summing them.
+
+```
+➔ python dice_distro.py -d 30 -n 10 --op-func multi-select-apply --op-params -1 -2 sum --percent-decimal-place 3 --simulate 100000
+20:   0.001 % |
+21:   0.003 % |
+22:   0.007 % |
+23:   0.001 % |
+24:   0.007 % |
+25:   0.004 % |
+26:   0.010 % |
+27:   0.014 % |
+28:   0.029 % |
+29:   0.037 % |
+30:   0.049 % |
+31:   0.060 % |
+32:   0.091 % |
+33:   0.114 % |
+34:   0.138 % |
+35:   0.204 % |
+36:   0.263 % |
+37:   0.345 % |
+38:   0.418 % |
+39:   0.518 % |=
+40:   0.739 % |=
+41:   0.932 % |=
+42:   1.071 % |==
+43:   1.311 % |==
+44:   1.593 % |===
+45:   1.968 % |===
+46:   2.451 % |====
+47:   2.928 % |=====
+48:   3.533 % |=======
+49:   4.100 % |========
+50:   5.001 % |==========
+51:   5.596 % |===========
+52:   6.471 % |============
+53:   7.232 % |==============
+54:   7.738 % |===============
+55:   8.374 % |================
+56:   8.803 % |=================
+57:   8.860 % |=================
+58:   8.228 % |================
+59:   6.662 % |=============
+60:   4.096 % |========
+```
+
+### Future Plans
+
+If I find time in the future, I plan to parallalize the work so that options with a large enumeration set can be computed faster,
+as well as allowing larger numbers of simulated dice throws.
