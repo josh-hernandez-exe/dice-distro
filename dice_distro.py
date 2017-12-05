@@ -385,7 +385,7 @@ def get_dice():
 
 def get_outcome_simulator(dice, num_iterations):
     return zip(*tuple(itertools.starmap(
-            random.choice, itertools.repeat([die], num_iterations)
+            random.choice, itertools.repeat((die,), num_iterations)
         )
         for die in dice
     ))
