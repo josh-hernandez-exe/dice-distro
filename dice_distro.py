@@ -1,11 +1,16 @@
 from __future__ import print_function
 
+import sys
 import math
 import argparse
 import operator
 import functools
-from itertools import product, takewhile
+import random
+import itertools
 from collections import Counter
+
+if (2,0) <= sys.version_info < (3, 0):
+    zip = itertools.izip
 
 operations_dict = {
     'sum':sum,
@@ -23,7 +28,7 @@ operations_dict = {
 parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     description="\n".join([
-        "This program is used to calculate the distributions of dice rolling",
+        "This program is used to calculate the distributions of dice rolling (using brute force enumeration)",
         "with operations applied to results of the roll (via brute force calculations).",
     ]),
 )
@@ -269,6 +274,34 @@ value_group.add_argument(
     ]),
 )
 
+"""
+========================================================================================
+Simulate Options Die Options
+========================================================================================
+"""
+simulate_group = parser.add_argument_group(
+    'Simulate Options',
+    ' '.join([
+        'Options related to simulating the dice rolls rather than enumerating all the outcomes.',
+        'Useful if the compute time of calculating all the outcomes takes too long.',
+        'This will only provide an approximation of the results.'
+    ]),
+)
+
+simulate_group.add_argument(
+    '--simulate',
+    dest='simulate_num_iterations',
+    type=int,
+    default = None,
+    help=" ".join([
+        "The number of simulated dice rols that will occur.",
+        "If this option is not provided, then enumerating all outcomes will take place."
+    ]),
+)
+
+
+
+
 args = parser.parse_args()
 
 formatter_percent = "{{value:{percent_formatter}}} %".format(
@@ -293,7 +326,7 @@ class Memorize(object):
 
         return result
 
-def get_outcome_generator():
+def get_dice():
     if isinstance(args.multi_die_sides, (list,tuple)):
         dice = []
 
@@ -323,7 +356,7 @@ def get_outcome_generator():
             for start,step,size in zip(start_values, step_values, args.multi_die_sides):
                 dice.append(range(start,start+step*size, step))
 
-        return product(*tuple(dice))
+        return tuple(dice)
     else:
         if isinstance(args.die_sides,int) and len(args.die_values) > 0:
             raise Exception("Both die sides are given and die values are given. Only pass one")
@@ -337,7 +370,26 @@ def get_outcome_generator():
         else:
             raise Exception('Must pass in one of \'--die\' or \'--die-values\'')
 
-        return product(values,repeat=args.num_dice)
+        return tuple(values for _ in range(args.num_dice))
+
+def get_outcome_simulator(dice, num_iterations):
+    return zip(*tuple(itertools.starmap(
+            random.choice, itertools.repeat([die], num_iterations)
+        )
+        for die in dice
+    ))
+
+def get_outcome_generator():
+    dice = get_dice()
+
+    if not isinstance(args.simulate_num_iterations, int):
+        return itertools.product(*dice)
+
+    elif args.simulate_num_iterations > 0:
+        return get_outcome_simulator(dice,args.simulate_num_iterations)
+    else:
+        raise Exception('The number of simulation iterations must be a positive integer')
+
 
 def find_max_digits(iterable):
     if not all(isinstance(xx, (int, float)) for xx in iterable):
@@ -387,7 +439,7 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
         _operator = multi_select_func
 
     elif operation_str == 'multi-select-apply':
-        multi_select_params = list(takewhile(lambda xx: xx not in operations_dict, param_list))
+        multi_select_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, param_list))
         assert len(multi_select_params) < len(param_list), "multi-select-apply requires an operation to be passed"
 
         other_operator_str = param_list[len(multi_select_params)]
