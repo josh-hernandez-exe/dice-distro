@@ -428,6 +428,8 @@ and the numbers can be slightly different each time (can be reduced with a large
 To get exact values, do not use simulated dice rolls.
 
 An example of simulating 100000 rolls of ten D30, taking the two largest values and summing them.
+Ten D30's has `30^10` or `5.904900e+14` distinct outcomes if you treat each die as distingishable.
+Enumerating all the outcomes would take quite a while.
 
 ```
 ➔ python dice_distro.py -d 30 -n 10 --op-func multi-select-apply --op-params -1 -2 sum --percent-decimal-place 3 --simulate 100000
