@@ -11,6 +11,7 @@ python $dice_distro_file -d 6 -n 2 && \
     python $dice_distro_file -d 6 -n 2 --bar-size 2 --bar-char '@#' --bar-prefix '<|' && \
     python $dice_distro_file -d 20 -n 2 --op-func max && \
     python $dice_distro_file -d 20 -n 2 --op-func min && \
+    python $dice_distro_file -d 4 -n 4 --op-func set && \
     python $dice_distro_file -d 6 -n 4 --op-func select --op-param -2 && \
     python $dice_distro_file -d 6 -n 4 --op-func select --op-param 1 && \
     python $dice_distro_file -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3 && \

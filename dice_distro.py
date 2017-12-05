@@ -16,6 +16,7 @@ operations_dict = {
     'sum':sum,
     'min':min,
     'max':max,
+    'set':lambda xx: tuple(sorted(xx)),
     'prod':lambda xx: functools.reduce(operator.mul, xx, 1),
     'or':lambda xx: functools.reduce(operator.or_, xx, 0),
     'xor':lambda xx: functools.reduce(operator.xor, xx),
@@ -184,6 +185,7 @@ op_group.add_argument(
     help=" ".join([
         "The operation that will be applied to the values rolled.",
         "The operations available are both communitive and associative.",
+        "The 'set' enumerates the results, treating the dice is indistiguishable."
         "The 'select' operation requires an integer parameter (use '--op-params')."
         "The 'multi-select' operation at least one integer parameter,",
         "the meaning behind the parameter is the same as 'select' (use '--op-params')."
