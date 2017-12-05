@@ -287,7 +287,7 @@ value_group.add_argument(
 
 """
 ========================================================================================
-Simulate Options Die Options
+Simulate Options
 ========================================================================================
 """
 simulate_group = parser.add_argument_group(
