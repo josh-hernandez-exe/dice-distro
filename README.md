@@ -395,7 +395,6 @@ in relation to `--multi-die-sides`.
 12:   4.17 % |========
 13:   4.17 % |========
 14:   4.17 % |========
-
 ```
 
 #### Roll Multiple Types of Dice with Specific Values
