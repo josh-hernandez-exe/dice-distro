@@ -9,7 +9,7 @@ though it should work for all versions that are `Python 3.x`.
 This gives it the flexibility to calculated different kinds of distributions with many restrictions,
 but may take a while to compute when lots of dice are being rolled.
 For example six D20 calculations may take quite a while to compute depending on your machine.
-There is a `--simulate` flag if you don't need exact probablitic values, but approximations are good enough for you use case.
+There is a `--simulate` flag if you don't need exact probabilistic values, but approximations are good enough for you use case.
 
 There is a lot of explanation in the `--help` output. Which you can see using:
 ```
@@ -37,7 +37,8 @@ The default operation applied is to sum all the values of what is rolled.
 
 You can change the output to show a different number of decimal places (default is 2).
 ```
-➔ python dice_distro.py -d 6 -n 2 --percent-decimal-place 4
+➔ # python dice_distro.py -d 6 -n 2 --percent-decimal-place 4
+➔ python dice_distro.py -d 6 -n 2 -pdp 4
  2:   2.7778 % |=====
  3:   5.5556 % |===========
  4:   8.3333 % |================
@@ -469,7 +470,7 @@ An example of simulating 100000 rolls of ten D30, taking the two largest values 
 Ten D30's has `30^10` or `5.904900e+14` distinct outcomes if you treat each die as distingishable.
 Enumerating all the outcomes would take quite a while.
 ```
-➔ python dice_distro.py -d 30 -n 10 --op-func multi-select-apply --op-params -1 -2 sum --percent-decimal-place 3 --simulate 100000
+➔ python dice_distro.py -d 30 -n 10 -pdp 3 --op-func multi-select-apply --op-params -1 -2 sum --simulate 100000
 20:   0.001 % |
 21:   0.003 % |
 22:   0.007 % |
