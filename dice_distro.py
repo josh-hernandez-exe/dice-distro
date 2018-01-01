@@ -538,7 +538,7 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
             raise Exception("The parameter passed must be in integer")
 
         try:
-            # reroll if die value is less than
+            # number of dice parsed to send to the function that will be applied
             num_dice_parse = int(c_apply_reroll_params[1])
         except:
             raise Exception("The parameter passed must be in integer")
