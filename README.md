@@ -471,7 +471,7 @@ This example rolls five D8 (with 1 as the lowest value) and applies the followin
 16:   1.61 % |===
 ```
 
-### Simulating Dice Rolls
+## Simulating Dice Rolls
 
 If the enumeration of all outcomes takes too long, you can choose to simulate the dice rolls.
 This allows you get an idea for what the distribution looks like without have to wait for computation time
