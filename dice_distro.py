@@ -25,6 +25,7 @@ operations_dict = {
     'multi-select': None, # This will get defined later if used
     'multi-select-apply': None, # This will get defined later if used
     'conditional-reroll': None, # This will get defined later if used
+    'apply-then-conditional-reroll': None, # This will get defined later if used
 }
 
 parser = argparse.ArgumentParser(
@@ -195,7 +196,10 @@ op_group.add_argument(
         "the meaning behind the parameter is the same as 'select' (use '--op-params').",
         "The 'multi-select-apply' is the same as 'multi-select' but will then apply",
         "The 'conditional-reroll' will assume ordered dice rolls. Takes a parameter for a decicion to keep the dice.",
-        "Note that 'conditional-reroll' is NOT treat the input as communitive."
+        "The 'apply-then-conditional-reroll' is similar to 'conditional-reroll' but will parse multiple dice and apply a function",
+        "Takes a parameter for the reroll decicion, number of dice to parse, and function with any function params",
+        "It is up to the user to make sure the result is only one value."
+        "Note that 'conditional-reroll' and 'apply-then-conditional-reroll' is NOT treat the input as communitive."
         "an operation afterwards specified by an additional argument at the end",
         "(if that operation requires parameters, pass them in after the name of the function).",
         "Note: that bit-wise operations are available, not logical operations.",
@@ -491,8 +495,8 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
         _operator = wrapper
 
     elif operation_str == 'conditional-reroll':
-        if len(param_list) < 1:
-            raise Exception("The 'select' operation requires at least one parameter which is the select index.")
+        if len(param_list) != 1:
+            raise Exception("The 'conditional-reroll' operation requires one parameter to determine reroll.")
 
         try:
             # reroll if die value is less than
@@ -501,15 +505,73 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
             raise Exception("The parameter passed must be in integer")
 
         def conditional_reroll_func(xx):
+            result = None
             for ii in xx:
                 if ii < keep_roll_value:
                     continue
 
-                return ii
+                result = ii
+                break
 
-            return xx[-1]
+            return result
 
         _operator = conditional_reroll_func
+
+
+    elif operation_str == 'apply-then-conditional-reroll':
+        c_apply_reroll_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, param_list))
+
+        if len(c_apply_reroll_params) != 2:
+            raise Exception(" ".join([
+                "The 'conditional-apply-reroll' operation requires at least two parameters.",
+                "The first to determine reroll and num dice to parse for function application."
+            ]))
+
+        other_operator_str = param_list[len(c_apply_reroll_params)]
+        other_params = []
+        if len(c_apply_reroll_params) + 1 < len(param_list):
+            # there are other parameters
+            other_params = param_list[len(c_apply_reroll_params)+1:]
+
+        try:
+            # reroll if die value is less than
+            keep_roll_value = int(c_apply_reroll_params[0])
+        except:
+            raise Exception("The parameter passed must be in integer")
+
+        try:
+            # reroll if die value is less than
+            num_dice_parse = int(c_apply_reroll_params[1])
+        except:
+            raise Exception("The parameter passed must be in integer")
+
+        other_operator = get_operator(other_operator_str,
+            param_list = other_params,
+            should_memorize=should_memorize,
+        )
+
+        def apply_then_conditional_reroll_func(xx):
+            dice = []
+            result = None
+            for ii in xx:
+                dice.append(ii)
+                if len(dice) < num_dice_parse:
+                    continue
+
+                result = other_operator(dice)
+
+                if result < keep_roll_value:
+                    # reroll
+                    dice = []
+                    continue
+
+                else:
+                    break
+
+            return result
+
+        _operator = apply_then_conditional_reroll_func
+
 
     elif operation_str in operations_dict:
         _operator = operations_dict[operation_str]

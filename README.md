@@ -281,7 +281,8 @@ The key sorting is lexicographic.
 ```
 
 ### Conditional Rerolling
-Roll a D6, if the value is greater than 4 (the `--op-params` value), keep the value. Otherwise reroll, repeat to a max of three times.
+Roll a D6, if the value is greater than 4 (the `--op-params` value), keep the value.
+Otherwise reroll, repeat to a max of three rolls.
 To change the max reroll count, change the number of dice that are rolled (the `-n` parameter).
 ```
 ➔ python dice_distro.py -d 6 -n 3 --op-func conditional-reroll --op-params 4
@@ -291,7 +292,26 @@ To change the max reroll count, change the number of dice that are rolled (the `
 4:  29.17 % |==========================================================
 5:  29.17 % |==========================================================
 6:  29.17 % |==========================================================
+```
 
+### Conditional Rerolling with Multiple Dice
+Roll two D6 and sum their values. If the value is equal to or greater than 7, keep the value.
+Otherwise, reroll.
+The rolls are parsed two at a time, so if you have `-n 8` will have a max of four rolls.
+**Note** that its up to the user to make sure that there is enough dice.
+```
+➔ python dice_distro.py -d 6 -n 4  --op-func apply-then-conditional-reroll --op-params 7 2 sum
+ 2:   1.16 % |==
+ 3:   2.31 % |====
+ 4:   3.47 % |======
+ 5:   4.63 % |=========
+ 6:   5.79 % |===========
+ 7:  23.61 % |===============================================
+ 8:  19.68 % |=======================================
+ 9:  15.74 % |===============================
+10:  11.81 % |=======================
+11:   7.87 % |===============
+12:   3.94 % |=======
 ```
 
 ### Rolling a True D10

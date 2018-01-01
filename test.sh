@@ -12,7 +12,6 @@ python $dice_distro_file -d 6 -n 2 && \
     python $dice_distro_file -d 20 -n 2 --op-func max && \
     python $dice_distro_file -d 20 -n 2 --op-func min && \
     python $dice_distro_file -d 4 -n 4 --op-func set && \
-    python $dice_distro_file -d 6 -n 2 --op-func conditional-reroll --op-params 4 && \
     python $dice_distro_file -d 6 -n 4 --op-func select --op-param -2 && \
     python $dice_distro_file -d 6 -n 4 --op-func select --op-param 1 && \
     python $dice_distro_file -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3 && \
@@ -22,6 +21,8 @@ python $dice_distro_file -d 6 -n 2 && \
     python $dice_distro_file -d 8 -n 5 --op-func multi-select-apply --op-params -1 -2 -3 multi-select-apply 0 1 sum && \
     python $dice_distro_file -d 8 -n 5 --op-func multi-select-apply --op-params -1 -2 -3 multi-select-apply 0 1 select 1 && \
     python $dice_distro_file -d 8 -n 5 --op-func multi-select-apply --op-params -1 -2 -3 multi-select-apply 0 1 select 1 --memorize && \
+    python $dice_distro_file -d 6 -n 2 --op-func conditional-reroll --op-params 4 && \
+    python $dice_distro_file -d 6 -n 4 --op-func apply-then-conditional-reroll --op-params 7 2 sum && \
     python $dice_distro_file -d 10 -n 2 --die-start 0 && \
     python $dice_distro_file -d 10 -n 2 --die-start 0 --die-step 10 && \
     python $dice_distro_file -n 2 --die-values 0 10 100 -1000 && \
