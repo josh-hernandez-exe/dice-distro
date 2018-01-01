@@ -24,6 +24,7 @@ operations_dict = {
     'select': None, # This will get defined later if used
     'multi-select': None, # This will get defined later if used
     'multi-select-apply': None, # This will get defined later if used
+    'conditional-reroll': None, # This will get defined later if used
 }
 
 parser = argparse.ArgumentParser(
@@ -187,12 +188,14 @@ op_group.add_argument(
     default = 'sum',
     help=" ".join([
         "The operation that will be applied to the values rolled.",
-        "The operations available are both communitive and associative.",
+        "Most of the operations available are both communitive and associative.",
         "The 'set' enumerates the results, treating the dice is indistiguishable.",
         "The 'select' operation requires an integer parameter (use '--op-params').",
         "The 'multi-select' operation at least one integer parameter,",
         "the meaning behind the parameter is the same as 'select' (use '--op-params').",
         "The 'multi-select-apply' is the same as 'multi-select' but will then apply",
+        "The 'conditional-reroll' will assume ordered dice rolls. Takes a parameter for a decicion to keep the dice.",
+        "Note that 'conditional-reroll' is NOT treat the input as communitive."
         "an operation afterwards specified by an additional argument at the end",
         "(if that operation requires parameters, pass them in after the name of the function).",
         "Note: that bit-wise operations are available, not logical operations.",
@@ -486,6 +489,27 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
             return other_operator(multi_select_operator(xx))
 
         _operator = wrapper
+
+    elif operation_str == 'conditional-reroll':
+        if len(param_list) < 1:
+            raise Exception("The 'select' operation requires at least one parameter which is the select index.")
+
+        try:
+            # reroll if die value is less than
+            keep_roll_value = int(param_list[0])
+        except:
+            raise Exception("The parameter passed must be in integer")
+
+        def conditional_reroll_func(xx):
+            for ii in xx:
+                if ii < keep_roll_value:
+                    continue
+
+                return ii
+
+            return xx[-1]
+
+        _operator = conditional_reroll_func
 
     elif operation_str in operations_dict:
         _operator = operations_dict[operation_str]

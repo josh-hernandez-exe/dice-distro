@@ -168,6 +168,7 @@ Or you can drastically change how the bars get rendered.
 ```
 
 ### Selecting the Second Highest Value from Four D6
+Using the selection function uses parameters that are interpereted as python indices.
 ```
 ➔ python dice_distro.py -d 6 -n 4 --op-func select --op-param -2
 1:   1.62 % |===
@@ -277,6 +278,20 @@ The key sorting is lexicographic.
 16:   7.25 % |==============
 17:   4.17 % |========
 18:   1.62 % |===
+```
+
+### Conditional Rerolling
+Roll a D6, if the value is greater than 4 (the `--op-params` value), keep the value. Otherwise reroll, repeat to a max of three times.
+To change the max reroll count, change the number of dice that are rolled (the `-n` parameter).
+```
+➔ python dice_distro.py -d 6 -n 3 --op-func conditional-reroll --op-params 4
+1:   4.17 % |========
+2:   4.17 % |========
+3:   4.17 % |========
+4:  29.17 % |==========================================================
+5:  29.17 % |==========================================================
+6:  29.17 % |==========================================================
+
 ```
 
 ### Rolling a True D10
