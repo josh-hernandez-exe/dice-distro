@@ -505,15 +505,13 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
             raise Exception("The parameter passed must be in integer")
 
         def conditional_reroll_func(xx):
-            result = None
             for ii in xx:
                 if ii < keep_roll_value:
                     continue
 
-                result = ii
-                break
+                return ii
 
-            return result
+            return xx[-1]
 
         _operator = conditional_reroll_func
 
@@ -565,8 +563,10 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
                     dice = []
                     continue
 
-                else:
-                    break
+                return result
+
+            if result is None:
+                raise Exception('result should not be none')
 
             return result
 
