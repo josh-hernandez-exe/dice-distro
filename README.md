@@ -167,20 +167,10 @@ Or you can drastically change how the bars get rendered.
 20:   0.25 % |
 ```
 
-### Selecting the Second Highest Value from Four D6
-Using the selection function uses parameters that are interpereted as python indices.
-```
-➔ python dice_distro.py -d 6 -n 4 --op-func select --op-param -2
-1:   1.62 % |===
-2:   9.49 % |==================
-3:  20.14 % |========================================
-4:  28.01 % |========================================================
-5:  27.55 % |=======================================================
-6:  13.19 % |==========================
-```
-
 ### Selecting the Second Lowest Value from Four D6
-Note that the select index parameter is zero-indexed.
+Note that the select index parameter is zero-indexed,
+and refers to the index of the value in the list of sorted dice roll results.
+The selection index of `1` refers to the second lowest value.
 ```
 ➔ python dice_distro.py -d 6 -n 4 --op-func select --op-param 1
 1:  13.19 % |==========================
@@ -189,6 +179,21 @@ Note that the select index parameter is zero-indexed.
 4:  20.14 % |========================================
 5:   9.49 % |==================
 6:   1.62 % |===
+```
+
+### Selecting the Second Highest Value from Four D6
+Using the selection function uses parameters that are interpereted as python indices.
+The negative selection index takes from the end of the list of sorted dice roll results.
+Thus selection index `-2` is the second last element
+(or second largest value) in the list of sorted dice roll results,
+```
+➔ python dice_distro.py -d 6 -n 4 --op-func select --op-param -2
+1:   1.62 % |===
+2:   9.49 % |==================
+3:  20.14 % |========================================
+4:  28.01 % |========================================================
+5:  27.55 % |=======================================================
+6:  13.19 % |==========================
 ```
 
 ### Rolling Four D4 (Indistinguishable)
@@ -233,6 +238,8 @@ The possible outcomes treating the dice as indistinguishable.
 ```
 
 ### Selecting the Three Highest Values from Four D4
+The indices have the same meaning as with `--op-func select`,
+but being able to ask for more than one.
 The same as excluding the lowest.
 The key sorting is lexicographic.
 ```
@@ -260,6 +267,10 @@ The key sorting is lexicographic.
 ```
 
 ### Selecting the Three Highest Values from Four D6 and Summing
+The indices have the same meaning as with `--op-func multi-select`
+(and thus the same meaning as `--op-func select`),
+but with an additional parameter refering to the operation
+that will be applied to the selected values.
 ```
 ➔ python dice_distro.py -d 6 -n 4 --op-func multi-select-apply --op-params -1 -2 -3 sum
  3:   0.08 % |
@@ -415,22 +426,22 @@ This can be changed with `--multi-die-start` and `--multi-die-step`.
 Both flags are optional, but when using one, the values you pass are in parallel with the values given
 in relation to `--multi-die-sides`.
 ```
-➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-start -1 0 1 --multi-die-step 3 2 1
- 0:   4.17 % |========
- 1:   4.17 % |========
- 2:   4.17 % |========
- 3:   8.33 % |================
- 4:   8.33 % |================
- 5:   8.33 % |================
- 6:   8.33 % |================
- 7:   8.33 % |================
- 8:   8.33 % |================
- 9:   8.33 % |================
-10:   8.33 % |================
-11:   8.33 % |================
-12:   4.17 % |========
-13:   4.17 % |========
-14:   4.17 % |========
+➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-start -2 0 1 --multi-die-step 3 2 1
+ -1:   4.17 % |========
+  0:   4.17 % |========
+  1:   4.17 % |========
+  2:   8.33 % |================
+  3:   8.33 % |================
+  4:   8.33 % |================
+  5:   8.33 % |================
+  6:   8.33 % |================
+  7:   8.33 % |================
+  8:   8.33 % |================
+  9:   8.33 % |================
+ 10:   8.33 % |================
+ 11:   4.17 % |========
+ 12:   4.17 % |========
+ 13:   4.17 % |========
 ```
 
 ### Roll Multiple Types of Dice with Specific Values
