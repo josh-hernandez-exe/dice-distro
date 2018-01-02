@@ -332,8 +332,6 @@ simulate_group.add_argument(
 )
 
 
-
-
 args = parser.parse_args()
 
 formatter_percent = "{{value:{percent_formatter}}} %".format(
@@ -342,6 +340,25 @@ formatter_percent = "{{value:{percent_formatter}}} %".format(
         args.percent_decimal_place,
     ),
 )
+
+def docstring_format(*sub,**kwargs):
+    def decorator(func):
+        func.__doc__ = func.__doc__.format(*sub,**kwargs)
+        return func
+    return decorator
+
+def dice_input_checker(func):
+    @functools.wraps(func)
+    def wrapper(xx):
+        if not isinstance(xx, (list, tuple)):
+            raise Exception('Input of operation is not an instance of `list` or `tuple`. Given: {}'.format(str(xx)))
+
+        if not all(isinstance(item, int) for item in xx):
+            raise Exception('Entries in the list/tuple are not integers. Given: {}'.format(str(xx)))
+
+        return func(xx)
+
+    return wrapper
 
 class Memorize(object):
     def __init__(self, func):
@@ -462,7 +479,15 @@ def get_basic_operation(operation_str, param_list = []):
         except:
             raise Exception("The parameter passed must be in integer")
 
+        @docstring_format(
+            operation_str=operation_str,
+            num_dice_parse=num_dice_parse,
+        )
         def parse_apply(xx):
+            """
+            Basic Operation: {operation_str}
+            Number of Dice to Parse: {num_dice_parse}
+            """
             dice = []
             results = []
             for ii in xx:
@@ -491,7 +516,14 @@ def get_select_operation(param_list):
     except:
         raise Exception("The parameters passed must be in integers")
 
+    @docstring_format(
+        param_list=str(param_list),
+    )
     def multi_select_func(xx):
+        """
+        Multi Select Function
+        Params: {param_list}
+        """
         sorted_list = sorted(list(xx))
 
         return tuple(sorted_list[ii] for ii in select_indices)
@@ -509,7 +541,14 @@ def get_conditional_reroll_func(param_list):
     except:
         raise Exception("The parameter passed must be in integer")
 
+    @docstring_format(
+        param_list=str(param_list),
+    )
     def conditional_reroll_func(xx):
+        """
+        Contitional Reroll Function
+        Params: {param_list}
+        """
         for index, item in enumerate(xx):
             if index + 1 == len(xx):
                 return item
@@ -517,7 +556,6 @@ def get_conditional_reroll_func(param_list):
             if only_one:
                 if item < keep_roll_list[0]:
                     continue
-
             else:
                 if index < len(keep_roll_list) and item < keep_roll_list[index]:
                     continue
@@ -557,22 +595,35 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
         other_operator = get_operator(
             other_operator_str,
             param_list = other_operator_params,
-            should_memorize=should_memorize,
+            should_memorize = should_memorize,
         )
 
         _first_operation = _operator
 
-        def wrapper(xx):
+        @docstring_format(
+            first_operation_str=operation_str,
+            first_operation_params=str(cur_params),
+            other_operator_str=other_operator_str,
+            other_operator_params=str(other_operator_params),
+        )
+        def composite_operation(xx):
+            """
+            First Operation: {first_operation_str}
+            First Operation Parameters: {first_operation_params}
+            Other Operation: {other_operator_str}
+            Other Operation Parameters: {other_operator_params}
+            """
             return other_operator(_first_operation(xx))
 
-        _operator = wrapper
+        _operator = composite_operation
+
+    _operator = dice_input_checker(_operator)
 
     if should_memorize:
         # return an function that cashes the results to speed up runtime at the cost of memory
         _operator = Memorize(_operator)
 
-    return _operator
-
+    return dice_input_checker(_operator)
 
 def main():
     count = Counter()
