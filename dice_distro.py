@@ -360,20 +360,21 @@ def dice_input_checker(func):
 
     return wrapper
 
-class Memorize(object):
-    def __init__(self, func):
-        self.func = func
-        self.cashe = dict()
+def memorize(func):
+    cashe = dict()
 
-    def __call__(self, iterable):
+    @functools.wraps(func)
+    def wrapper(iterable):
         key = frozenset(Counter(iterable).items())
 
-        if key in self.cashe: return self.cashe[key]
+        if key in cashe: return cashe[key]
 
-        result = self.func(iterable)
-        self.cashe[key] = result
+        result = func(iterable)
+        cashe[key] = result
 
         return result
+
+    return wrapper
 
 def get_dice():
     if isinstance(args.multi_die_sides, (list,tuple)):
@@ -621,7 +622,7 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
 
     if should_memorize:
         # return an function that cashes the results to speed up runtime at the cost of memory
-        _operator = Memorize(_operator)
+        _operator = memorize(_operator)
 
     return dice_input_checker(_operator)
 
