@@ -18,7 +18,7 @@ There is a lot of explanation in the `--help` output. Which you can see using:
 
 # Examples
 
-## Astheric Examples
+## Aesthetic Examples
 
 ### Rolling Two D6 (and Changing the Output)
 We apply the sum operation on the dice.
@@ -121,8 +121,8 @@ Or you can drastically change how the bars get rendered.
 
 ## Functional Examples
 
-### Distingishable Dice
-The default operation is to show the results of the dice as if the results are distingishable
+### Distinguishable Dice
+The default operation is to show the results of the dice as if the results are distinguishable.
 ```
 ➔ python dice_distro.py -d 4 -n 2
 1,1:   6.25 % |============
@@ -143,7 +143,7 @@ The default operation is to show the results of the dice as if the results are d
 4,4:   6.25 % |============
 ```
 
-### Four D2 Sum in Pairs (Distingishable Results)
+### Four D2 Sum in Pairs (Distinguishable Results)
 ```
 ➔ python ./dice_distro.py -d 2 -n 4 --op-func sum --op-params 2
 2,2:   6.25 % |============
@@ -222,7 +222,7 @@ The selection index of `1` refers to the second lowest value.
 ```
 
 ### Selecting the Second Highest Value from Four D6
-Using the selection function uses parameters that are interpereted as python indices.
+Using the selection function uses parameters that are interpreted as python indices.
 The negative selection index takes from the end of the list of sorted dice roll results.
 Thus selection index `-2` is the second last element
 (or second largest value) in the list of sorted dice roll results,
@@ -309,7 +309,7 @@ The key sorting is lexicographic.
 ### Selecting the Three Highest Values from Four D6 and Summing
 The indices have the same meaning as with `--op-func multi-select`
 (and thus the same meaning as `--op-func select`),
-but with an additional parameter refering to the operation
+but with an additional parameter referring to the operation
 that will be applied to the selected values.
 ```
 ➔ python dice_distro.py -d 6 -n 4 --op-func select --op-params -1 -2 -3 sum
@@ -606,7 +606,7 @@ Then sum their values, and treat the results as indistinguishable.
 ```
 
 ### Weighted Dice
-Since this program uses enumeration to calculate the disrobution,
+Since this program uses enumeration to calculate the distribution,
 weighted dice can't simply be added with a parameter with weights.
 To work around that, you must make a custom die with repeated values on the faces.
 
@@ -661,7 +661,7 @@ and the numbers can be slightly different each time (can be reduced with a large
 To get exact values, do not use simulated dice rolls.
 
 An example of simulating 100000 rolls of ten D30, taking the two largest values and summing them.
-Ten D30's has `30^10` or `5.904900e+14` distinct outcomes if you treat each die as distingishable.
+Ten D30's has `30^10` or `5.904900e+14` distinct outcomes if you treat each die as distinguishable.
 Enumerating all the outcomes would take quite a while.
 ```
 ➔ python dice_distro.py -d 30 -n 10 -pdp 3 --op-func select --op-params -1 -2 sum --simulate 100000
@@ -710,5 +710,5 @@ Enumerating all the outcomes would take quite a while.
 
 # Future Plans
 
-If I find time in the future, I plan to parallalize the work so that options with a large enumeration set can be computed faster,
+If I find time in the future, I plan to parallelize the work so that options with a large enumeration set can be computed faster,
 as well as allowing larger numbers of simulated dice throws.
