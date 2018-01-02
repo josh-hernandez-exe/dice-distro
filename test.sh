@@ -22,7 +22,11 @@ echo "Starting Test" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --op-func sum --sort value && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --op-func sum --bar-size 0 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --op-func sum --bar-size 2 --bar-char '@#' --bar-prefix '<|' && \
-    $python_exe $dice_distro_file $test_params -d 6 -n 4 --op-func select --op-param -2 && \
+    $python_exe $dice_distro_file $test_params -d 6 --op-func shift --op-params 2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --op-func shift --op-params 2 -1 && \
+    $python_exe $dice_distro_file $test_params -d 6 --op-func bound --op-params 3 4 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2  --op-func bound --op-params 2 5 3 4 && \
+    $python_exe $dice_distro_file $test_params -d 6 --op-func shift --op-params 2 bound 1 6 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --op-func select --op-param 1 && \
     $python_exe $dice_distro_file $test_params -d 4 -n 4 --op-func select --op-params -1 -2 -3 && \
     $python_exe $dice_distro_file $test_params -d 4 -n 4 --op-func select --op-params -1 -2 -3 --sort value && \
@@ -34,6 +38,7 @@ echo "Starting Test" && \
     $python_exe $dice_distro_file $test_params -d 8 -n 5 --op-func select --op-params -1 -2 -3 select 0 1 select 1 --memorize && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --op-func conditional-reroll --op-params 4 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --op-func sum --op-params 2 conditional-reroll 7 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 4  --op-func slice-apply --op-params 2 sum max && \
     $python_exe $dice_distro_file $test_params -d 10 -n 2 --die-start 0 && \
     $python_exe $dice_distro_file $test_params -d 10 -n 2 --die-start 0 --die-step 10 && \
     $python_exe $dice_distro_file $test_params -n 2 --die-values 0 10 100 -1000 && \

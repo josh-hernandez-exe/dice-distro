@@ -14,16 +14,19 @@ if (2,0) <= sys.version_info < (3, 0):
 
 operations_dict = {
     'id':tuple,
-    'sum':sum,
-    'min':min,
-    'max':max,
+    'sum':lambda xx: (sum(xx),),
+    'min':lambda xx: (min(xx),),
+    'max':lambda xx: (max(xx),),
     'set':lambda xx: tuple(sorted(xx)),
     'prod':lambda xx: functools.reduce(operator.mul, xx, 1),
     'or':lambda xx: functools.reduce(operator.or_, xx, 0),
     'xor':lambda xx: functools.reduce(operator.xor, xx),
     'and':lambda xx: functools.reduce(operator.and_, xx),
+    'shift': None, # This will get defined later if used
+    'bound': None, # This will get defined later if used
     'select': None, # This will get defined later if used
-    'conditional-reroll': None, # This will get defined later if used
+    'conditional-reroll': None, # This will get defined later if used,
+    'slice-apply': None, # This will get defined later if used,
 }
 
 basic_operations = set(
@@ -204,6 +207,8 @@ op_group.add_argument(
         "Most of the operations available are both communitive and associative.",
         "The 'id' operation refers to the identity operation, which will leave the input unchanged."
         "The 'set' enumerates the results, treating the dice is indistiguishable.",
+        "The 'shift' operation will add a static value to all results (you can specify the value per die).",
+        "The 'bound' operation will keep the values within specified upper and lower bound (can be spcified per die).",
         "The 'select' operation requires at least one integer parameter (use '--op-params').",
         "The 'conditional-reroll' will assume ordered dice rolls. Takes a parameter for a decicion to keep the dice.",
         "It is up to the user to make sure the result is only one value."
@@ -364,12 +369,12 @@ def memorize(func):
     cashe = dict()
 
     @functools.wraps(func)
-    def wrapper(iterable):
-        key = frozenset(Counter(iterable).items())
+    def wrapper(*args, **kwargs):
+        key = (tuple(args),frozenset(kwargs.items()))
 
         if key in cashe: return cashe[key]
 
-        result = func(iterable)
+        result = func(*args, **kwargs)
         cashe[key] = result
 
         return result
@@ -474,6 +479,8 @@ def get_basic_operation(operation_str, param_list = []):
     elif len(param_list) == 1:
         # parse dice in groups
 
+        _base_operation = operations_dict[operation_str]
+
         try:
             # number of dice parsed to send to the function that will be applied
             num_dice_parse = int(param_list[0])
@@ -496,7 +503,7 @@ def get_basic_operation(operation_str, param_list = []):
                 if len(dice) < num_dice_parse:
                     continue
                 else:
-                    results.append(operations_dict[operation_str](dice))
+                    results.append(_base_operation(dice)[0])
                     dice = []
 
             return tuple(results)
@@ -508,6 +515,91 @@ def get_basic_operation(operation_str, param_list = []):
 
     return _operator
 
+def get_shift_operation(param_list):
+    if len(param_list) < 1:
+        raise Exception("The 'shift' operation requires at least one parameter to determine shift value.")
+
+    only_one_param = len(param_list) == 1
+
+    try:
+        shift_values = tuple(int(item) for item in param_list)
+    except:
+        raise Exception("The parameter(s) passed must be in integer(s)")
+
+    @docstring_format(
+        shift_values=str(shift_values),
+    )
+    def shift_func(xx):
+        """
+        Shift Function
+        Shift Values: {shift_values}
+        """
+        if only_one_param:
+            iterable = zip(
+                xx,
+                itertools.repeat(shift_values[0],len(xx)),
+            )
+        else:
+            iterable = zip(xx, shift_values)
+
+        return tuple(item+shift for item,shift in iterable)
+
+    return shift_func
+
+def get_bound_operation(param_list):
+    if len(param_list) < 2:
+        raise Exception("The 'bound' operation requires at least two parameters to determine min/max bounds.")
+
+    if len(param_list) % 2 != 0:
+        raise Exception("The 'bound' operation requires parameters in pairs to determine min/max bounds.")
+
+    only_one_pair = len(param_list) == 2
+
+    try:
+        temp_value = tuple(int(item) for item in param_list)
+    except:
+        raise Exception("The parameters passed must be in integers")
+    else:
+        lower_bounds = temp_value[0::2]
+        upper_bounds = temp_value[1::2]
+
+    if len(lower_bounds) != len(upper_bounds):
+        raise Exception("Error during parsing parameters for 'bound', miss match on lower and upper bound sizes")
+
+    for low,high in zip(lower_bounds,upper_bounds):
+        if low > high:
+            raise Exception('Lower bound is larger than upper bound.')
+
+    @docstring_format(
+        lower_bounds=str(lower_bounds),
+        upper_bounds=str(upper_bounds),
+    )
+    def bound_func(xx):
+        """
+        Bound Function
+        Lower Bounds: {lower_bounds}
+        Upper Bounds: {upper_bounds}
+        """
+        results = []
+
+        if only_one_pair:
+            iterable = zip(
+                xx,
+                itertools.repeat(lower_bounds[0],len(xx)),
+                itertools.repeat(upper_bounds[0],len(xx)),
+            )
+        else:
+            iterable = zip(xx, lower_bounds, upper_bounds)
+
+        for item,lower,upper in iterable:
+            if item < lower: results.append(lower)
+            elif item > upper: results.append(upper)
+            else: results.append(item)
+
+        return tuple(results)
+
+    return bound_func
+
 def get_select_operation(param_list):
     if len(param_list) < 1:
         raise Exception("The 'select' operation requires at least one parameter which is the select index.")
@@ -515,15 +607,15 @@ def get_select_operation(param_list):
     try:
         select_indices = tuple(int(item) for item in param_list)
     except:
-        raise Exception("The parameters passed must be in integers")
+        raise Exception("The parameter(s) passed must be in integer(s)")
 
     @docstring_format(
-        param_list=str(param_list),
+        select_indices=str(select_indices),
     )
     def multi_select_func(xx):
         """
         Multi Select Function
-        Params: {param_list}
+        Select Indices: {select_indices}
         """
         sorted_list = sorted(list(xx))
 
@@ -540,7 +632,7 @@ def get_conditional_reroll_operation(param_list):
     try:
         keep_roll_list = tuple(int(item) for item in param_list)
     except:
-        raise Exception("The parameter passed must be in integer")
+        raise Exception("The parameter(s) passed must be in integer(s)")
 
     @docstring_format(
         param_list=str(param_list),
@@ -553,7 +645,7 @@ def get_conditional_reroll_operation(param_list):
         for index, item in enumerate(xx):
             if index + 1 == len(xx):
                 # last item, can't reroll anymore
-                return item
+                return (item,)
 
             if only_one_param:
                 if item < keep_roll_list[0]:
@@ -569,28 +661,107 @@ def get_conditional_reroll_operation(param_list):
                     ]))
 
             # keep result
-            return item
+            return (item,)
 
         # should never happen, but just in case
-        return xx[-1]
+        return (xx[-1],)
 
     return conditional_reroll_func
 
+def get_slice_apply_operation(slice_params, other_param_list, should_memorize = False):
+    if len(slice_params) != 1:
+        raise Exception("The 'slice-apply' operation requires the first parameter to slice size.")
+
+    try:
+        slice_size = int(slice_params[0])
+    except:
+        raise Exception("The parameter(s) passed must be in integer(s)")
+
+    if len(other_param_list) == 0:
+        raise Exception("The 'slice-apply' operation requires extra parameters for another operation.")
+
+    # only grab info for the second function
+    # since it is this function that will be split off
+    second_operator_str = other_param_list[0]
+    second_operator_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, other_param_list[1:]))
+    second_operator = get_operator(
+        second_operator_str,
+        param_list = second_operator_params,
+        should_memorize = should_memorize,
+    )
+
+    num_params_related_to_second = len(second_operator_params) + 1
+    if num_params_related_to_second < len(other_param_list):
+        # there is a third operation
+        third_operator_str = other_param_list[num_params_related_to_second]
+        third_operator_params = other_param_list[num_params_related_to_second+1:]
+        third_operator = get_operator(
+            third_operator_str,
+            param_list = third_operator_params,
+            should_memorize = should_memorize,
+        )
+    else:
+        third_operator_str = 'id'
+        third_operator_params = []
+        third_operator = get_operator(third_operator_str)
+
+    @docstring_format(
+        slice_size=str(slice_size),
+        second_operator_str=second_operator_str,
+        second_operator_params=str(second_operator_params),
+        third_operator_str=third_operator_str,
+        third_operator_params=str(third_operator_params),
+    )
+    def slice_apply_func(xx):
+        """
+        Slice Apply Function
+        Slice Size: {slice_size}
+        Second Operation: {second_operator_str}
+        Second Operation Parameters: {second_operator_params}
+        Third Operation: {third_operator_str}
+        Third Operation Parameters: {third_operator_params}
+        """
+        dice = []
+        results = []
+        for ii in xx:
+            dice.append(ii)
+            if len(dice) < slice_size:
+                continue
+            else:
+                results.extend(second_operator(dice))
+                dice = []
+
+        return third_operator(tuple(results))
+
+    return slice_apply_func
+
 def get_operator(operation_str, param_list = [], should_memorize = True):
     cur_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, param_list))
+    apply_nested_operation = True
 
     if operation_str in basic_operations:
         _operator = get_basic_operation(operation_str, cur_params)
+
+    elif operation_str == 'shift':
+        _operator = get_shift_operation(cur_params)
+
+    elif operation_str == 'bound':
+        _operator = get_bound_operation(cur_params)
 
     elif operation_str == 'select':
         _operator = get_select_operation(cur_params)
 
     elif operation_str == 'conditional-reroll':
         _operator = get_conditional_reroll_operation(cur_params)
+
+    elif operation_str == 'slice-apply':
+        _operator = get_slice_apply_operation(cur_params, param_list[len(cur_params):], should_memorize)
+        apply_nested_operation = False
+
     else:
         raise Exception("operation string passed is not valid")
 
-    if len(cur_params) < len(param_list):
+    if apply_nested_operation and len(cur_params) < len(param_list):
         # Apply a nested operation
 
         other_operator_str = param_list[len(cur_params)]

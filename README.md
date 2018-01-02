@@ -207,6 +207,16 @@ The default operation is to show the results of the dice as if the results are d
 20:   0.25 % |
 ```
 
+### Rolling D6 Shifting the Value but Bounding the Results
+We roll a D6, add 2, but don't let the value exceed the values that can be possibly rolled.
+```
+➔ python ./dice_distro.py --bar-size 1 -d 6 --op-func shift --op-params 2 bound 1 6
+3:  16.67 % |================
+4:  16.67 % |================
+5:  16.67 % |================
+6:  50.00 % |==================================================
+```
+
 ### Selecting the Second Lowest Value from Four D6
 Note that the select index parameter is zero-indexed,
 and refers to the index of the value in the list of sorted dice roll results.
