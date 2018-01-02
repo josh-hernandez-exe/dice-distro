@@ -531,11 +531,11 @@ def get_select_operation(param_list):
 
     return multi_select_func
 
-def get_conditional_reroll_func(param_list):
+def get_conditional_reroll_operation(param_list):
     if len(param_list) < 1:
         raise Exception("The 'conditional-reroll' operation requires one parameter to determine reroll.")
 
-    only_one = len(param_list) == 1
+    only_one_param = len(param_list) == 1
 
     try:
         keep_roll_list = tuple(int(item) for item in param_list)
@@ -552,9 +552,10 @@ def get_conditional_reroll_func(param_list):
         """
         for index, item in enumerate(xx):
             if index + 1 == len(xx):
+                # last item, can't reroll anymore
                 return item
 
-            if only_one:
+            if only_one_param:
                 if item < keep_roll_list[0]:
                     continue
             else:
@@ -567,8 +568,10 @@ def get_conditional_reroll_func(param_list):
                         "enough parameters must be passed to be in parallel with the input dice tuple."
                     ]))
 
+            # keep result
             return item
 
+        # should never happen, but just in case
         return xx[-1]
 
     return conditional_reroll_func
@@ -583,7 +586,7 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
         _operator = get_select_operation(cur_params)
 
     elif operation_str == 'conditional-reroll':
-        _operator = get_conditional_reroll_func(cur_params)
+        _operator = get_conditional_reroll_operation(cur_params)
     else:
         raise Exception("operation string passed is not valid")
 
