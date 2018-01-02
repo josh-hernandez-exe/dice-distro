@@ -334,6 +334,7 @@ that will be applied to the selected values.
 ### Conditional Rerolling
 Roll a D6, if the value is greater than 4 (the `--op-params` value), keep the value.
 Otherwise reroll, repeat to a max of three rolls.
+Keep the final roll, regardless of outcome.
 To change the max reroll count, change the number of dice that are rolled (the `-n` parameter).
 ```
 ➔ python dice_distro.py -d 6 -n 3 --op-func conditional-reroll --op-params 4
