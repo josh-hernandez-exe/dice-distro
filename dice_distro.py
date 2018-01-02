@@ -12,9 +12,6 @@ from collections import Counter
 if (2,0) <= sys.version_info < (3, 0):
     zip = itertools.izip
 
-basic_operations = set([
-])
-
 operations_dict = {
     'id':tuple,
     'sum':sum,
@@ -29,9 +26,9 @@ operations_dict = {
     'conditional-reroll': None, # This will get defined later if used
 }
 
-basic_operations = set([
+basic_operations = set(
     key for key,value in operations_dict.items() if value is not None
-])
+)
 
 parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
