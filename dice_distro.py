@@ -202,6 +202,7 @@ op_group.add_argument(
     help=" ".join([
         "The operation that will be applied to the values rolled.",
         "Most of the operations available are both communitive and associative.",
+        "The 'id' operation refers to the identity operation, which will leave the input unchanged."
         "The 'set' enumerates the results, treating the dice is indistiguishable.",
         "The 'select' operation requires at least one integer parameter (use '--op-params').",
         "The 'conditional-reroll' will assume ordered dice rolls. Takes a parameter for a decicion to keep the dice.",
@@ -223,6 +224,8 @@ op_group.add_argument(
         "Example-Select-2: '--op-func select --op-params 1' returns the second lowest value.",
         "Example-Select-3: '--op-func select --op-params -1' is the same as max.",
         "Example-Select-4: '--op-func select --op-params -2' returns the second highest value.",
+        "Subsequent operations can be changed using '--op-params'",
+        "Example-Subsequent: '--op-func select --op-param -1 -2 -3 -4 sum 2'",
     ]),
 )
 
