@@ -12,6 +12,9 @@ from collections import Counter
 if (2,0) <= sys.version_info < (3, 0):
     zip = itertools.izip
 
+basic_operations = set([
+])
+
 operations_dict = {
     'sum':sum,
     'min':min,
@@ -22,11 +25,12 @@ operations_dict = {
     'xor':lambda xx: functools.reduce(operator.xor, xx),
     'and':lambda xx: functools.reduce(operator.and_, xx),
     'select': None, # This will get defined later if used
-    'multi-select': None, # This will get defined later if used
-    'multi-select-apply': None, # This will get defined later if used
     'conditional-reroll': None, # This will get defined later if used
-    'apply-then-conditional-reroll': None, # This will get defined later if used
 }
+
+basic_operations = set([
+    key for key,value in operations_dict.items() if value is not None
+])
 
 parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -201,15 +205,9 @@ op_group.add_argument(
         "The operation that will be applied to the values rolled.",
         "Most of the operations available are both communitive and associative.",
         "The 'set' enumerates the results, treating the dice is indistiguishable.",
-        "The 'select' operation requires an integer parameter (use '--op-params').",
-        "The 'multi-select' operation at least one integer parameter,",
-        "the meaning behind the parameter is the same as 'select' (use '--op-params').",
-        "The 'multi-select-apply' is the same as 'multi-select' but will then apply",
+        "The 'select' operation requires at least one integer parameter (use '--op-params').",
         "The 'conditional-reroll' will assume ordered dice rolls. Takes a parameter for a decicion to keep the dice.",
-        "The 'apply-then-conditional-reroll' is similar to 'conditional-reroll' but will parse multiple dice and apply a function",
-        "Takes a parameter for the reroll decicion, number of dice to parse, and function with any function params",
         "It is up to the user to make sure the result is only one value."
-        "Note that 'conditional-reroll' and 'apply-then-conditional-reroll' is NOT treat the input as communitive."
         "an operation afterwards specified by an additional argument at the end",
         "(if that operation requires parameters, pass them in after the name of the function).",
         "Note: that bit-wise operations are available, not logical operations.",
@@ -444,150 +442,114 @@ def find_max_digits(iterable):
             math.log10(max_abs)
     ))
 
-def get_operator(operation_str, param_list = [], should_memorize = True):
+def get_basic_operation(operation_str, param_list = []):
+    """
+    The following operations are basic and normally do not need parameters
+    The only parameter these can take is one for dice parsing which will result in
+    an array like result.
+    """
 
-    if operation_str == 'select':
-        if len(param_list) != 1:
-            raise Exception("The 'select' operation requires a single parameter which is the select index.")
+    if len(param_list) == 0:
+        _operator = operations_dict[operation_str]
 
-        try:
-            select_index = int(param_list[0])
-        except:
-            raise Exception("The parameter passed must be in integer")
-
-        def signle_select_func(xx):
-            """
-            this could be sped up with the quick select algorithm
-            """
-            return sorted(list(xx))[select_index]
-
-        _operator = signle_select_func
-
-    elif operation_str == 'multi-select':
-        if len(param_list) < 1:
-            raise Exception("The 'select' operation requires at least one parameter which is the select index.")
-
-        try:
-            select_indices = tuple(int(item) for item in param_list)
-        except:
-            raise Exception("The parameters passed must be in integers")
-
-        def multi_select_func(xx):
-            sorted_list = sorted(list(xx))
-
-            return tuple(sorted_list[ii] for ii in select_indices)
-
-        _operator = multi_select_func
-
-    elif operation_str == 'multi-select-apply':
-        multi_select_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, param_list))
-        if len(multi_select_params) >= len(param_list):
-            raise Exception("multi-select-apply requires an operation to be passed")
-
-        other_operator_str = param_list[len(multi_select_params)]
-        other_params = []
-        if len(multi_select_params) + 1 < len(param_list):
-            # there are other parameters
-            other_params = param_list[len(multi_select_params)+1:]
-
-        multi_select_operator = get_operator('multi-select',
-            param_list = multi_select_params,
-            should_memorize=should_memorize
-        )
-        other_operator = get_operator(other_operator_str,
-            param_list = other_params,
-            should_memorize=should_memorize
-        )
-
-        def wrapper(xx):
-            return other_operator(multi_select_operator(xx))
-
-        _operator = wrapper
-
-    elif operation_str == 'conditional-reroll':
-        if len(param_list) != 1:
-            raise Exception("The 'conditional-reroll' operation requires one parameter to determine reroll.")
-
-        try:
-            # reroll if die value is less than
-            keep_roll_value = int(param_list[0])
-        except:
-            raise Exception("The parameter passed must be in integer")
-
-        def conditional_reroll_func(xx):
-            for ii in xx:
-                if ii < keep_roll_value:
-                    continue
-
-                return ii
-
-            return xx[-1]
-
-        _operator = conditional_reroll_func
-
-
-    elif operation_str == 'apply-then-conditional-reroll':
-        c_apply_reroll_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, param_list))
-
-        if len(c_apply_reroll_params) != 2:
-            raise Exception(" ".join([
-                "The 'conditional-apply-reroll' operation requires at least two parameters.",
-                "The first to determine reroll and num dice to parse for function application."
-            ]))
-
-        other_operator_str = param_list[len(c_apply_reroll_params)]
-        other_params = []
-        if len(c_apply_reroll_params) + 1 < len(param_list):
-            # there are other parameters
-            other_params = param_list[len(c_apply_reroll_params)+1:]
-
-        try:
-            # reroll if die value is less than
-            keep_roll_value = int(c_apply_reroll_params[0])
-        except:
-            raise Exception("The parameter passed must be in integer")
+    elif len(param_list) == 1:
+        # parse dice in groups
 
         try:
             # number of dice parsed to send to the function that will be applied
-            num_dice_parse = int(c_apply_reroll_params[1])
+            num_dice_parse = int(param_list[0])
         except:
             raise Exception("The parameter passed must be in integer")
 
-        other_operator = get_operator(other_operator_str,
-            param_list = other_params,
-            should_memorize=should_memorize,
-        )
-
-        def apply_then_conditional_reroll_func(xx):
+        def parse_apply(xx):
             dice = []
-            result = None
+            results = []
             for ii in xx:
                 dice.append(ii)
                 if len(dice) < num_dice_parse:
                     continue
-
-                result = other_operator(dice)
-
-                if result < keep_roll_value:
-                    # reroll
+                else:
+                    results.append(operations_dict[operation_str](dice))
                     dice = []
-                    continue
 
-                return result
+            return tuple(results)
 
-            if result is None:
-                raise Exception('result should not be none')
-
-            return result
-
-        _operator = apply_then_conditional_reroll_func
-
-
-    elif operation_str in operations_dict:
-        _operator = operations_dict[operation_str]
+        _operator = parse_apply
 
     else:
+        raise Exception('This operation either takes no parameters or one.')
+
+    return _operator
+
+def get_select_operation(param_list):
+    if len(param_list) < 1:
+        raise Exception("The 'select' operation requires at least one parameter which is the select index.")
+
+    try:
+        select_indices = tuple(int(item) for item in param_list)
+    except:
+        raise Exception("The parameters passed must be in integers")
+
+    def multi_select_func(xx):
+        sorted_list = sorted(list(xx))
+
+        return tuple(sorted_list[ii] for ii in select_indices)
+
+    return multi_select_func
+
+def get_conditional_reroll_func(param_list):
+    if len(param_list) != 1:
+        raise Exception("The 'conditional-reroll' operation requires one parameter to determine reroll.")
+
+    try:
+        # reroll if die value is less than
+        keep_roll_value = int(param_list[0])
+    except:
+        raise Exception("The parameter passed must be in integer")
+
+    def conditional_reroll_func(xx):
+        for ii in xx:
+            if ii < keep_roll_value:
+                continue
+
+            return ii
+
+        return xx[-1]
+
+    return conditional_reroll_func
+
+def get_operator(operation_str, param_list = [], should_memorize = True):
+    cur_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, param_list))
+
+    if operation_str in basic_operations:
+        _operator = get_basic_operation(operation_str, cur_params)
+
+    elif operation_str == 'select':
+        _operator = get_select_operation(cur_params)
+
+    elif operation_str == 'conditional-reroll':
+        _operator = get_conditional_reroll_func(cur_params)
+    else:
         raise Exception("operation string passed is not valid")
+
+    if len(cur_params) < len(param_list):
+        # Apply a nested operation
+
+        other_operator_str = param_list[len(cur_params)]
+        other_operator_params = param_list[len(cur_params)+1:]
+
+        other_operator = get_operator(
+            other_operator_str,
+            param_list = other_operator_params,
+            should_memorize=should_memorize,
+        )
+
+        _first_operation = _operator
+
+        def wrapper(xx):
+            return other_operator(_first_operation(xx))
+
+        _operator = wrapper
 
     if should_memorize:
         # return an function that cashes the results to speed up runtime at the cost of memory

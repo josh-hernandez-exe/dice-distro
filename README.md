@@ -238,12 +238,12 @@ The possible outcomes treating the dice as indistinguishable.
 ```
 
 ### Selecting the Three Highest Values from Four D4
-The indices have the same meaning as with `--op-func select`,
-but being able to ask for more than one.
-The same as excluding the lowest.
+You can give the `select` function more than one select index
+but the result is a list in the order of the select indices that you gave.
+In this example this is the same as excluding the lowest.
 The key sorting is lexicographic.
 ```
-➔ python dice_distro.py -d 4 -n 4 --op-func multi-select --op-params -1 -2 -3
+➔ python dice_distro.py -d 4 -n 4 --op-func select --op-params -1 -2 -3
 1,1,1:   0.39 % |
 2,1,1:   1.56 % |===
 2,2,1:   2.34 % |====
@@ -272,7 +272,7 @@ The indices have the same meaning as with `--op-func multi-select`
 but with an additional parameter refering to the operation
 that will be applied to the selected values.
 ```
-➔ python dice_distro.py -d 6 -n 4 --op-func multi-select-apply --op-params -1 -2 -3 sum
+➔ python dice_distro.py -d 6 -n 4 --op-func select --op-params -1 -2 -3 sum
  3:   0.08 % |
  4:   0.31 % |
  5:   0.77 % |=
@@ -311,7 +311,7 @@ Otherwise, reroll.
 The rolls are parsed two at a time, so if you have `-n 8` will have a max of four rolls.
 **Note** that its up to the user to make sure that there is enough dice.
 ```
-➔ python dice_distro.py -d 6 -n 4  --op-func apply-then-conditional-reroll --op-params 7 2 sum
+➔ python dice_distro.py -d 6 -n 4  --op-func sum --op-params 2 conditional-reroll 7
  2:   1.16 % |==
  3:   2.31 % |====
  4:   3.47 % |======
@@ -484,7 +484,7 @@ This example rolls five D8 (with 1 as the lowest value) and applies the followin
 - of the selected values, select the two lowest values
 - sum the remaining values
 ```
-➔ python dice_distro.py -d 8 -n 5 --op-func multi-select-apply --op-params -1 -2 -3 multi-select-apply 0 1 sum
+➔ python dice_distro.py -d 8 -n 5 --op-func select --op-params -1 -2 -3 select 0 1 sum
  2:   0.11 % |
  3:   0.40 % |
  4:   1.39 % |==
@@ -516,7 +516,7 @@ An example of simulating 100000 rolls of ten D30, taking the two largest values 
 Ten D30's has `30^10` or `5.904900e+14` distinct outcomes if you treat each die as distingishable.
 Enumerating all the outcomes would take quite a while.
 ```
-➔ python dice_distro.py -d 30 -n 10 -pdp 3 --op-func multi-select-apply --op-params -1 -2 sum --simulate 100000
+➔ python dice_distro.py -d 30 -n 10 -pdp 3 --op-func select --op-params -1 -2 sum --simulate 100000
 20:   0.001 % |
 21:   0.003 % |
 22:   0.007 % |
