@@ -49,6 +49,16 @@ parser.add_argument(
     ]),
 )
 
+parser.add_argument(
+    "--show-args",
+    action='store_true',
+    help=" ".join([
+        "This is used for debuging purposes.",
+        "This will print out the parameters used to console,",
+        "before running a calculation",
+    ]),
+)
+
 """
 ========================================================================================
 Single Die Options
@@ -588,6 +598,9 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
 
 def main():
     count = Counter()
+
+    if args.show_args:
+        print(args)
 
     _operator = get_operator(args.op_func, args.op_params, args.memorize)
 
