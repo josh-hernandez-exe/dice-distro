@@ -21,9 +21,9 @@ There is a lot of explanation in the `--help` output. Which you can see using:
 ## Astheric Examples
 
 ### Rolling Two D6 (and Changing the Output)
-The default operation applied is to sum all the values of what is rolled.
+We apply the sum operation on the dice.
 ```
-➔ python dice_distro.py -d 6 -n 2
+➔ python dice_distro.py -d 6 -n 2 --op-func sum
  2:   2.78 % |=====
  3:   5.56 % |===========
  4:   8.33 % |================
@@ -39,8 +39,8 @@ The default operation applied is to sum all the values of what is rolled.
 
 You can change the output to show a different number of decimal places (default is 2).
 ```
-➔ # python dice_distro.py -d 6 -n 2 --percent-decimal-place 4
-➔ python dice_distro.py -d 6 -n 2 -pdp 4
+➔ # python dice_distro.py -d 6 -n 2 --percent-decimal-place 4 --op-func sum
+➔ python dice_distro.py -d 6 -n 2 -pdp 4 --op-func sum
  2:   2.7778 % |=====
  3:   5.5556 % |===========
  4:   8.3333 % |================
@@ -57,7 +57,7 @@ You can change the output to show a different number of decimal places (default 
 You can also change the output to show the counts.
 The modules trying every combination of output, treating each die as distinguishable.
 ```
-➔ python dice_distro.py -d 6 -n 2 --show-counts
+➔ python dice_distro.py -d 6 -n 2 --show-counts --op-func sum
  2: 1 |=====
  3: 2 |===========
  4: 3 |================
@@ -73,7 +73,7 @@ The modules trying every combination of output, treating each die as distinguish
 
 You can also change the sort order.
 ```
-➔ python dice_distro.py -d 6 -n 2 --sort value
+➔ python dice_distro.py -d 6 -n 2 --sort value --op-func sum
  2:   2.78 % |=====
 12:   2.78 % |=====
  3:   5.56 % |===========
@@ -89,7 +89,7 @@ You can also change the sort order.
 
 If you don't want to see the bars, you can turn them off.
 ```
-➔ python dice_distro.py -d 6 -n 2 --bar-size 0
+➔ python dice_distro.py -d 6 -n 2 --bar-size 0 --op-func sum
  2:   2.78 % 
  3:   5.56 % 
  4:   8.33 % 
@@ -105,7 +105,7 @@ If you don't want to see the bars, you can turn them off.
 
 Or you can drastically change how the bars get rendered.
 ```
-➔ python dice_distro.py -d 6 -n 2 --bar-size 2 --bar-char '@#' --bar-prefix '<|'
+➔ python dice_distro.py -d 6 -n 2 --bar-size 2 --bar-char '@#' --bar-prefix '<|' --op-func sum
  2:   2.78 % <|@#@#@#@#@#
  3:   5.56 % <|@#@#@#@#@#@#@#@#@#@#@#
  4:   8.33 % <|@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#
@@ -120,6 +120,42 @@ Or you can drastically change how the bars get rendered.
 ```
 
 ## Functional Examples
+
+### Distingishable Dice
+The default operation is to show the results of the dice as if the results are distingishable
+```
+➔ python dice_distro.py -d 4 -n 2
+1,1:   6.25 % |============
+1,2:   6.25 % |============
+1,3:   6.25 % |============
+1,4:   6.25 % |============
+2,1:   6.25 % |============
+2,2:   6.25 % |============
+2,3:   6.25 % |============
+2,4:   6.25 % |============
+3,1:   6.25 % |============
+3,2:   6.25 % |============
+3,3:   6.25 % |============
+3,4:   6.25 % |============
+4,1:   6.25 % |============
+4,2:   6.25 % |============
+4,3:   6.25 % |============
+4,4:   6.25 % |============
+```
+
+### Four D2 Sum in Pairs (Distingishable Results)
+```
+➔ python ./dice_distro.py -d 2 -n 4 --op-func sum --op-params 2
+2,2:   6.25 % |============
+2,3:  12.50 % |=========================
+2,4:   6.25 % |============
+3,2:  12.50 % |=========================
+3,3:  25.00 % |==================================================
+3,4:  12.50 % |=========================
+4,2:   6.25 % |============
+4,3:  12.50 % |=========================
+4,4:   6.25 % |============
+```
 
 ### Advantage (Rolling Two D20 Taking Max)
 ```
@@ -351,7 +387,7 @@ Instructions:
 This program by default will treat a D10 to begin at `1` and have values all the way up to `10`.
 If we want the lowest value to start at `0` we can do the following.
 ```
-➔ python dice_distro.py -d 10 -n 2 --die-start 0
+➔ python dice_distro.py -d 10 -n 2 --die-start 0 --op-func sum
  0:   1.00 % |==
  1:   2.00 % |====
  2:   3.00 % |======
@@ -375,7 +411,7 @@ If we want the lowest value to start at `0` we can do the following.
 
 Or other type of D10 (some refer to as a D100, but does not have 100 sides)
 ```
-➔ python dice_distro.py -d 10 -n 2 --die-start 0 --die-step 10
+➔ python dice_distro.py -d 10 -n 2 --die-start 0 --die-step 10 --op-func sum
   0:   1.00 % |==
  10:   2.00 % |====
  20:   3.00 % |======
@@ -400,7 +436,7 @@ Or other type of D10 (some refer to as a D100, but does not have 100 sides)
 ### Rolling Custom Values
 You can manually set the values on the sides of the die.
 ```
-➔ python dice_distro.py -n 2 --die-values 0 10 100 -1000
+➔ python dice_distro.py -n 2 --die-values 0 10 100 -1000 --op-func sum
 -2000:   6.25 % |============
 -1000:  12.50 % |=========================
  -990:  12.50 % |=========================
@@ -415,7 +451,7 @@ You can manually set the values on the sides of the die.
 
 ### Rolling a D12 D8 and D6
 ```
-➔ python dice_distro.py --multi-die-sides 12 8 6
+➔ python dice_distro.py --multi-die-sides 12 8 6 --op-func sum
  3:   0.17 % |
  4:   0.52 % |=
  5:   1.04 % |==
@@ -449,21 +485,30 @@ Both flags are optional, but when using one, the values you pass are in parallel
 in relation to `--multi-die-sides`.
 ```
 ➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-start -2 0 1 --multi-die-step 3 2 1
- -1:   4.17 % |========
-  0:   4.17 % |========
-  1:   4.17 % |========
-  2:   8.33 % |================
-  3:   8.33 % |================
-  4:   8.33 % |================
-  5:   8.33 % |================
-  6:   8.33 % |================
-  7:   8.33 % |================
-  8:   8.33 % |================
-  9:   8.33 % |================
- 10:   8.33 % |================
- 11:   4.17 % |========
- 12:   4.17 % |========
- 13:   4.17 % |========
+-2, 0, 1:   4.17 % |========
+-2, 0, 2:   4.17 % |========
+-2, 2, 1:   4.17 % |========
+-2, 2, 2:   4.17 % |========
+-2, 4, 1:   4.17 % |========
+-2, 4, 2:   4.17 % |========
+ 1, 0, 1:   4.17 % |========
+ 1, 0, 2:   4.17 % |========
+ 1, 2, 1:   4.17 % |========
+ 1, 2, 2:   4.17 % |========
+ 1, 4, 1:   4.17 % |========
+ 1, 4, 2:   4.17 % |========
+ 4, 0, 1:   4.17 % |========
+ 4, 0, 2:   4.17 % |========
+ 4, 2, 1:   4.17 % |========
+ 4, 2, 2:   4.17 % |========
+ 4, 4, 1:   4.17 % |========
+ 4, 4, 2:   4.17 % |========
+ 7, 0, 1:   4.17 % |========
+ 7, 0, 2:   4.17 % |========
+ 7, 2, 1:   4.17 % |========
+ 7, 2, 2:   4.17 % |========
+ 7, 4, 1:   4.17 % |========
+ 7, 4, 2:   4.17 % |========
 ```
 
 ### Roll Multiple Types of Dice with Specific Values
@@ -473,30 +518,30 @@ in relation to `--multi-die-sides`.
 - One D2 with values of 100 and 200.
 ```
 ➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200
-110:   4.17 % |========
-111:   4.17 % |========
-112:   4.17 % |========
-113:   4.17 % |========
-120:   4.17 % |========
-121:   4.17 % |========
-122:   4.17 % |========
-123:   4.17 % |========
-130:   4.17 % |========
-131:   4.17 % |========
-132:   4.17 % |========
-133:   4.17 % |========
-210:   4.17 % |========
-211:   4.17 % |========
-212:   4.17 % |========
-213:   4.17 % |========
-220:   4.17 % |========
-221:   4.17 % |========
-222:   4.17 % |========
-223:   4.17 % |========
-230:   4.17 % |========
-231:   4.17 % |========
-232:   4.17 % |========
-233:   4.17 % |========
+  0, 10,100:   4.17 % |========
+  0, 10,200:   4.17 % |========
+  0, 20,100:   4.17 % |========
+  0, 20,200:   4.17 % |========
+  0, 30,100:   4.17 % |========
+  0, 30,200:   4.17 % |========
+  1, 10,100:   4.17 % |========
+  1, 10,200:   4.17 % |========
+  1, 20,100:   4.17 % |========
+  1, 20,200:   4.17 % |========
+  1, 30,100:   4.17 % |========
+  1, 30,200:   4.17 % |========
+  2, 10,100:   4.17 % |========
+  2, 10,200:   4.17 % |========
+  2, 20,100:   4.17 % |========
+  2, 20,200:   4.17 % |========
+  2, 30,100:   4.17 % |========
+  2, 30,200:   4.17 % |========
+  3, 10,100:   4.17 % |========
+  3, 10,200:   4.17 % |========
+  3, 20,100:   4.17 % |========
+  3, 20,200:   4.17 % |========
+  3, 30,100:   4.17 % |========
+  3, 30,200:   4.17 % |========
 ```
 
 ### Nested Selecting

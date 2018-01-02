@@ -16,6 +16,7 @@ basic_operations = set([
 ])
 
 operations_dict = {
+    'id':tuple,
     'sum':sum,
     'min':min,
     'max':max,
@@ -200,7 +201,7 @@ op_group.add_argument(
     "--op-func",
     type=str,
     choices=sorted(operations_dict.keys()),
-    default = 'sum',
+    default = 'id',
     help=" ".join([
         "The operation that will be applied to the values rolled.",
         "Most of the operations available are both communitive and associative.",
