@@ -605,6 +605,51 @@ Then sum their values, and treat the results as indistinguishable.
 8,8:   0.39 % |
 ```
 
+### Weighted Dice
+Since this program uses enumeration to calculate the disrobution,
+weighted dice can't simply be added with a parameter with weights.
+To work around that, you must make a custom die with repeated values on the faces.
+
+The following example shows a weighted D6.
+```
+➔ python dice_distro.py --die-values \
+    1 1 1 1 1 1 \
+    2 2 2 2 2 \
+    3 3 3 3 \
+    4 4 4 \
+    5 5 \
+    6
+1:  28.57 % |=========================================================
+2:  23.81 % |===============================================
+3:  19.05 % |======================================
+4:  14.29 % |============================
+5:   9.52 % |===================
+6:   4.76 % |=========
+```
+
+The following example shows two the above weighted D6 then summing the values.
+```
+➔ python dice_distro.py --die-values \
+    1 1 1 1 1 1 \
+    2 2 2 2 2 \
+    3 3 3 3 \
+    4 4 4 \
+    5 5 \
+    6 \
+    -n 2 --op-func sum
+ 2:   8.16 % |================
+ 3:  13.61 % |===========================
+ 4:  16.55 % |=================================
+ 5:  17.23 % |==================================
+ 6:  15.87 % |===============================
+ 7:  12.70 % |=========================
+ 8:   7.94 % |===============
+ 9:   4.54 % |=========
+10:   2.27 % |====
+11:   0.91 % |=
+12:   0.23 % |
+```
+
 # Simulating Dice Rolls
 
 If the enumeration of all outcomes takes too long, you can choose to simulate the dice rolls.
