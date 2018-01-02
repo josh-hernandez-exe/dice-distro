@@ -498,21 +498,36 @@ def get_select_operation(param_list):
     return multi_select_func
 
 def get_conditional_reroll_func(param_list):
-    if len(param_list) != 1:
+    if len(param_list) < 1:
         raise Exception("The 'conditional-reroll' operation requires one parameter to determine reroll.")
 
+    only_one = len(param_list) == 1
+
     try:
-        # reroll if die value is less than
-        keep_roll_value = int(param_list[0])
+        keep_roll_list = tuple(int(item) for item in param_list)
     except:
         raise Exception("The parameter passed must be in integer")
 
     def conditional_reroll_func(xx):
-        for ii in xx:
-            if ii < keep_roll_value:
-                continue
+        for index, item in enumerate(xx):
+            if index + 1 == len(xx):
+                return item
 
-            return ii
+            if only_one:
+                if item < keep_roll_list[0]:
+                    continue
+
+            else:
+                if index < len(keep_roll_list) and item < keep_roll_list[index]:
+                    continue
+
+                elif index >= len(keep_roll_list):
+                    raise Exception(" ".join([
+                        "If more than one parameters are passed to 'conditional-reroll' then",
+                        "enough parameters must be passed to be in parallel with the input dice tuple."
+                    ]))
+
+            return item
 
         return xx[-1]
 

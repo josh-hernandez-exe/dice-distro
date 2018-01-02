@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 dice_distro_file="$DIR/dice_distro.py"
 test_params="--show-args"
 
-echo "Starting Test" && \
+echo "Starting Test" && \gui
     python $dice_distro_file $test_params -d 6 -n 2 && \
     python $dice_distro_file $test_params -d 6 -n 2 --show-counts && \
     python $dice_distro_file $test_params -d 6 -n 2 --sort value && \
@@ -29,6 +29,8 @@ echo "Starting Test" && \
     python $dice_distro_file $test_params -d 10 -n 2 --die-start 0 --die-step 10 && \
     python $dice_distro_file $test_params -n 2 --die-values 0 10 100 -1000 && \
     python $dice_distro_file $test_params --multi-die-sides 12 8 6 && \
+    python $dice_distro_file $test_params --multi-die-sides 8 6 4 --op-func conditional-reroll --op-params 3 && \
+    python $dice_distro_file $test_params --multi-die-sides 8 6 4 --op-func conditional-reroll --op-params 5 4 && \
     python $dice_distro_file $test_params --multi-die-sides 4 3 2 --multi-die-start -1 0 1 --multi-die-step 3 2 1 && \
     python $dice_distro_file $test_params --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200 && \
     python $dice_distro_file $test_params -d 40 -n 6 --op-func max --simulate 100000

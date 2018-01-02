@@ -329,6 +329,24 @@ The rolls are parsed two at a time, so if you have `-n 8` will have a max of fou
 12:   3.94 % |=======
 ```
 
+### Conditional Rerolling with Different Dice
+Instructions:
+- Roll D8
+- If 5 or greater, keep the value and terminate execution, otherwise disregard the value and roll a D6.
+- If 4 or greater, keep the value and terminate execution, otherwise disregard the value and roll a D4.
+- Keep the final value (if you got this far)
+```
+➔ python dice_distro.py --multi-die-sides 8 6 4 --op-func conditional-reroll --op-params 5 4
+1:   6.25 % |============
+2:   6.25 % |============
+3:   6.25 % |============
+4:  14.58 % |=============================
+5:  20.83 % |=========================================
+6:  20.83 % |=========================================
+7:  12.50 % |=========================
+8:  12.50 % |=========================
+```
+
 ### Rolling a True D10
 This program by default will treat a D10 to begin at `1` and have values all the way up to `10`.
 If we want the lowest value to start at `0` we can do the following.
