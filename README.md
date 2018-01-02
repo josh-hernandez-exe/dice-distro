@@ -1,4 +1,4 @@
-## General Info
+# General Info
 
 This program was meant to be used as a command line tool.
 It only uses built-in modules to calculate everything, but uses brute force calculations.
@@ -16,7 +16,9 @@ There is a lot of explanation in the `--help` output. Which you can see using:
 ➔ python dice_distro.py --help
 ```
 
-## Examples
+# Examples
+
+## Astheric Examples
 
 ### Rolling Two D6 (and Changing the Output)
 The default operation applied is to sum all the values of what is rolled.
@@ -116,6 +118,8 @@ Or you can drastically change how the bars get rendered.
 11:   5.56 % <|@#@#@#@#@#@#@#@#@#@#@#
 12:   2.78 % <|@#@#@#@#@#
 ```
+
+## Functional Examples
 
 ### Advantage (Rolling Two D20 Taking Max)
 ```
@@ -479,30 +483,65 @@ in relation to `--multi-die-sides`.
 
 ### Nested Selecting
 
-This example rolls five D8 (with 1 as the lowest value) and applies the following instructions:
-- select the three highest values
-- of the selected values, select the two lowest values
-- sum the remaining values
+This example rolls five D8 and applies the following instructions:
+- select the four highest values (in the order highest, fourth, second, third)
+- sum the values in pairs (highest and fourth is summed to one value, the second and third highest are summed)
+- of the two values select the lowest
 ```
-➔ python dice_distro.py -d 8 -n 5 --op-func select --op-params -1 -2 -3 select 0 1 sum
+➔ python dice_distro.py -d 8 -n 5 --op-func select --op-params -1 -4 -2 -3 sum 2 select 0
  2:   0.11 % |
- 3:   0.40 % |
- 4:   1.39 % |==
- 5:   2.62 % |=====
- 6:   4.81 % |=========
- 7:   6.87 % |=============
- 8:   9.63 % |===================
- 9:  11.47 % |======================
-10:  13.32 % |==========================
-11:  13.28 % |==========================
-12:  12.77 % |=========================
-13:  10.19 % |====================
-14:   7.65 % |===============
-15:   3.88 % |=======
-16:   1.61 % |===
+ 3:   0.43 % |
+ 4:   1.48 % |==
+ 5:   2.93 % |=====
+ 6:   5.45 % |==========
+ 7:   8.24 % |================
+ 8:  12.01 % |========================
+ 9:  15.62 % |===============================
+10:  17.14 % |==================================
+11:  14.65 % |=============================
+12:  10.94 % |=====================
+13:   6.59 % |=============
+14:   3.31 % |======
+15:   0.98 % |=
+16:   0.11 % |
 ```
 
-## Simulating Dice Rolls
+### The Sum of Two Independent Sets of Two D4
+We roll four D4 group them into 2 pairs.
+Then sum their values, and treat the results as indistinguishable.
+```
+➔ python dice_distro.py -d 4 -n 4 --op-func sum --op-params 2 set
+2,2:   0.39 % |
+2,3:   1.56 % |===
+2,4:   2.34 % |====
+2,5:   3.12 % |======
+2,6:   2.34 % |====
+2,7:   1.56 % |===
+2,8:   0.78 % |=
+3,3:   1.56 % |===
+3,4:   4.69 % |=========
+3,5:   6.25 % |============
+3,6:   4.69 % |=========
+3,7:   3.12 % |======
+3,8:   1.56 % |===
+4,4:   3.52 % |=======
+4,5:   9.38 % |==================
+4,6:   7.03 % |==============
+4,7:   4.69 % |=========
+4,8:   2.34 % |====
+5,5:   6.25 % |============
+5,6:   9.38 % |==================
+5,7:   6.25 % |============
+5,8:   3.12 % |======
+6,6:   3.52 % |=======
+6,7:   4.69 % |=========
+6,8:   2.34 % |====
+7,7:   1.56 % |===
+7,8:   1.56 % |===
+8,8:   0.39 % |
+```
+
+# Simulating Dice Rolls
 
 If the enumeration of all outcomes takes too long, you can choose to simulate the dice rolls.
 This allows you get an idea for what the distribution looks like without have to wait for computation time
@@ -560,7 +599,7 @@ Enumerating all the outcomes would take quite a while.
 60:   4.096 % |========
 ```
 
-## Future Plans
+# Future Plans
 
 If I find time in the future, I plan to parallalize the work so that options with a large enumeration set can be computed faster,
 as well as allowing larger numbers of simulated dice throws.
