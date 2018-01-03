@@ -27,13 +27,34 @@ operations_dict = {
     'scale': None, # This will get defined later if used
     'bound': None, # This will get defined later if used
     'select': None, # This will get defined later if used
-    'reroll-if': None, # This will get defined later if used,
+    'reroll': None, # This will get defined later if used,
     'slice-apply': None, # This will get defined later if used,
 }
 
 basic_operations = set(
     key for key,value in operations_dict.items() if value is not None
 )
+
+ifable = set([
+    'shift',
+    'scale',
+    'bound',
+    'select',
+    'reroll',
+])
+
+basic_compare_dict = {
+    'eq':lambda aa,bb,cc=None: aa == bb,
+    'neq': lambda aa,bb,cc=None: aa != bb,
+    'gt':lambda aa,bb,cc=None: aa > bb,
+    'ge':lambda aa,bb,cc=None: aa >= bb,
+    'lt':lambda aa,bb,cc=None: aa < bb,
+    'le':lambda aa,bb,cc=None: aa <= bb,
+}
+
+compare_helper = set([
+    'mod',
+])
 
 parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -200,39 +221,13 @@ op_group = parser.add_argument_group(
 )
 
 op_group.add_argument(
-    "--op-func",
+    "--apply",
     type=str,
-    choices=sorted(operations_dict.keys()),
-    default = 'id',
-    help=" ".join([
-        "The operation that will be applied to the values rolled.",
-        "Most of the operations available are both communitive and associative.",
-        "The 'id' operation refers to the identity operation, which will leave the input unchanged."
-        "The 'set' enumerates the results, treating the dice is indistiguishable.",
-        "The 'shift' operation will add a static value to all results (you can specify the value per die).",
-        "The 'bound' operation will keep the values within specified upper and lower bound (can be spcified per die).",
-        "The 'select' operation requires at least one integer parameter (use '--op-params').",
-        "The 'reroll-if' will assume ordered dice rolls. Takes a parameters for a decicion to keep the dice.",
-        "It is up to the user to make sure the result is only one value."
-        "an operation afterwards specified by an additional argument at the end",
-        "(if that operation requires parameters, pass them in after the name of the function).",
-        "Note: that bit-wise operations are available, not logical operations.",
-    ]),
-)
-
-op_group.add_argument(
-    "--op-params",
     nargs="*",
-    default = [],
+    choices=sorted(operations_dict.keys()),
+    default = ['id'],
     help=" ".join([
-        "Optional parameters that may be needed for '--op-func'.",
-        "When '--op-func' is 'select' then the parameter is the index of the item in the sorted array."
-        "Example-Select-1: '--op-func select --op-params 0' is the same as min.",
-        "Example-Select-2: '--op-func select --op-params 1' returns the second lowest value.",
-        "Example-Select-3: '--op-func select --op-params -1' is the same as max.",
-        "Example-Select-4: '--op-func select --op-params -2' returns the second highest value.",
-        "Subsequent operations can be changed using '--op-params'",
-        "Example-Subsequent: '--op-func select --op-param -1 -2 -3 -4 sum 2'",
+        ""
     ]),
 )
 
@@ -347,6 +342,9 @@ formatter_percent = "{{value:{percent_formatter}}} %".format(
         args.percent_decimal_place,
     ),
 )
+
+def always_true(*args, **kwargs):
+    return True
 
 def docstring_format(*sub,**kwargs):
     def decorator(func):
@@ -492,7 +490,7 @@ def get_basic_operation(operation_str, param_list = []):
 
     return _operator
 
-def get_shift_operation(param_list):
+def get_shift_operation(param_list, conditoinal_func):
     if len(param_list) < 1:
         raise Exception("The 'shift' operation requires at least one parameter to determine shift value.")
 
@@ -523,8 +521,7 @@ def get_shift_operation(param_list):
 
     return shift_func
 
-
-def get_scale_operation(param_list):
+def get_scale_operation(param_list, conditoinal_func):
     if len(param_list) < 1:
         raise Exception("The 'scale' operation requires at least one parameter to determine shift value.")
 
@@ -573,8 +570,7 @@ def get_scale_operation(param_list):
 
     return scale_func
 
-
-def get_bound_operation(param_list):
+def get_bound_operation(param_list, conditoinal_func):
     if len(param_list) < 2:
         raise Exception("The 'bound' operation requires at least two parameters to determine min/max bounds.")
 
@@ -651,71 +647,80 @@ def get_select_operation(param_list):
 
     return multi_select_func
 
-def get_reroll_if_operation(param_list):
-    if len(param_list) < 2:
-        raise Exception("The 'reroll-if' operation requires at least two parameter to determine reroll.")
+def determine_compare_func(param_list):
+    param_list_copy = list(param_list)
 
-    basic_compare_dict = {
-        'eq':lambda aa,bb: aa == bb,
-        'neq': lambda aa,bb: aa != bb,
-        'gt':lambda aa,bb: aa > bb,
-        'ge':lambda aa,bb: aa >= bb,
-        'lt':lambda aa,bb: aa < bb,
-        'le':lambda aa,bb: aa <= bb,
-    }
-
-    def determine_compare_func(_param_list):
+    def determine_compare_func():
         """
         This function edits the passed parameter list in place
         """
-        comparison_str = _param_list.pop(0)
+        comparison_str = param_list_copy.pop(0)
 
         if comparison_str in basic_compare_dict:
             return basic_compare_dict[comparison_str]
         elif comparison_str == 'mod':
             try:
-                mod_value = int(_param_list.pop(0))
+                mod_values = tuple(int(item) for item in takewhile(
+                    lambda xx: xx not in basic_compare_dict or xx not in compare_helper,
+                    param_list_copy
+                ))
+                param_list_copy = param_list_copy[len(mod_values):]
             except:
                 raise Exception("The parameter for `mod` comparision must be an integer")
 
-            other_comparison = determine_compare_func(_param_list)
+            other_comparison = determine_compare_func()
 
-            return lambda aa,bb: other_comparison(aa % mod_value, bb)
+            if len(mod_values) == 1:
+                return lambda aa,bb,cc=None: other_comparison(aa % mod_values[0], bb)
+            else:
+                return lambda aa,bb,cc=None: other_comparison(aa % mod_values[cc], bb)
         else:
             raise Exception('Comparison string invalid')
 
-    param_list_copy = list(param_list)
-    comparison_func = determine_compare_func(param_list_copy)
-
-    only_one_compare = len(param_list_copy) == 1
+    compare_func_helper = determine_compare_func(param_list_copy)
 
     try:
-        keep_roll_list = tuple(int(item) for item in param_list_copy)
+        compare_values = tuple(int(item) for item in param_list_copy)
     except:
         raise Exception("The parameter(s) passed must be in integer(s)")
+
+    if len(compare_values) == 0:
+        raise Exception('No compare values where given.')
 
     @docstring_format(
         param_list=str(param_list),
     )
+    def compare_func(value, index):
+        """
+        Compare Func
+        params: {param_list}
+        """
+        if len(compare_values) == 1:
+            return compare_func(value, compare_values[0], index)
+        elif len(compare_values) > 1:
+            return compare_func(value, compare_values[index], index)
+
+    return compare_func
+
+def get_reroll_if_operation(param_list, comparison_func):
+    if len(param_list) > 0:
+        raise Exception("Reroll doesn't take any parameters")
+
+    @docstring_format(
+        param_list=str(param_list),
+        conditional_info=comparison_func.__doc__,
+    )
     def reroll_if_func(xx):
         """
         Reroll If Contitional Function
-        Params: {param_list}
+        Conditional: {conditional_info}
         """
-        if only_one_compare:
-            iterable = zip(
-                xx,
-                itertools.repeat(keep_roll_list[0],len(xx)),
-            )
-        else:
-            iterable = zip(xx, keep_roll_list)
-
-        for index, (item,keep_value) in enumerate(iterable):
+        for index,item in enumerate(xx):
             if index + 1 == len(xx):
                 # last item, can't reroll anymore
                 return (item,)
 
-            if comparison_func(item, keep_value):
+            if comparison_func(item, index):
                 continue
 
             # keep result
@@ -796,39 +801,53 @@ def get_slice_apply_operation(slice_params, other_param_list, should_memorize = 
     return slice_apply_func
 
 def get_operator(operation_str, param_list = [], should_memorize = True):
+    orignal_params = list(param_list)
+
+    conditional_params = []
+    if operation_str in ifable:
+        if param_list[0] == 'if':
+            conditional_params = list(itertools.takewhile(lambda xx: xx != 'then', param_list))
+        else:
+            raise Exception('This operation is not if-able.')
+
+    conditoinal_func = determine_compare_func(conditional_params)
+
+    param_list = param_list[len(conditional_params):]
     cur_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, param_list))
     apply_nested_operation = True
+
+    param_list = param_list[len(cur_params):]
 
     if operation_str in basic_operations:
         _operator = get_basic_operation(operation_str, cur_params)
 
     elif operation_str == 'shift':
-        _operator = get_shift_operation(cur_params)
+        _operator = get_shift_operation(cur_params, conditoinal_func)
 
     elif operation_str == 'scale':
-        _operator = get_scale_operation(cur_params)
+        _operator = get_scale_operation(cur_params, conditoinal_func)
 
     elif operation_str == 'bound':
-        _operator = get_bound_operation(cur_params)
+        _operator = get_bound_operation(cur_params, conditoinal_func)
 
     elif operation_str == 'select':
         _operator = get_select_operation(cur_params)
 
-    elif operation_str == 'reroll-if':
-        _operator = get_reroll_if_operation(cur_params)
+    elif operation_str == 'reroll':
+        _operator = get_reroll_if_operation(cur_params, conditoinal_func)
 
     elif operation_str == 'slice-apply':
-        _operator = get_slice_apply_operation(cur_params, param_list[len(cur_params):], should_memorize)
+        _operator = get_slice_apply_operation(cur_params, param_list, should_memorize)
         apply_nested_operation = False
 
     else:
         raise Exception("operation string passed is not valid")
 
-    if apply_nested_operation and len(cur_params) < len(param_list):
+    if apply_nested_operation and len(param_list):
         # Apply a nested operation
 
-        other_operator_str = param_list[len(cur_params)]
-        other_operator_params = param_list[len(cur_params)+1:]
+        other_operator_str = param_list[0]
+        other_operator_params = param_list[1:]
 
         other_operator = get_operator(
             other_operator_str,
@@ -869,7 +888,7 @@ def main():
     if args.show_args:
         print(args)
 
-    _operator = get_operator(args.op_func, args.op_params, args.memorize)
+    _operator = get_operator(args.apply[0], args.apply[1:], args.memorize)
 
     # the next two lines is the majority of the program run time for larger values
     for item in get_outcome_generator():
