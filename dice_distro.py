@@ -479,16 +479,10 @@ def get_basic_operation(operation_str, param_list = []):
     elif len(param_list) == 1:
         # parse dice in groups
 
-        try:
-            # number of dice parsed to send to the function that will be applied
-            num_dice_parse = int(param_list[0])
-        except:
-            raise Exception("The parameter passed must be in integer")
-
-        _operator = get_operator(
-            'slice-apply',
-            param_list = [num_dice_parse, operation_str],
-            should_memorize = False
+        _operator = get_slice_apply_operation(
+            param_list[0],
+            [operation_str],
+            should_memorize = False,
         )
 
     else:
