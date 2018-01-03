@@ -665,6 +665,8 @@ def get_slice_apply_operation(slice_params, other_param_list, should_memorize = 
         should_memorize = should_memorize,
     )
 
+    # third operation is needed to be considered so that each subsequent
+    # operation acts on the conmbined data, rather than having branching processing
     num_params_related_to_second = len(second_operator_params) + 1
     if num_params_related_to_second < len(other_param_list):
         # there is a third operation
