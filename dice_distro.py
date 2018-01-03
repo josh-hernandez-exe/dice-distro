@@ -479,36 +479,17 @@ def get_basic_operation(operation_str, param_list = []):
     elif len(param_list) == 1:
         # parse dice in groups
 
-        _base_operation = operations_dict[operation_str]
-
         try:
             # number of dice parsed to send to the function that will be applied
             num_dice_parse = int(param_list[0])
         except:
             raise Exception("The parameter passed must be in integer")
 
-        @docstring_format(
-            operation_str=operation_str,
-            num_dice_parse=num_dice_parse,
+        _operator = get_operator(
+            'slice-apply',
+            param_list = [num_dice_parse, operation_str],
+            should_memorize = False
         )
-        def parse_apply(xx):
-            """
-            Basic Operation: {operation_str}
-            Number of Dice to Parse: {num_dice_parse}
-            """
-            dice = []
-            results = []
-            for ii in xx:
-                dice.append(ii)
-                if len(dice) < num_dice_parse:
-                    continue
-                else:
-                    results.append(_base_operation(dice)[0])
-                    dice = []
-
-            return tuple(results)
-
-        _operator = parse_apply
 
     else:
         raise Exception('This operation either takes no parameters or one.')
