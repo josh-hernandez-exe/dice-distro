@@ -615,6 +615,119 @@ Then sum their values, and treat the results as indistinguishable.
 8,8:   0.39 % |
 ```
 
+### Using `slice-apply`
+The example is encompases the following instructions:
+- Roll a D4
+- If the value is less than 3 reroll, repeat to a max of three rolls.
+- Record the value.
+- Repeat the whole process two more times (distinguishable) value.
+The above is the equvalent in saying:
+- Roll nine independent D4
+- Make groups of three:
+	- For each group:
+		- For each die in the group:
+			- Look at the result and check if it is greater or equal to 3
+			- Record the die result if it is and move to the next group
+			- Otherwise continue to the next die result
+- With the recorded results from each group display results
+```
+➔ python dice_distro.py -d 4 -n 9 --op-func slice-apply --op-params 3 conditional-reroll 3
+1,1,1:   0.02 % |
+1,1,2:   0.02 % |
+1,1,3:   0.17 % |
+1,1,4:   0.17 % |
+1,2,1:   0.02 % |
+1,2,2:   0.02 % |
+1,2,3:   0.17 % |
+1,2,4:   0.17 % |
+1,3,1:   0.17 % |
+1,3,2:   0.17 % |
+1,3,3:   1.20 % |==
+1,3,4:   1.20 % |==
+1,4,1:   0.17 % |
+1,4,2:   0.17 % |
+1,4,3:   1.20 % |==
+1,4,4:   1.20 % |==
+2,1,1:   0.02 % |
+2,1,2:   0.02 % |
+2,1,3:   0.17 % |
+2,1,4:   0.17 % |
+2,2,1:   0.02 % |
+2,2,2:   0.02 % |
+2,2,3:   0.17 % |
+2,2,4:   0.17 % |
+2,3,1:   0.17 % |
+2,3,2:   0.17 % |
+2,3,3:   1.20 % |==
+2,3,4:   1.20 % |==
+2,4,1:   0.17 % |
+2,4,2:   0.17 % |
+2,4,3:   1.20 % |==
+2,4,4:   1.20 % |==
+3,1,1:   0.17 % |
+3,1,2:   0.17 % |
+3,1,3:   1.20 % |==
+3,1,4:   1.20 % |==
+3,2,1:   0.17 % |
+3,2,2:   0.17 % |
+3,2,3:   1.20 % |==
+3,2,4:   1.20 % |==
+3,3,1:   1.20 % |==
+3,3,2:   1.20 % |==
+3,3,3:   8.37 % |================
+3,3,4:   8.37 % |================
+3,4,1:   1.20 % |==
+3,4,2:   1.20 % |==
+3,4,3:   8.37 % |================
+3,4,4:   8.37 % |================
+4,1,1:   0.17 % |
+4,1,2:   0.17 % |
+4,1,3:   1.20 % |==
+4,1,4:   1.20 % |==
+4,2,1:   0.17 % |
+4,2,2:   0.17 % |
+4,2,3:   1.20 % |==
+4,2,4:   1.20 % |==
+4,3,1:   1.20 % |==
+4,3,2:   1.20 % |==
+4,3,3:   8.37 % |================
+4,3,4:   8.37 % |================
+4,4,1:   1.20 % |==
+4,4,2:   1.20 % |==
+4,4,3:   8.37 % |================
+4,4,4:   8.37 % |================
+```
+
+### Two Ways to Roll Two Sets of D6, Summing Then Taking Max
+```
+➔ python dice_distro.py -d 6 -n 4 -pdp 4 --op-func sum --op-params 2 max
+ 2:   0.0772 % |
+ 3:   0.6173 % |=
+ 4:   2.0833 % |====
+ 5:   4.9383 % |=========
+ 6:   9.6451 % |===================
+ 7:  16.6667 % |=================================
+ 8:  18.1327 % |====================================
+ 9:  17.2840 % |==================================
+10:  14.5833 % |=============================
+11:  10.4938 % |====================
+12:   5.4784 % |==========
+```
+```
+➔ python dice_distro.py -d 6 -n 4 -pdp 4 --op-func slice-apply --op-params 2 sum max
+ 2:   0.0772 % |
+ 3:   0.6173 % |=
+ 4:   2.0833 % |====
+ 5:   4.9383 % |=========
+ 6:   9.6451 % |===================
+ 7:  16.6667 % |=================================
+ 8:  18.1327 % |====================================
+ 9:  17.2840 % |==================================
+10:  14.5833 % |=============================
+11:  10.4938 % |====================
+12:   5.4784 % |==========
+```
+
 ### Weighted Dice
 Since this program uses enumeration to calculate the distribution,
 weighted dice can't simply be added with a parameter with weights.
