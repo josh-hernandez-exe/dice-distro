@@ -347,7 +347,7 @@ Otherwise reroll, repeat to a max of three rolls.
 Keep the final roll, regardless of outcome.
 To change the max reroll count, change the number of dice that are rolled (the `-n` parameter).
 ```
-➔ python dice_distro.py -d 6 -n 3 --op-func conditional-reroll --op-params 4
+➔ python dice_distro.py -d 6 -n 3 --op-func reroll-if --op-params lt 4
 1:   4.17 % |========
 2:   4.17 % |========
 3:   4.17 % |========
@@ -362,7 +362,7 @@ Otherwise, reroll.
 The rolls are parsed two at a time, so if you have `-n 8` will have a max of four rolls.
 **Note** that its up to the user to make sure that there is enough dice.
 ```
-➔ python dice_distro.py -d 6 -n 4  --op-func sum --op-params 2 conditional-reroll 7
+➔ python dice_distro.py -d 6 -n 4  --op-func sum --op-params 2 reroll-if lt 7
  2:   1.16 % |==
  3:   2.31 % |====
  4:   3.47 % |======
@@ -383,7 +383,7 @@ Instructions:
 - If 4 or greater, keep the value and terminate execution, otherwise disregard the value and roll a D4.
 - Keep the final value (if you got this far)
 ```
-➔ python dice_distro.py --multi-die-sides 8 6 4 --op-func conditional-reroll --op-params 5 4
+➔ python dice_distro.py --multi-die-sides 8 6 4 --op-func reroll-if --op-params lt 5 4
 1:   6.25 % |============
 2:   6.25 % |============
 3:   6.25 % |============
@@ -631,7 +631,7 @@ The above is the equvalent in saying:
 			- Otherwise continue to the next die result
 - With the recorded results from each group display results
 ```
-➔ python dice_distro.py -d 4 -n 9 --op-func slice-apply --op-params 3 conditional-reroll 3
+➔ python dice_distro.py -d 4 -n 9 --op-func slice-apply --op-params 3 reroll-if lt 3
 1,1,1:   0.02 % |
 1,1,2:   0.02 % |
 1,1,3:   0.17 % |

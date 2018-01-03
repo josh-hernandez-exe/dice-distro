@@ -7,6 +7,7 @@ import operator
 import functools
 import random
 import itertools
+import decimal
 from collections import Counter
 
 if (2,0) <= sys.version_info < (3, 0):
@@ -19,13 +20,14 @@ operations_dict = {
     'max':lambda xx: (max(xx),),
     'set':lambda xx: tuple(sorted(xx)),
     'prod':lambda xx: functools.reduce(operator.mul, xx, 1),
-    'or':lambda xx: functools.reduce(operator.or_, xx, 0),
-    'xor':lambda xx: functools.reduce(operator.xor, xx),
-    'and':lambda xx: functools.reduce(operator.and_, xx),
+    'bit-or':lambda xx: functools.reduce(operator.or_, xx, 0),
+    'bit-xor':lambda xx: functools.reduce(operator.xor, xx),
+    'bit-and':lambda xx: functools.reduce(operator.and_, xx),
     'shift': None, # This will get defined later if used
+    'scale': None, # This will get defined later if used
     'bound': None, # This will get defined later if used
     'select': None, # This will get defined later if used
-    'conditional-reroll': None, # This will get defined later if used,
+    'reroll-if': None, # This will get defined later if used,
     'slice-apply': None, # This will get defined later if used,
 }
 
@@ -210,7 +212,7 @@ op_group.add_argument(
         "The 'shift' operation will add a static value to all results (you can specify the value per die).",
         "The 'bound' operation will keep the values within specified upper and lower bound (can be spcified per die).",
         "The 'select' operation requires at least one integer parameter (use '--op-params').",
-        "The 'conditional-reroll' will assume ordered dice rolls. Takes a parameter for a decicion to keep the dice.",
+        "The 'reroll-if' will assume ordered dice rolls. Takes a parameters for a decicion to keep the dice.",
         "It is up to the user to make sure the result is only one value."
         "an operation afterwards specified by an additional argument at the end",
         "(if that operation requires parameters, pass them in after the name of the function).",
@@ -521,6 +523,57 @@ def get_shift_operation(param_list):
 
     return shift_func
 
+
+def get_scale_operation(param_list):
+    if len(param_list) < 1:
+        raise Exception("The 'scale' operation requires at least one parameter to determine shift value.")
+
+    round_option_dict = {
+        'r-ceil': lambda xx: math.ceil(xx),
+        'r-floor': lambda xx: math.floor(xx),
+        'r-truncate': lambda xx: int(xx),
+        'r-half-up': lambda xx: decimal.Decimal(xx).quantize(decimal.Decimal('1'),rounding=decimal.ROUND_HALF_UP),
+        'r-half-down': lambda xx: decimal.Decimal(xx).quantize(decimal.Decimal('1'),rounding=decimal.ROUND_HALF_DOWN),
+    }
+
+    param_list_copy = list(param_list)
+
+    # set default value
+    round_options = 'r-truncate'
+    if param_list_copy[0] in round_option_dict:
+        round_options = param_list_copy.pop(0)
+
+    round_func = round_option_dict[round_options]
+    scale_operation = lambda aa,bb: int(round_func(aa*bb))
+
+    only_one_param = len(param_list_copy) == 1
+
+    try:
+        scale_values = tuple(float(item) for item in param_list_copy)
+    except:
+        raise Exception("The parameter(s) passed must be in float(s)")
+
+    @docstring_format(
+        scale_values=str(scale_values),
+    )
+    def scale_func(xx):
+        """
+        Shift Function
+        Shift Values: {scale_values}
+        """
+        if only_one_param:
+            iterable = zip(
+                xx,
+                itertools.repeat(scale_values[0],len(xx)),
+            )
+        else:
+            iterable = zip(xx, scale_values)
+
+        return tuple(scale_operation(item,scale_factor) for item,scale_factor in iterable)
+
+    return scale_func
+
+
 def get_bound_operation(param_list):
     if len(param_list) < 2:
         raise Exception("The 'bound' operation requires at least two parameters to determine min/max bounds.")
@@ -598,42 +651,72 @@ def get_select_operation(param_list):
 
     return multi_select_func
 
-def get_conditional_reroll_operation(param_list):
-    if len(param_list) < 1:
-        raise Exception("The 'conditional-reroll' operation requires one parameter to determine reroll.")
+def get_reroll_if_operation(param_list):
+    if len(param_list) < 2:
+        raise Exception("The 'reroll-if' operation requires at least two parameter to determine reroll.")
 
-    only_one_param = len(param_list) == 1
+    basic_compare_dict = {
+        'eq':lambda aa,bb: aa == bb,
+        'neq': lambda aa,bb: aa != bb,
+        'gt':lambda aa,bb: aa > bb,
+        'ge':lambda aa,bb: aa >= bb,
+        'lt':lambda aa,bb: aa < bb,
+        'le':lambda aa,bb: aa <= bb,
+    }
+
+    def determine_compare_func(_param_list):
+        """
+        This function edits the passed parameter list in place
+        """
+        comparison_str = _param_list.pop(0)
+
+        if comparison_str in basic_compare_dict:
+            return basic_compare_dict[comparison_str]
+        elif comparison_str == 'mod':
+            try:
+                mod_value = int(_param_list.pop(0))
+            except:
+                raise Exception("The parameter for `mod` comparision must be an integer")
+
+            other_comparison = determine_compare_func(_param_list)
+
+            return lambda aa,bb: other_comparison(aa % mod_value, bb)
+        else:
+            raise Exception('Comparison string invalid')
+
+    param_list_copy = list(param_list)
+    comparison_func = determine_compare_func(param_list_copy)
+
+    only_one_compare = len(param_list_copy) == 1
 
     try:
-        keep_roll_list = tuple(int(item) for item in param_list)
+        keep_roll_list = tuple(int(item) for item in param_list_copy)
     except:
         raise Exception("The parameter(s) passed must be in integer(s)")
 
     @docstring_format(
         param_list=str(param_list),
     )
-    def conditional_reroll_func(xx):
+    def reroll_if_func(xx):
         """
-        Contitional Reroll Function
+        Reroll If Contitional Function
         Params: {param_list}
         """
-        for index, item in enumerate(xx):
+        if only_one_compare:
+            iterable = zip(
+                xx,
+                itertools.repeat(keep_roll_list[0],len(xx)),
+            )
+        else:
+            iterable = zip(xx, keep_roll_list)
+
+        for index, (item,keep_value) in enumerate(iterable):
             if index + 1 == len(xx):
                 # last item, can't reroll anymore
                 return (item,)
 
-            if only_one_param:
-                if item < keep_roll_list[0]:
-                    continue
-            else:
-                if index < len(keep_roll_list) and item < keep_roll_list[index]:
-                    continue
-
-                elif index >= len(keep_roll_list):
-                    raise Exception(" ".join([
-                        "If more than one parameters are passed to 'conditional-reroll' then",
-                        "enough parameters must be passed to be in parallel with the input dice tuple."
-                    ]))
+            if comparison_func(item, keep_value):
+                continue
 
             # keep result
             return (item,)
@@ -641,7 +724,7 @@ def get_conditional_reroll_operation(param_list):
         # should never happen, but just in case
         return (xx[-1],)
 
-    return conditional_reroll_func
+    return reroll_if_func
 
 def get_slice_apply_operation(slice_params, other_param_list, should_memorize = False):
     if len(slice_params) != 1:
@@ -722,14 +805,17 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
     elif operation_str == 'shift':
         _operator = get_shift_operation(cur_params)
 
+    elif operation_str == 'scale':
+        _operator = get_scale_operation(cur_params)
+
     elif operation_str == 'bound':
         _operator = get_bound_operation(cur_params)
 
     elif operation_str == 'select':
         _operator = get_select_operation(cur_params)
 
-    elif operation_str == 'conditional-reroll':
-        _operator = get_conditional_reroll_operation(cur_params)
+    elif operation_str == 'reroll-if':
+        _operator = get_reroll_if_operation(cur_params)
 
     elif operation_str == 'slice-apply':
         _operator = get_slice_apply_operation(cur_params, param_list[len(cur_params):], should_memorize)
