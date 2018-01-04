@@ -771,6 +771,33 @@ The following example shows two the above weighted D6 then summing the values.
 12:   0.23 % |
 ```
 
+### Advance Conditionals on Unitary Operations
+Operations that that only change a single die value can be applied conditinoally.
+These operations are `shift`, `scale`, `bound`, `select`, `reroll`.
+In this example we:
+- Roll two D6
+- For the first die, if it is an even number, subtract 10
+- For the second die, if it is equivalent to 1 mod 3, add 100
+```
+➔ python dice_distro.py -d 4 -n 2 --apply shift if mod 2 3 eq 0 1 then -10 100
+  -8,   2:   6.25 % |============
+  -8,   3:   6.25 % |============
+  -8, 101:   6.25 % |============
+  -8, 104:   6.25 % |============
+  -6,   2:   6.25 % |============
+  -6,   3:   6.25 % |============
+  -6, 101:   6.25 % |============
+  -6, 104:   6.25 % |============
+   1,   2:   6.25 % |============
+   1,   3:   6.25 % |============
+   1, 101:   6.25 % |============
+   1, 104:   6.25 % |============
+   3,   2:   6.25 % |============
+   3,   3:   6.25 % |============
+   3, 101:   6.25 % |============
+   3, 104:   6.25 % |============
+```
+
 # Simulating Dice Rolls
 
 If the enumeration of all outcomes takes too long, you can choose to simulate the dice rolls.
