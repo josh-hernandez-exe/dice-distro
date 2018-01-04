@@ -35,6 +35,7 @@ basic_operations = set(
     key for key,value in operations_dict.items() if value is not None
 )
 
+# set of operations that support an if-block
 ifable = set([
     'shift',
     'scale',
@@ -52,7 +53,7 @@ basic_compare_dict = {
     'le':lambda aa,bb,cc=None: aa <= bb,
 }
 
-compare_helper = set([
+compare_modifiers = set([
     'mod',
 ])
 
@@ -465,6 +466,68 @@ def find_max_digits(iterable):
             math.log10(max_abs)
     ))
 
+def determine_compare_func(param_list):
+    if len(param_list) == 0: return always_true
+
+    _vars = {
+        'param_list': list(param_list),
+    }
+
+    def _determine_compare_func():
+        """
+        This function edits the passed parameter list in place
+        """
+        if len(_vars['param_list']) == 0:
+            raise Exception('Not enough arguments given to determine comparision function for conditional.')
+
+        comparison_str = _vars['param_list'].pop(0)
+
+        if comparison_str in basic_compare_dict:
+            return basic_compare_dict[comparison_str]
+        elif comparison_str == 'mod':
+            try:
+                mod_values = tuple(int(item) for item in itertools.takewhile(
+                    lambda xx: xx not in basic_compare_dict and xx not in compare_modifiers,
+                    _vars['param_list']
+                ))
+                _vars['param_list'] = _vars['param_list'][len(mod_values):]
+            except:
+                raise Exception("The parameter for `mod` comparision must be an integer")
+
+            other_comparison = _determine_compare_func()
+
+            if len(mod_values) == 1:
+                return lambda aa,bb,cc=None: other_comparison(aa % mod_values[0], bb)
+            else:
+                return lambda aa,bb,cc=None: other_comparison(aa % mod_values[cc], bb)
+        else:
+            raise Exception('Comparison string invalid')
+
+    compare_func_helper = _determine_compare_func()
+
+    try:
+        compare_values = tuple(int(item) for item in _vars['param_list'])
+    except:
+        raise Exception("The parameter(s) passed must be in integer(s)")
+
+    if len(compare_values) == 0:
+        raise Exception('No compare values where given.')
+
+    @docstring_format(
+        param_list=str(param_list),
+    )
+    def compare_func(value, index):
+        """
+        Compare Func
+        params: {param_list}
+        """
+        if len(compare_values) == 1:
+            return compare_func_helper(value, compare_values[0], index)
+        elif len(compare_values) > 1:
+            return compare_func_helper(value, compare_values[index], index)
+
+    return compare_func
+
 def get_basic_operation(operation_str, param_list = []):
     """
     The following operations are basic and normally do not need parameters
@@ -632,91 +695,6 @@ def get_bound_operation(param_list, conditoinal_func):
 
     return bound_func
 
-def get_select_operation(param_list):
-    if len(param_list) < 1:
-        raise Exception("The 'select' operation requires at least one parameter which is the select index.")
-
-    try:
-        select_indices = tuple(int(item) for item in param_list)
-    except:
-        raise Exception("The parameter(s) passed must be in integer(s)")
-
-    @docstring_format(
-        select_indices=str(select_indices),
-    )
-    def multi_select_func(xx):
-        """
-        Multi Select Function
-        Select Indices: {select_indices}
-        """
-        sorted_list = sorted(list(xx))
-
-        return tuple(sorted_list[ii] for ii in select_indices)
-
-    return multi_select_func
-
-def determine_compare_func(param_list):
-    if len(param_list) == 0: return always_true
-
-    _vars = {
-        'param_list': list(param_list),
-    }
-
-    def _determine_compare_func():
-        """
-        This function edits the passed parameter list in place
-        """
-        if len(_vars['param_list']) == 0:
-            raise Exception('Not enough arguments given to determine comparision function for conditional.')
-
-        comparison_str = _vars['param_list'].pop(0)
-
-        if comparison_str in basic_compare_dict:
-            return basic_compare_dict[comparison_str]
-        elif comparison_str == 'mod':
-            try:
-                mod_values = tuple(int(item) for item in itertools.takewhile(
-                    lambda xx: xx not in basic_compare_dict and xx not in compare_helper,
-                    _vars['param_list']
-                ))
-                _vars['param_list'] = _vars['param_list'][len(mod_values):]
-            except:
-                raise Exception("The parameter for `mod` comparision must be an integer")
-
-            other_comparison = _determine_compare_func()
-
-            if len(mod_values) == 1:
-                return lambda aa,bb,cc=None: other_comparison(aa % mod_values[0], bb)
-            else:
-                return lambda aa,bb,cc=None: other_comparison(aa % mod_values[cc], bb)
-        else:
-            raise Exception('Comparison string invalid')
-
-    compare_func_helper = _determine_compare_func()
-
-    try:
-        compare_values = tuple(int(item) for item in _vars['param_list'])
-    except:
-        raise Exception("The parameter(s) passed must be in integer(s)")
-
-    if len(compare_values) == 0:
-        raise Exception('No compare values where given.')
-
-    @docstring_format(
-        param_list=str(param_list),
-    )
-    def compare_func(value, index):
-        """
-        Compare Func
-        params: {param_list}
-        """
-        if len(compare_values) == 1:
-            return compare_func_helper(value, compare_values[0], index)
-        elif len(compare_values) > 1:
-            return compare_func_helper(value, compare_values[index], index)
-
-    return compare_func
-
 def get_reroll_if_operation(param_list, comparison_func):
     if len(param_list) > 0:
         raise Exception("Reroll doesn't take any parameters")
@@ -745,6 +723,29 @@ def get_reroll_if_operation(param_list, comparison_func):
         return (xx[-1],)
 
     return reroll_if_func
+
+def get_select_operation(param_list):
+    if len(param_list) < 1:
+        raise Exception("The 'select' operation requires at least one parameter which is the select index.")
+
+    try:
+        select_indices = tuple(int(item) for item in param_list)
+    except:
+        raise Exception("The parameter(s) passed must be in integer(s)")
+
+    @docstring_format(
+        select_indices=str(select_indices),
+    )
+    def multi_select_func(xx):
+        """
+        Multi Select Function
+        Select Indices: {select_indices}
+        """
+        sorted_list = sorted(list(xx))
+
+        return tuple(sorted_list[ii] for ii in select_indices)
+
+    return multi_select_func
 
 def get_slice_apply_operation(slice_params, other_param_list, should_memorize = False):
     if len(slice_params) != 1:
