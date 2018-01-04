@@ -52,6 +52,9 @@ echo "Starting Test" && \
     $python_exe $dice_distro_file $test_params --multi-die-sides 8 6 4 --apply reroll if lt 5 4 && \
     $python_exe $dice_distro_file $test_params --multi-die-sides 4 3 2 --multi-die-start -1 0 1 --multi-die-step 3 2 1 && \
     $python_exe $dice_distro_file $test_params --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200 && \
+    # the following two tests are related
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --save /tmp/2d6.json && \
+    $python_exe $dice_distro_file $test_params --load /tmp/2d6.json /tmp/2d6.json --apply sum && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum --show-counts && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum --sort value && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum --bar-size 0 && \

@@ -1,13 +1,16 @@
 from __future__ import print_function
 
-import sys
-import math
 import argparse
-import operator
-import functools
-import random
-import itertools
 import decimal
+import functools
+import itertools
+import json
+import math
+import operator
+import os
+import random
+import sys
+
 from collections import Counter
 
 if (2,0) <= sys.version_info < (3, 0):
@@ -107,18 +110,6 @@ parser = argparse.ArgumentParser(
         "This program is used to calculate the distributions of",
         "dice rolling (using brute force enumeration) with operations",
         "applied to results of the roll (via brute force calculations).",
-    ]),
-)
-
-parser.add_argument(
-    "--sort",
-    type=str,
-    choices=["key","value"],
-    default = 'key',
-    help=" ".join([
-        "This defines how the output is sorted.",
-        "Key refers to the die results.",
-        "Value refers to the counts or the probability of the results.",
     ]),
 )
 
@@ -377,22 +368,46 @@ bar_group.add_argument(
 
 """
 ========================================================================================
-Value Die Options
+Display Output Options
 ========================================================================================
 """
-value_group = parser.add_argument_group(
-    'Value Options',
+display_output_group = parser.add_argument_group(
+    'Display Output Options',
     'Options related to displaying calculated information',
 )
 
-value_group.add_argument(
+display_output_group.add_argument(
+    "--sort",
+    type=str,
+    choices=["key","value"],
+    default = 'key',
+    help=" ".join([
+        "This defines how the output is sorted.",
+        "Key refers to the die results.",
+        "Value refers to the counts or the probability of the results.",
+    ]),
+)
+
+display_output_group.add_argument(
+    "--no-output",
+    action='store_false',
+    dest='display_output',
+    default=True,
+    help=" ".join([
+        "If this flag is set, there will be no output displayed."
+    ]),
+)
+
+display_format_exclusive_options = display_output_group.add_mutually_exclusive_group()
+
+display_format_exclusive_options.add_argument(
     "--percent-decimal-place","-pdp",
     type=int,
     default = 2,
     help="The number of digits that will be displayed after the decimal place.",
 )
 
-value_group.add_argument(
+display_format_exclusive_options.add_argument(
     "--show-counts",
     action="store_true",
     help=" ".join([
@@ -422,6 +437,41 @@ simulate_group.add_argument(
     help=" ".join([
         "The number of simulated dice rols that will occur.",
         "If this option is not provided, then enumerating all outcomes will take place.",
+    ]),
+)
+
+"""
+========================================================================================
+File Save/Load Options
+========================================================================================
+"""
+file_save_load_options = parser.add_argument_group(
+    'Save/Load Options',
+    ' '.join([
+        'Options related to saving data and loading data'
+    ]),
+)
+
+file_save_load_options.add_argument(
+    '--load',
+    dest='load_file_paths',
+    type=str,
+    nargs="*",
+    default = None,
+    help=" ".join([
+        "The file path of where you want the data loaded from.",
+        "NOTE: If this parameter is used, all dice generation parameters will be ignored.",
+    ]),
+)
+
+
+file_save_load_options.add_argument(
+    '--save',
+    dest='save_file_path',
+    type=str,
+    default = None,
+    help=" ".join([
+        "The file path of where you want the data saved.",
     ]),
 )
 
@@ -536,14 +586,17 @@ def get_outcome_simulator(dice, num_iterations):
 
 def get_outcome_generator():
     dice = get_dice()
+    iterator = None
 
     if not isinstance(args.simulate_num_iterations, int):
-        return itertools.product(*dice)
+        iterator = itertools.product(*dice)
 
     elif args.simulate_num_iterations > 0:
-        return get_outcome_simulator(dice,args.simulate_num_iterations)
+        iterator = get_outcome_simulator(dice,args.simulate_num_iterations)
     else:
         raise Exception('The number of simulation iterations must be a positive integer')
+
+    return zip(iterator, itertools.repeat(1))
 
 
 def find_max_digits(iterable):
@@ -993,32 +1046,81 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
 
     return dice_input_checker(_operator)
 
-def main():
-    count = Counter()
+def save_data(counter_dict, save_file_path):
+    save_dict = dict()
 
-    if args.show_args:
-        print(args)
+    for key,value in counter_dict.items():
+        new_key = None
+        if isinstance(key,(list,tuple)):
+            new_key = json.dumps(key)
+        elif isinstance(key,int):
+            new_key = key
+        else:
+            raise Exception("Unexpected key to save: {}".format(key))
 
-    _operator = get_operator(args.apply[0], args.apply[1:], args.memorize)
+        save_dict[new_key] = value
 
-    # the next two lines is the majority of the program run time for larger values
-    for item in get_outcome_generator():
-        count[_operator(item)] += 1
+    with open(save_file_path, "w") as file_stream:
+        json.dump(save_dict, file_stream)
 
-    total = sum(count.values())
+def load_data(file_path):
+    counter_dict = Counter()
 
-    _temp_key = list(count.keys())[0]
+    if not os.path.isfile(file_path):
+        raise Exception('File path give to load is not a file.')
+
+    with open(file_path) as file_stream:
+        load_dict = json.load(file_stream)
+
+    for key,value in load_dict.items():
+        new_key = None
+        try:
+            new_key = tuple(json.loads(key))
+        except:
+            # key is not a list
+            try:
+                new_key = int(key)
+            except:
+                raise Exception("Key in file is not valid")
+
+        if not isinstance(value, int):
+            raise Exception("Values given in file are not integers.")
+
+
+        counter_dict[new_key] = value
+
+    return counter_dict
+
+def counter_dict_product(*args):
+    for items in itertools.product(*tuple(count_dict.items() for count_dict in args)):
+        full_key = []
+        full_value = 1
+
+        for key, value in items:
+            if isinstance(key, (tuple,list)):
+                full_key.extend(key)
+            elif isinstance(key, int):
+                full_key.append(key)
+
+            full_value*=value
+
+        yield tuple(full_key),full_value
+
+def display_data(counter_dict):
+    total = sum(counter_dict.values())
+
+    _temp_key = list(counter_dict.keys())[0]
     is_key_array_like = isinstance(_temp_key, (tuple,list))
     num_items_in_key = 1*(not is_key_array_like) or len(_temp_key)
 
     if is_key_array_like:
         all_keys = []
-        for key_set in count:
+        for key_set in counter_dict:
             all_keys.extend(key_set)
         num_key_digits = find_max_digits(all_keys)
 
     else:
-        num_key_digits = find_max_digits(count.keys())
+        num_key_digits = find_max_digits(counter_dict.keys())
 
     key_formater = "{{key:{num_key_digits}d}}".format(
         num_key_digits=num_key_digits
@@ -1033,7 +1135,7 @@ def main():
             ]),
         )
 
-    num_count_digits = find_max_digits(count.values())
+    num_count_digits = find_max_digits(counter_dict.values())
 
     formatter_count = "{{value:{num_count_digits}d}}".format(
         num_count_digits=num_count_digits,
@@ -1042,9 +1144,9 @@ def main():
     full_formater = "{key}: {value} {bar}"
 
     if args.sort == "key":
-        iterater = sorted(list(count.items()))
+        iterater = sorted(list(counter_dict.items()))
     elif args.sort == "value":
-        iterater = sorted(list(count.items()), key=lambda xx:xx[-1::-1])
+        iterater = sorted(list(counter_dict.items()), key=lambda xx:xx[-1::-1])
     else:
         raise Exception("Unexpected sort value")
 
@@ -1078,7 +1180,31 @@ def main():
             bar=bar_string,
         ))
 
-    return count
+def main():
+    counter_dict = Counter()
+
+    if args.show_args:
+        print(args)
+
+    if isinstance(args.load_file_paths, (list,tuple)) and len(args.load_file_paths) > 0:
+        iterator = counter_dict_product(*tuple(
+            load_data(file_path)
+            for file_path in args.load_file_paths
+        ))
+    else:
+        iterator = get_outcome_generator()
+
+    _operator = get_operator(args.apply[0], args.apply[1:], args.memorize)
+
+    # the next two lines is the majority of the program run time for larger values
+    for item,count in iterator:
+        counter_dict[_operator(item)] += count
+
+    if args.save_file_path is not None:
+        save_data(counter_dict, args.save_file_path)
+
+    if args.display_output:
+        display_data(counter_dict)
 
 if __name__ == '__main__':
     main()
