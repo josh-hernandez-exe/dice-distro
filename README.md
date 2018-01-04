@@ -771,6 +771,34 @@ The following example shows two the above weighted D6 then summing the values.
 12:   0.23 % |
 ```
 
+### Saving/Loading/Suppresing Output
+You can use the `--save <file_name>` flag to save the data to a file.
+Then use it later for other calculations.
+You can use the `--no-output` to not render any output.
+```
+➔ python dice_distro.py -d 6 --no-output --save /tmp/1d6.json
+➔ python dice_distro.py -d 8 --no-output --save /tmp/1d8.json
+```
+You can then load the data using `--load <file_names>`.
+If you supply more than one file name, the distributions are **multiplied**.
+This makes calculating some larger dice pools to be easier.
+```
+➔ python dice_distro.py --load /tmp/1d6.json /tmp/1d8.json --apply sum
+ 2:   2.08 % |====
+ 3:   4.17 % |========
+ 4:   6.25 % |============
+ 5:   8.33 % |================
+ 6:  10.42 % |====================
+ 7:  12.50 % |=========================
+ 8:  12.50 % |=========================
+ 9:  12.50 % |=========================
+10:  10.42 % |====================
+11:   8.33 % |================
+12:   6.25 % |============
+13:   4.17 % |========
+14:   2.08 % |====
+```
+
 ### Advance Conditionals on Unitary Operations
 Operations that that only change a single die value can be applied conditinoally.
 These operations are `shift`, `scale`, `bound`, `select`, `reroll`.
@@ -861,8 +889,5 @@ Enumerating all the outcomes would take quite a while.
 If I find time in the future, I plan to (in no specific order):
 - Add parallelization the work so that options with a large enumeration set can be computed faster
     - also allowing larger numbers of simulated dice throws.
-- Add saving output to a file
-    + Load output from a file and apply operations after loading
-    + Load multiple file and have a cartisian product of the output
 + Add boolean logic (`or`/`and`/`not`) to the conditional parser
     * This will require an implementation for brackets
