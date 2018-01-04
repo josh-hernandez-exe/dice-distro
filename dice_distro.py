@@ -57,8 +57,52 @@ compare_modifiers = set([
     'mod',
 ])
 
+class CustomFormatter(argparse.HelpFormatter):
+    """
+    Utilized code from:
+        - https://github.com/bewest/argparse/blob/master/argparse.py
+            class RawDescriptionHelpFormatter(HelpFormatter)
+            class ArgumentDefaultsHelpFormatter(HelpFormatter)
+            RawTextHelpFormatter._split_lines
+        - https://bitbucket.org/ruamel/std.argparse/src/cd5e8c944c5793fa9fa16c3af0080ea31f2c6710/__init__.py?at=default&fileviewer=file-view-default
+
+    R| - Raw text, no indentation will be added
+    D| - Pad with white space
+    """
+    def __init__(self, *args, **kw):
+        self._add_defaults = None
+        super(CustomFormatter, self).__init__(*args, **kw)
+
+    def _split_lines(self, text, width):
+        # this is the RawTextHelpFormatter._split_lines
+        if text.startswith('R|'):
+            return text[2:].splitlines()
+        elif text.startswith('D|'):
+            return [item.strip() for item in text[2:].splitlines()]
+
+        return argparse.HelpFormatter._split_lines(self, text, width)
+
+    def _fill_text(self, text, width, indent):
+        # this is the RawDescriptionHelpFormatter._fill_text
+        if text.startswith('R|'):
+            return text[2:]
+
+        if text.startswith('D|'):
+            text = text[2:]
+
+        return argparse.HelpFormatter._fill_text(self, text, width, indent)
+
+    def _get_help_string(self, action):
+        _help = action.help
+        if '%(default)' not in action.help:
+            if action.default is not argparse.SUPPRESS:
+                defaulting_nargs = [argparse.OPTIONAL, argparse.ZERO_OR_MORE]
+                if action.option_strings or action.nargs in defaulting_nargs:
+                    _help += ' (default: %(default)s)'
+        return _help
+
 parser = argparse.ArgumentParser(
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    formatter_class=CustomFormatter,
     description="\n".join([
         "This program is used to calculate the distributions of",
         "dice rolling (using brute force enumeration) with operations",
@@ -153,7 +197,6 @@ single_type_group_side_option.add_argument(
     ]),
 )
 
-
 """
 ========================================================================================
 Multi Die Options
@@ -226,8 +269,58 @@ op_group.add_argument(
     type=str,
     nargs="*",
     default = ['id'],
-    help=" ".join([
-        ""
+    help="\n".join([
+        "D|"
+        # Intro block
+        "The operation that will be applied to the values rolled.",
+        "Operations can be chained, but it is up to the user to make",
+        "sure that the outputs of one are correct inputs for the other.",
+        # Explain if-block synatx
+        "Some operations can be applied conditionally, denoted by an",
+        "if-block between the operation string and its parameters.",
+        "The 'then' keyword can be used to denote the end",
+        "of the conditional statement",
+        "if more operation or parameters are needed.",
+        "Example Syntax:",
+        "'--apply op1 if cond1... then params1... then op2 if cond2... then params2...'",
+        "Note that if the last operation does not need parameters",
+        "but has an if-block, the final 'then' is not needed.",
+        # End of into block
+        # Define id operation
+        "The 'id' operation refers to the identity operation, which will",
+        "leave the input unchanged.",
+        # Define math operations operation
+        "The following operations:",
+        "'sum', 'min', 'max', 'set', 'prod', 'bit-or', 'bit-xor', 'bit-and',",
+        "apply their assosiated operation to all the dice.",
+        "An optional parameter can be given for a block-size, for block-wise application.",
+        "If the a block-size parameter is used, the results will be treated",
+        "as distinguishable dice.",
+        # Define set operation
+        "The 'set' enumerates the results, treating the dice is indistiguishable.",
+        # Define shift operation
+        "The 'shift' operation will add a static value to all results",
+        "(you can specify the value per die).",
+        # Define bound operation
+        "The 'bound' operation will keep the values within specified upper and",
+        "lower bound (can be spcified per die).",
+        # Define reroll operation
+        "The 'reroll' will assume ordered dice rolls.",
+        "To be useful, 'reroll' should be given an if block,",
+        "otherwise, the die is always rerolled and the final roll will just be used.",
+        # Define slice-apply operation
+        "The 'slice-apply' will take an block-size parameter to split the current",
+        "dice pool into blocks.",
+        "The immideate subsequent operation is applied to each block independently.",
+        "Operations applied after the immideate subsequent one will be applied to the",
+        "whole dice pool again (unless 'slice-apply' is used again).",
+        # Define select operation
+        "The 'select' operation requires at least one integer parameter.",
+        "This parameter is the index of the item in the sorted array.",
+        "Example-Select-1: '--apply select  0' is the same as min.",
+        "Example-Select-2: '--apply select  1' returns the second lowest value.",
+        "Example-Select-3: '--apply select -1' is the same as max.",
+        "Example-Select-4: '--apply select -2' returns the second highest value.",
     ]),
 )
 
@@ -251,7 +344,6 @@ bar_group = parser.add_argument_group(
     'Bar Options',
     'Options related to the bar rendering',
 )
-
 
 bar_group.add_argument(
     "--bar-size",
