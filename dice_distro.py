@@ -787,7 +787,7 @@ def get_bound_operation(param_list, conditoinal_func):
 
     return bound_func
 
-def get_reroll_if_operation(param_list, comparison_func):
+def get_reroll_operation(param_list, comparison_func):
     if len(param_list) > 0:
         raise Exception("Reroll doesn't take any parameters")
 
@@ -795,7 +795,7 @@ def get_reroll_if_operation(param_list, comparison_func):
         param_list=str(param_list),
         conditional_info=comparison_func.__doc__,
     )
-    def reroll_if_func(xx):
+    def reroll_func(xx):
         """
         Reroll If Contitional Function
         Conditional: {conditional_info}
@@ -814,7 +814,7 @@ def get_reroll_if_operation(param_list, comparison_func):
         # should never happen, but just in case
         return (xx[-1],)
 
-    return reroll_if_func
+    return reroll_func
 
 def get_select_operation(param_list):
     if len(param_list) < 1:
@@ -941,11 +941,11 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
     elif operation_str == 'bound':
         _operator = get_bound_operation(cur_params, conditoinal_func)
 
+    elif operation_str == 'reroll':
+        _operator = get_reroll_operation(cur_params, conditoinal_func)
+
     elif operation_str == 'select':
         _operator = get_select_operation(cur_params)
-
-    elif operation_str == 'reroll':
-        _operator = get_reroll_if_operation(cur_params, conditoinal_func)
 
     elif operation_str == 'slice-apply':
         _operator = get_slice_apply_operation(cur_params, param_list, should_memorize)
