@@ -8,6 +8,7 @@ dice_distro_file="$DIR/dice_distro.py"
 test_params="--show-args"
 
 echo "Starting Test" && \
+    $python_exe $dice_distro_file $test_params --help && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply min && \
