@@ -224,7 +224,6 @@ op_group.add_argument(
     "--apply",
     type=str,
     nargs="*",
-    choices=sorted(operations_dict.keys()),
     default = ['id'],
     help=" ".join([
         ""
@@ -517,7 +516,10 @@ def get_shift_operation(param_list, conditoinal_func):
         else:
             iterable = zip(xx, shift_values)
 
-        return tuple(item+shift for item,shift in iterable)
+        return tuple(
+            item+shift if conditoinal_func(item,index) else item
+            for index, (item,shift) in enumerate(iterable)
+        )
 
     return shift_func
 
@@ -566,7 +568,10 @@ def get_scale_operation(param_list, conditoinal_func):
         else:
             iterable = zip(xx, scale_values)
 
-        return tuple(scale_operation(item,scale_factor) for item,scale_factor in iterable)
+        return tuple(
+            scale_operation(item,scale_factor) if conditoinal_func(item,index) else item
+            for index,(item,scale_factor) in enumerate(iterable)
+        )
 
     return scale_func
 
@@ -594,6 +599,11 @@ def get_bound_operation(param_list, conditoinal_func):
         if low > high:
             raise Exception('Lower bound is larger than upper bound.')
 
+    def bound_value_func(item, upper, lower):
+        if item <= lower: return lower
+        elif item >= upper: return upper
+        else: return item
+
     @docstring_format(
         lower_bounds=str(lower_bounds),
         upper_bounds=str(upper_bounds),
@@ -615,12 +625,10 @@ def get_bound_operation(param_list, conditoinal_func):
         else:
             iterable = zip(xx, lower_bounds, upper_bounds)
 
-        for item,lower,upper in iterable:
-            if item < lower: results.append(lower)
-            elif item > upper: results.append(upper)
-            else: results.append(item)
-
-        return tuple(results)
+        return tuple(
+            bound_value_func(item, upper, lower) if conditoinal_func(item,index) else item
+            for index,(item,lower,upper) in enumerate(iterable)
+        )
 
     return bound_func
 
@@ -648,27 +656,34 @@ def get_select_operation(param_list):
     return multi_select_func
 
 def determine_compare_func(param_list):
-    param_list_copy = list(param_list)
+    if len(param_list) == 0: return always_true
 
-    def determine_compare_func():
+    _vars = {
+        'param_list': list(param_list),
+    }
+
+    def _determine_compare_func():
         """
         This function edits the passed parameter list in place
         """
-        comparison_str = param_list_copy.pop(0)
+        if len(_vars['param_list']) == 0:
+            raise Exception('Not enough arguments given to determine comparision function for conditional.')
+
+        comparison_str = _vars['param_list'].pop(0)
 
         if comparison_str in basic_compare_dict:
             return basic_compare_dict[comparison_str]
         elif comparison_str == 'mod':
             try:
-                mod_values = tuple(int(item) for item in takewhile(
-                    lambda xx: xx not in basic_compare_dict or xx not in compare_helper,
-                    param_list_copy
+                mod_values = tuple(int(item) for item in itertools.takewhile(
+                    lambda xx: xx not in basic_compare_dict and xx not in compare_helper,
+                    _vars['param_list']
                 ))
-                param_list_copy = param_list_copy[len(mod_values):]
+                _vars['param_list'] = _vars['param_list'][len(mod_values):]
             except:
                 raise Exception("The parameter for `mod` comparision must be an integer")
 
-            other_comparison = determine_compare_func()
+            other_comparison = _determine_compare_func()
 
             if len(mod_values) == 1:
                 return lambda aa,bb,cc=None: other_comparison(aa % mod_values[0], bb)
@@ -677,10 +692,10 @@ def determine_compare_func(param_list):
         else:
             raise Exception('Comparison string invalid')
 
-    compare_func_helper = determine_compare_func(param_list_copy)
+    compare_func_helper = _determine_compare_func()
 
     try:
-        compare_values = tuple(int(item) for item in param_list_copy)
+        compare_values = tuple(int(item) for item in _vars['param_list'])
     except:
         raise Exception("The parameter(s) passed must be in integer(s)")
 
@@ -696,9 +711,9 @@ def determine_compare_func(param_list):
         params: {param_list}
         """
         if len(compare_values) == 1:
-            return compare_func(value, compare_values[0], index)
+            return compare_func_helper(value, compare_values[0], index)
         elif len(compare_values) > 1:
-            return compare_func(value, compare_values[index], index)
+            return compare_func_helper(value, compare_values[index], index)
 
     return compare_func
 
@@ -804,15 +819,18 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
     orignal_params = list(param_list)
 
     conditional_params = []
-    if operation_str in ifable:
-        if param_list[0] == 'if':
-            conditional_params = list(itertools.takewhile(lambda xx: xx != 'then', param_list))
+    if len(param_list) > 0 and param_list[0] == 'if':
+        if operation_str in ifable:
+            conditional_params = list(itertools.takewhile(lambda xx: xx != 'then', param_list[1:]))
+            param_list = param_list[1+len(conditional_params):]
+
+            if len(param_list) > 0 and param_list[0] == 'then':
+                param_list = param_list[1:]
         else:
             raise Exception('This operation is not if-able.')
 
     conditoinal_func = determine_compare_func(conditional_params)
 
-    param_list = param_list[len(conditional_params):]
     cur_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, param_list))
     apply_nested_operation = True
 
@@ -841,7 +859,7 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
         apply_nested_operation = False
 
     else:
-        raise Exception("operation string passed is not valid")
+        raise Exception("operation string '{}' is not valid".format(operation_str))
 
     if apply_nested_operation and len(param_list):
         # Apply a nested operation
