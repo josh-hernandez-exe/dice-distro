@@ -858,5 +858,11 @@ Enumerating all the outcomes would take quite a while.
 
 # Future Plans
 
-If I find time in the future, I plan to parallelize the work so that options with a large enumeration set can be computed faster,
-as well as allowing larger numbers of simulated dice throws.
+If I find time in the future, I plan to (in no specific order):
+- Add parallelization the work so that options with a large enumeration set can be computed faster
+    - also allowing larger numbers of simulated dice throws.
+- Add saving output to a file
+    + Load output from a file and apply operations after loading
+    + Load multiple file and have a cartisian product of the output
++ Add boolean logic (`or`/`and`/`not`) to the conditional parser
+    * This will require an implementation for brackets
