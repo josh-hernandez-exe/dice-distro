@@ -23,7 +23,7 @@ There is a lot of explanation in the `--help` output. Which you can see using:
 ### Rolling Two D6 (and Changing the Output)
 We apply the sum operation on the dice.
 ```
-➔ python dice_distro.py -d 6 -n 2 --op-func sum
+➔ python dice_distro.py -d 6 -n 2 --apply sum
  2:   2.78 % |=====
  3:   5.56 % |===========
  4:   8.33 % |================
@@ -39,8 +39,8 @@ We apply the sum operation on the dice.
 
 You can change the output to show a different number of decimal places (default is 2).
 ```
-➔ # python dice_distro.py -d 6 -n 2 --percent-decimal-place 4 --op-func sum
-➔ python dice_distro.py -d 6 -n 2 -pdp 4 --op-func sum
+➔ # python dice_distro.py -d 6 -n 2 --percent-decimal-place 4 --apply sum
+➔ python dice_distro.py -d 6 -n 2 -pdp 4 --apply sum
  2:   2.7778 % |=====
  3:   5.5556 % |===========
  4:   8.3333 % |================
@@ -57,7 +57,7 @@ You can change the output to show a different number of decimal places (default 
 You can also change the output to show the counts.
 The modules trying every combination of output, treating each die as distinguishable.
 ```
-➔ python dice_distro.py -d 6 -n 2 --show-counts --op-func sum
+➔ python dice_distro.py -d 6 -n 2 --show-counts --apply sum
  2: 1 |=====
  3: 2 |===========
  4: 3 |================
@@ -73,7 +73,7 @@ The modules trying every combination of output, treating each die as distinguish
 
 You can also change the sort order.
 ```
-➔ python dice_distro.py -d 6 -n 2 --sort value --op-func sum
+➔ python dice_distro.py -d 6 -n 2 --sort value --apply sum
  2:   2.78 % |=====
 12:   2.78 % |=====
  3:   5.56 % |===========
@@ -89,7 +89,7 @@ You can also change the sort order.
 
 If you don't want to see the bars, you can turn them off.
 ```
-➔ python dice_distro.py -d 6 -n 2 --bar-size 0 --op-func sum
+➔ python dice_distro.py -d 6 -n 2 --bar-size 0 --apply sum
  2:   2.78 % 
  3:   5.56 % 
  4:   8.33 % 
@@ -105,7 +105,7 @@ If you don't want to see the bars, you can turn them off.
 
 Or you can drastically change how the bars get rendered.
 ```
-➔ python dice_distro.py -d 6 -n 2 --bar-size 2 --bar-char '@#' --bar-prefix '<|' --op-func sum
+➔ python dice_distro.py -d 6 -n 2 --bar-size 2 --bar-char '@#' --bar-prefix '<|' --apply sum
  2:   2.78 % <|@#@#@#@#@#
  3:   5.56 % <|@#@#@#@#@#@#@#@#@#@#@#
  4:   8.33 % <|@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#
@@ -145,7 +145,7 @@ The default operation is to show the results of the dice as if the results are d
 
 ### Four D2 Sum in Pairs (Distinguishable Results)
 ```
-➔ python ./dice_distro.py -d 2 -n 4 --op-func sum --op-params 2
+➔ python dice_distro.py -d 2 -n 4 --apply sum  2
 2,2:   6.25 % |============
 2,3:  12.50 % |=========================
 2,4:   6.25 % |============
@@ -159,7 +159,7 @@ The default operation is to show the results of the dice as if the results are d
 
 ### Advantage (Rolling Two D20 Taking Max)
 ```
-➔ python dice_distro.py -d 20 -n 2 --op-func max
+➔ python dice_distro.py -d 20 -n 2 --apply max
  1:   0.25 % |
  2:   0.75 % |=
  3:   1.25 % |==
@@ -184,7 +184,7 @@ The default operation is to show the results of the dice as if the results are d
 
 ### Disadvantage (Rolling Two D20 Taking Min)
 ```
-➔ python dice_distro.py -d 20 -n 2 --op-func min
+➔ python dice_distro.py -d 20 -n 2 --apply min
  1:   9.75 % |===================
  2:   9.25 % |==================
  3:   8.75 % |=================
@@ -210,7 +210,7 @@ The default operation is to show the results of the dice as if the results are d
 ### Rolling D6 Shifting the Value but Bounding the Results
 We roll a D6, add 2, but don't let the value exceed the values that can be possibly rolled.
 ```
-➔ python ./dice_distro.py --bar-size 1 -d 6 --op-func shift --op-params 2 bound 1 6
+➔ python dice_distro.py --bar-size 1 -d 6 --apply shift 2 bound 1 6
 3:  16.67 % |================
 4:  16.67 % |================
 5:  16.67 % |================
@@ -222,7 +222,7 @@ Note that the select index parameter is zero-indexed,
 and refers to the index of the value in the list of sorted dice roll results.
 The selection index of `1` refers to the second lowest value.
 ```
-➔ python dice_distro.py -d 6 -n 4 --op-func select --op-param 1
+➔ python dice_distro.py -d 6 -n 4 --apply select 1
 1:  13.19 % |==========================
 2:  27.55 % |=======================================================
 3:  28.01 % |========================================================
@@ -237,7 +237,7 @@ The negative selection index takes from the end of the list of sorted dice roll 
 Thus selection index `-2` is the second last element
 (or second largest value) in the list of sorted dice roll results,
 ```
-➔ python dice_distro.py -d 6 -n 4 --op-func select --op-param -2
+➔ python dice_distro.py -d 6 -n 4 --apply select -2
 1:   1.62 % |===
 2:   9.49 % |==================
 3:  20.14 % |========================================
@@ -249,7 +249,7 @@ Thus selection index `-2` is the second last element
 ### Rolling Four D4 (Indistinguishable)
 The possible outcomes treating the dice as indistinguishable.
 ```
-➔ python dice_distro.py -d 4 -n 4 --op-func set
+➔ python dice_distro.py -d 4 -n 4 --apply set
 1,1,1,1:   0.39 % |
 1,1,1,2:   1.56 % |===
 1,1,1,3:   1.56 % |===
@@ -293,7 +293,7 @@ but the result is a list in the order of the select indices that you gave.
 In this example this is the same as excluding the lowest.
 The key sorting is lexicographic.
 ```
-➔ python dice_distro.py -d 4 -n 4 --op-func select --op-params -1 -2 -3
+➔ python dice_distro.py -d 4 -n 4 --apply select -1 -2 -3
 1,1,1:   0.39 % |
 2,1,1:   1.56 % |===
 2,2,1:   2.34 % |====
@@ -317,12 +317,11 @@ The key sorting is lexicographic.
 ```
 
 ### Selecting the Three Highest Values from Four D6 and Summing
-The indices have the same meaning as with `--op-func multi-select`
-(and thus the same meaning as `--op-func select`),
+The indices have the same meaning as with `--apply select`,
 but with an additional parameter referring to the operation
 that will be applied to the selected values.
 ```
-➔ python dice_distro.py -d 6 -n 4 --op-func select --op-params -1 -2 -3 sum
+➔ python dice_distro.py -d 6 -n 4 --apply select -1 -2 -3 sum
  3:   0.08 % |
  4:   0.31 % |
  5:   0.77 % |=
@@ -342,12 +341,12 @@ that will be applied to the selected values.
 ```
 
 ### Conditional Rerolling
-Roll a D6, if the value is greater than 4 (the `--op-params` value), keep the value.
+Roll a D6, if the value is greater than 4 (the `` value), keep the value.
 Otherwise reroll, repeat to a max of three rolls.
 Keep the final roll, regardless of outcome.
 To change the max reroll count, change the number of dice that are rolled (the `-n` parameter).
 ```
-➔ python dice_distro.py -d 6 -n 3 --op-func reroll-if --op-params lt 4
+➔ python dice_distro.py -d 6 -n 3 --apply reroll if lt 4
 1:   4.17 % |========
 2:   4.17 % |========
 3:   4.17 % |========
@@ -362,7 +361,7 @@ Otherwise, reroll.
 The rolls are parsed two at a time, so if you have `-n 8` will have a max of four rolls.
 **Note** that its up to the user to make sure that there is enough dice.
 ```
-➔ python dice_distro.py -d 6 -n 4  --op-func sum --op-params 2 reroll-if lt 7
+➔ python dice_distro.py -d 6 -n 4 --apply sum  2 reroll if lt 7
  2:   1.16 % |==
  3:   2.31 % |====
  4:   3.47 % |======
@@ -383,7 +382,7 @@ Instructions:
 - If 4 or greater, keep the value and terminate execution, otherwise disregard the value and roll a D4.
 - Keep the final value (if you got this far)
 ```
-➔ python dice_distro.py --multi-die-sides 8 6 4 --op-func reroll-if --op-params lt 5 4
+➔ python dice_distro.py --multi-die-sides 8 6 4 --apply reroll if lt 5 4
 1:   6.25 % |============
 2:   6.25 % |============
 3:   6.25 % |============
@@ -398,7 +397,7 @@ Instructions:
 This program by default will treat a D10 to begin at `1` and have values all the way up to `10`.
 If we want the lowest value to start at `0` we can do the following.
 ```
-➔ python dice_distro.py -d 10 -n 2 --die-start 0 --op-func sum
+➔ python dice_distro.py -d 10 -n 2 --die-start 0 --apply sum
  0:   1.00 % |==
  1:   2.00 % |====
  2:   3.00 % |======
@@ -422,7 +421,7 @@ If we want the lowest value to start at `0` we can do the following.
 
 Or other type of D10 (some refer to as a D100, but does not have 100 sides)
 ```
-➔ python dice_distro.py -d 10 -n 2 --die-start 0 --die-step 10 --op-func sum
+➔ python dice_distro.py -d 10 -n 2 --die-start 0 --die-step 10 --apply sum
   0:   1.00 % |==
  10:   2.00 % |====
  20:   3.00 % |======
@@ -447,7 +446,7 @@ Or other type of D10 (some refer to as a D100, but does not have 100 sides)
 ### Rolling Custom Values
 You can manually set the values on the sides of the die.
 ```
-➔ python dice_distro.py -n 2 --die-values 0 10 100 -1000 --op-func sum
+➔ python dice_distro.py -n 2 --die-values 0 10 100 -1000 --apply sum
 -2000:   6.25 % |============
 -1000:  12.50 % |=========================
  -990:  12.50 % |=========================
@@ -462,7 +461,7 @@ You can manually set the values on the sides of the die.
 
 ### Rolling a D12 D8 and D6
 ```
-➔ python dice_distro.py --multi-die-sides 12 8 6 --op-func sum
+➔ python dice_distro.py --multi-die-sides 12 8 6 --apply sum
  3:   0.17 % |
  4:   0.52 % |=
  5:   1.04 % |==
@@ -523,7 +522,6 @@ in relation to `--multi-die-sides`.
 ```
 
 ### Roll Multiple Types of Dice with Specific Values
-
 - One D4 with values from 0 to 3.
 - One D3 with values of 10, 20, and 30.
 - One D2 with values of 100 and 200.
@@ -562,7 +560,7 @@ This example rolls five D8 and applies the following instructions:
 - sum the values in pairs (highest and fourth is summed to one value, the second and third highest are summed)
 - of the two values select the lowest
 ```
-➔ python dice_distro.py -d 8 -n 5 --op-func select --op-params -1 -4 -2 -3 sum 2 select 0
+➔ python dice_distro.py -d 8 -n 5 --apply select -1 -4 -2 -3 sum 2 select 0
  2:   0.11 % |
  3:   0.43 % |
  4:   1.48 % |==
@@ -584,7 +582,7 @@ This example rolls five D8 and applies the following instructions:
 We roll four D4 group them into 2 pairs.
 Then sum their values, and treat the results as indistinguishable.
 ```
-➔ python dice_distro.py -d 4 -n 4 --op-func sum --op-params 2 set
+➔ python dice_distro.py -d 4 -n 4 --apply sum 2 set
 2,2:   0.39 % |
 2,3:   1.56 % |===
 2,4:   2.34 % |====
@@ -631,7 +629,7 @@ The above is the equvalent in saying:
 			- Otherwise continue to the next die result
 - With the recorded results from each group display results
 ```
-➔ python dice_distro.py -d 4 -n 9 --op-func slice-apply --op-params 3 reroll-if lt 3
+➔ python dice_distro.py -d 4 -n 9 --apply slice-apply 3 reroll if lt 3
 1,1,1:   0.02 % |
 1,1,2:   0.02 % |
 1,1,3:   0.17 % |
@@ -700,7 +698,7 @@ The above is the equvalent in saying:
 
 ### Two Ways to Roll Two Sets of D6, Summing Then Taking Max
 ```
-➔ python dice_distro.py -d 6 -n 4 -pdp 4 --op-func sum --op-params 2 max
+➔ python dice_distro.py -d 6 -n 4 -pdp 4 --apply sum 2 max
  2:   0.0772 % |
  3:   0.6173 % |=
  4:   2.0833 % |====
@@ -714,7 +712,7 @@ The above is the equvalent in saying:
 12:   5.4784 % |==========
 ```
 ```
-➔ python dice_distro.py -d 6 -n 4 -pdp 4 --op-func slice-apply --op-params 2 sum max
+➔ python dice_distro.py -d 6 -n 4 -pdp 4 --apply slice-apply 2 sum max
  2:   0.0772 % |
  3:   0.6173 % |=
  4:   2.0833 % |====
@@ -759,7 +757,7 @@ The following example shows two the above weighted D6 then summing the values.
     4 4 4 \
     5 5 \
     6 \
-    -n 2 --op-func sum
+    -n 2 --apply sum
  2:   8.16 % |================
  3:  13.61 % |===========================
  4:  16.55 % |=================================
@@ -771,6 +769,33 @@ The following example shows two the above weighted D6 then summing the values.
 10:   2.27 % |====
 11:   0.91 % |=
 12:   0.23 % |
+```
+
+### Advance Conditionals on Unitary Operations
+Operations that that only change a single die value can be applied conditinoally.
+These operations are `shift`, `scale`, `bound`, `select`, `reroll`.
+In this example we:
+- Roll two D6
+- For the first die, if it is an even number, subtract 10
+- For the second die, if it is equivalent to 1 mod 3, add 100
+```
+➔ python dice_distro.py -d 4 -n 2 --apply shift if mod 2 3 eq 0 1 then -10 100
+  -8,   2:   6.25 % |============
+  -8,   3:   6.25 % |============
+  -8, 101:   6.25 % |============
+  -8, 104:   6.25 % |============
+  -6,   2:   6.25 % |============
+  -6,   3:   6.25 % |============
+  -6, 101:   6.25 % |============
+  -6, 104:   6.25 % |============
+   1,   2:   6.25 % |============
+   1,   3:   6.25 % |============
+   1, 101:   6.25 % |============
+   1, 104:   6.25 % |============
+   3,   2:   6.25 % |============
+   3,   3:   6.25 % |============
+   3, 101:   6.25 % |============
+   3, 104:   6.25 % |============
 ```
 
 # Simulating Dice Rolls
@@ -787,7 +812,7 @@ An example of simulating 100000 rolls of ten D30, taking the two largest values 
 Ten D30's has `30^10` or `5.904900e+14` distinct outcomes if you treat each die as distinguishable.
 Enumerating all the outcomes would take quite a while.
 ```
-➔ python dice_distro.py -d 30 -n 10 -pdp 3 --op-func select --op-params -1 -2 sum --simulate 100000
+➔ python dice_distro.py -d 30 -n 10 -pdp 3 --apply select -1 -2 sum --simulate 100000
 20:   0.001 % |
 21:   0.003 % |
 22:   0.007 % |
