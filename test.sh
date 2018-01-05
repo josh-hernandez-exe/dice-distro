@@ -8,7 +8,7 @@ dice_distro_file="$DIR/dice_distro.py"
 test_params_with_output="--show-args"
 test_params="$test_params_with_output --no-output"
 
-echo "Starting Test" && \
+echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params --help && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 && \
     # Test basic operations
@@ -86,4 +86,4 @@ echo "Starting Test" && \
     $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum --sort value && \
     $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum --bar-size 0 && \
     $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum --bar-size 2 --bar-char '@#' --bar-prefix '<|' && \
-    echo "End of Test"
+    echo "End of Test with $python_exe"
