@@ -16,7 +16,7 @@ from collections import Counter
 if (2,0) <= sys.version_info < (3, 0):
     zip = itertools.izip
 
-operations_dict = {
+OPERATIONS_DICT = {
     'id':tuple,
     'sum':lambda xx: (sum(xx),),
     'min':lambda xx: (min(xx),),
@@ -34,12 +34,12 @@ operations_dict = {
     'slice-apply': None, # This will get defined later if used,
 }
 
-basic_operations = set(
-    key for key,value in operations_dict.items() if value is not None
+BASIC_OPERATIONS = set(
+    key for key,value in OPERATIONS_DICT.items() if value is not None
 )
 
 # set of operations that support an if-block
-ifable = set([
+IF_ABLE_OPERATIONS = set([
     'shift',
     'scale',
     'bound',
@@ -47,7 +47,7 @@ ifable = set([
     'reroll',
 ])
 
-basic_compare_dict = {
+BASIC_COMPARE_DICT = {
     'eq':lambda aa,bb,cc=None: aa == bb,
     'neq': lambda aa,bb,cc=None: aa != bb,
     'gt':lambda aa,bb,cc=None: aa > bb,
@@ -56,9 +56,6 @@ basic_compare_dict = {
     'le':lambda aa,bb,cc=None: aa <= bb,
 }
 
-compare_modifiers = set([
-    'mod',
-])
 
 class CustomFormatter(argparse.HelpFormatter):
     """
@@ -316,6 +313,17 @@ op_group.add_argument(
 )
 
 op_group.add_argument(
+    "--bracket-chars",
+    type=str,
+    nargs=2,
+    default=['[',']'],
+    help=" ".join([
+        "You can redfine what the delimiter for brackets are.",
+        "You must give two values, for the left brackets, then the right."
+    ]),
+)
+
+op_group.add_argument(
     "--memorize",
     action='store_true',
     help=" ".join([
@@ -476,17 +484,51 @@ file_save_load_options.add_argument(
 )
 
 
-args = parser.parse_args()
+ARGS = parser.parse_args()
 
-formatter_percent = "{{value:{percent_formatter}}} %".format(
+
+BRACKET_CHARS = ARGS.bracket_chars
+BRACKET_SET = set(BRACKET_CHARS)
+
+BOOLEAN_LOGIC_OPERATOR_ORDER = ['not', 'and', 'or']
+BOOLEAN_LOGIC_OPERATORS = set(BOOLEAN_LOGIC_OPERATOR_ORDER)
+
+COMPARE_KEYWORDS_SET = set.union(
+    set([
+        'mod',
+    ]),
+    set(BASIC_COMPARE_DICT.keys()),
+    BOOLEAN_LOGIC_OPERATORS,
+)
+
+if any(char in COMPARE_KEYWORDS_SET for char in BRACKET_CHARS):
+    raise Exception('The bracket chars you set cannot be an existing keyword.')
+
+
+FORMATTER_PERCENT = "{{value:{percent_formatter}}} %".format(
     percent_formatter = "{}.{}f".format(
-        len("100.") + args.percent_decimal_place,
-        args.percent_decimal_place,
+        len("100.") + ARGS.percent_decimal_place,
+        ARGS.percent_decimal_place,
     ),
 )
 
 def always_true(*args, **kwargs):
     return True
+
+def apply_not(func):
+    def not_func(*args, **kwargs):
+        return not func(*args, **kwargs)
+    return not_func
+
+def apply_and(*funcs):
+    def and_func(*args, **kwargs):
+        return all(func(*args, **kwargs) for func in funcs)
+    return and_func
+
+def apply_or(*funcs):
+    def or_func(*args, **kwargs):
+        return any(func(*args, **kwargs) for func in funcs)
+    return or_func
 
 def docstring_format(*sub,**kwargs):
     def decorator(func):
@@ -523,7 +565,7 @@ def memorize(func):
 
     return wrapper
 
-def get_dice():
+def get_dice(args):
     if isinstance(args.multi_die_sides, (list,tuple)):
         dice = []
 
@@ -584,8 +626,8 @@ def get_outcome_simulator(dice, num_iterations):
         for die in dice
     ))
 
-def get_outcome_generator():
-    dice = get_dice()
+def get_outcome_generator(args):
+    dice = get_dice(args)
     iterator = None
 
     if not isinstance(args.simulate_num_iterations, int):
@@ -614,6 +656,141 @@ def find_max_digits(iterable):
 def determine_compare_func(param_list):
     if len(param_list) == 0: return always_true
 
+    """
+    parse input into groups delimited by brackets and logical operations
+    everything that is not a bracket or a logical operation should be parameters
+    that can be parsed into a conditional function
+    """
+    param_groups_1 = []
+    cur_group = []
+    for item in param_list:
+        if item.startswith(BRACKET_CHARS[0]) or item.startswith(BRACKET_CHARS[1]):
+            if len(cur_group) > 0:
+                param_groups_1.append(cur_group)
+                cur_group = []
+            param_groups_1.append(item[0])
+            if len(item) > 1: cur_group.append(item[1:])
+
+        elif item.endswith(BRACKET_CHARS[0]) or item.endswith(BRACKET_CHARS[1]):
+            if len(cur_group) > 0:
+                param_groups_1.append(cur_group)
+                cur_group = []
+            param_groups_1.append(item[-1])
+            if len(item) > 1: cur_group.append(item[:-1])
+
+        elif item in BOOLEAN_LOGIC_OPERATORS:
+            if len(cur_group) > 0:
+                param_groups_1.append(cur_group)
+                cur_group = []
+            param_groups_1.append(item)
+        else:
+            cur_group.append(item)
+
+    if len(cur_group) > 0:
+        param_groups_1.append(cur_group)
+        cur_group = []
+
+    # turn parameters into functions
+    param_group_funcs = [
+        determine_compare_func_helper(item) if isinstance(item,(list,tuple)) else item
+        for item in param_groups_1
+    ]
+
+    return _parse_param_logic(param_group_funcs)
+
+def _parse_param_logic(logic_param_groups):
+    """
+    We need a recursive parser.
+
+    This function expects input formated by 'determine_compare_func'
+    An example input is expected to be of the form:
+    [ func_a, 'or', func_b, 'and', 'not', '[', func_c, 'or', '[', func_d, 'and', func_e, ']', ']' ]
+    """
+
+    # re-parse into a tree structure based off the brackets
+    param_groups_2 = []
+    stack = []
+    for index,item in enumerate(logic_param_groups):
+        if item == BRACKET_CHARS[0]:
+            stack.append(index)
+        elif item == BRACKET_CHARS[1]:
+            open_index = stack.pop()
+            if len(stack) == 0:
+                # found matching close bracket to first opening bracket
+                param_groups_2.append(logic_param_groups[open_index+1:index])
+        elif len(stack) == 0:
+            param_groups_2.append(item)
+
+    """
+    Example state after loop:
+    [ func_a, 'or', func_b, 'and', 'not', [ func_c, 'or', '[', func_d, 'and', func_e, ']' ] ]
+    Note how the last entry is an actual list now with contents that can be
+    recursively sent to  '_parse_param_logic' for parsing.
+    Also notice that inside any list entry, there is NOT another list
+    if there are brackets, the recursive call will take of that.
+    """
+
+    if len(stack) > 0:
+        raise Exception('Parsing Error of if-block')
+
+    # we recursively parse anything in brackets
+    param_groups_3 = []
+    while len(param_groups_2) > 0:
+        item = param_groups_2.pop(0)
+
+        if isinstance(item,(list,tuple)):
+            param_groups_3.append(_parse_param_logic(item))
+        else:
+            param_groups_3.append(item)
+
+    """
+    parse operations
+    We want an order of operations of: [not, and, or]
+    We modify the list in place when applying a logical operation
+    """
+    for operation in BOOLEAN_LOGIC_OPERATOR_ORDER:
+        index = 0
+        while index < len(param_groups_3):
+            item = param_groups_3[index]
+            if item != operation:
+                index += 1
+                continue
+            elif item == 'not':
+                if len(param_groups_3) < index+1:
+                    raise Exception('No Contitional found for `not` to be applied to')
+
+                right_func = param_groups_3[index+1]
+                if not hasattr(right_func, '__call__'):
+                    raise Exception('Parsing Error of if-block')
+
+                param_groups_3[index] = apply_not(right_func)
+                del param_groups_3[index+1]
+
+            elif item == 'and' or item == 'or':
+                left_func = param_groups_3[index-1]
+                right_func = param_groups_3[index+1]
+
+                if len(param_groups_3) < index+1:
+                    raise Exception('Item found for `{}` to be applied to'.format(item))
+
+                if any(not hasattr(func, '__call__') for func in [left_func, right_func]):
+                    raise Exception('Parsing Error of if-block')
+
+                operator_apply = apply_and if item == 'and' else apply_or
+                new_func = operator_apply(left_func,right_func)
+
+                param_groups_3[index-1] = new_func
+                del param_groups_3[index+1]
+                del param_groups_3[index]
+
+    if len(param_groups_3) > 1 or not hasattr(param_groups_3[0], '__call__'):
+        raise Exception('Parsing Error of if-block')
+
+    return param_groups_3[0]
+
+def determine_compare_func_helper(param_list):
+    if len(param_list) == 0: return always_true
+
     _vars = {
         'param_list': list(param_list),
     }
@@ -627,12 +804,12 @@ def determine_compare_func(param_list):
 
         comparison_str = _vars['param_list'].pop(0)
 
-        if comparison_str in basic_compare_dict:
-            return basic_compare_dict[comparison_str]
+        if comparison_str in BASIC_COMPARE_DICT:
+            return BASIC_COMPARE_DICT[comparison_str]
         elif comparison_str == 'mod':
             try:
                 mod_values = tuple(int(item) for item in itertools.takewhile(
-                    lambda xx: xx not in basic_compare_dict and xx not in compare_modifiers,
+                    lambda xx: xx not in COMPARE_KEYWORDS_SET,
                     _vars['param_list']
                 ))
                 _vars['param_list'] = _vars['param_list'][len(mod_values):]
@@ -681,7 +858,7 @@ def get_basic_operation(operation_str, param_list = []):
     """
 
     if len(param_list) == 0:
-        _operator = operations_dict[operation_str]
+        _operator = OPERATIONS_DICT[operation_str]
 
     elif len(param_list) == 1:
         # parse dice in groups
@@ -907,7 +1084,7 @@ def get_slice_apply_operation(slice_params, other_param_list, should_memorize = 
     # only grab info for the second function
     # since it is this function that will be split off
     second_operator_str = other_param_list[0]
-    second_operator_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, other_param_list[1:]))
+    second_operator_params = list(itertools.takewhile(lambda xx: xx not in OPERATIONS_DICT, other_param_list[1:]))
     second_operator = get_operator(
         second_operator_str,
         param_list = second_operator_params,
@@ -966,7 +1143,7 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
 
     conditional_params = []
     if len(param_list) > 0 and param_list[0] == 'if':
-        if operation_str in ifable:
+        if operation_str in IF_ABLE_OPERATIONS:
             conditional_params = list(itertools.takewhile(lambda xx: xx != 'then', param_list[1:]))
             param_list = param_list[1+len(conditional_params):]
 
@@ -977,12 +1154,12 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
 
     conditoinal_func = determine_compare_func(conditional_params)
 
-    cur_params = list(itertools.takewhile(lambda xx: xx not in operations_dict, param_list))
+    cur_params = list(itertools.takewhile(lambda xx: xx not in OPERATIONS_DICT, param_list))
     apply_nested_operation = True
 
     param_list = param_list[len(cur_params):]
 
-    if operation_str in basic_operations:
+    if operation_str in BASIC_OPERATIONS:
         _operator = get_basic_operation(operation_str, cur_params)
 
     elif operation_str == 'shift':
@@ -1106,7 +1283,7 @@ def counter_dict_product(*args):
 
         yield tuple(full_key),full_value
 
-def display_data(counter_dict):
+def display_data(args,counter_dict):
     total = sum(counter_dict.values())
 
     _temp_key = list(counter_dict.keys())[0]
@@ -1168,7 +1345,7 @@ def display_data(counter_dict):
         if args.show_counts:
             value_string = formatter_count.format(value=count_value)
         else:
-            value_string = formatter_percent.format(value=percent)
+            value_string = FORMATTER_PERCENT.format(value=percent)
 
         if args.bar_size > 0:
             bar = int(percent * args.bar_size) * args.bar_char
@@ -1183,28 +1360,28 @@ def display_data(counter_dict):
 def main():
     counter_dict = Counter()
 
-    if args.show_args:
-        print(args)
+    if ARGS.show_args:
+        print(ARGS)
 
-    if isinstance(args.load_file_paths, (list,tuple)) and len(args.load_file_paths) > 0:
+    if isinstance(ARGS.load_file_paths, (list,tuple)) and len(ARGS.load_file_paths) > 0:
         iterator = counter_dict_product(*tuple(
             load_data(file_path)
-            for file_path in args.load_file_paths
+            for file_path in ARGS.load_file_paths
         ))
     else:
-        iterator = get_outcome_generator()
+        iterator = get_outcome_generator(ARGS)
 
-    _operator = get_operator(args.apply[0], args.apply[1:], args.memorize)
+    _operator = get_operator(ARGS.apply[0], ARGS.apply[1:], ARGS.memorize)
 
     # the next two lines is the majority of the program run time for larger values
     for item,count in iterator:
         counter_dict[_operator(item)] += count
 
-    if args.save_file_path is not None:
-        save_data(counter_dict, args.save_file_path)
+    if ARGS.save_file_path is not None:
+        save_data(counter_dict, ARGS.save_file_path)
 
-    if args.display_output:
-        display_data(counter_dict)
+    if ARGS.display_output:
+        display_data(ARGS,counter_dict)
 
 if __name__ == '__main__':
     main()
