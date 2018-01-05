@@ -62,7 +62,12 @@ class CustomFormatter(argparse.HelpFormatter):
             class RawDescriptionHelpFormatter(HelpFormatter)
             class ArgumentDefaultsHelpFormatter(HelpFormatter)
             RawTextHelpFormatter._split_lines
-        - https://bitbucket.org/ruamel/std.argparse/src/cd5e8c944c5793fa9fa16c3af0080ea31f2c6710/__init__.py?at=default&fileviewer=file-view-default
+        - https://bitbucket.org
+            /ruamel
+            /std.argparse
+            /src
+            /cd5e8c944c5793fa9fa16c3af0080ea31f2c6710
+            /__init__.py?at=default&fileviewer=file-view-default
 
     R| - Raw text, no indentation will be added
     D| - Pad with white space
@@ -106,7 +111,11 @@ def parse_int(compare_func, type_string):
     def parse_int_compare(value):
         ivalue = int(value)
         if not compare_func(ivalue):
-            raise argparse.ArgumentTypeError("{} is an invalid {} int value".format(value,type_string))
+            raise argparse.ArgumentTypeError(
+                "{} is an invalid {} int value".format(
+                    value,
+                    type_string,
+            ))
         return ivalue
 
     return parse_int_compare
@@ -178,7 +187,8 @@ single_type_group.add_argument(
     type=int,
     default=1,
     help=" ".join([
-        "If using '--die-sides' this defines the increments between values on the sides of the die.",
+        "If using '--die-sides' this defines the increments",
+        "between values on the sides of the die.",
         "This option is ignored if '--die-sides' is not used.",
     ]),
 )
@@ -212,8 +222,8 @@ multi_type_group.add_argument(
     help=" ".join([
         "Number of sides the dice simulated should have.",
         "The value given must be a positive integer.",
-        "The values on the die will start from '--die-start' and fill up the sides of the die",
-        "incrementing by '--die-step'.",
+        "The values on the die will start from '--die-start'",
+        "and fill up the sides of the die incrementing by '--die-step'.",
     ]),
 )
 
@@ -233,7 +243,8 @@ multi_type_group.add_argument(
     type=int,
     nargs="+",
     help=" ".join([
-        "If using '--die-sides' this defines the increments between values on the sides of the die.",
+        "If using '--die-sides' this defines the increments between",
+        "values on the sides of the die.",
         "This option is ignored if '--die-sides' is not used.",
         "These values must be in parallel to '--multi-die-sides'",
     ]),
@@ -543,10 +554,16 @@ def dice_input_checker(func):
     @functools.wraps(func)
     def wrapper(xx):
         if not isinstance(xx, (list, tuple)):
-            raise Exception('Input of operation is not an instance of `list` or `tuple`. Given: {}'.format(str(xx)))
+            raise Exception(
+                'Input of operation is not an instance of `list` or `tuple`. Given: {}'.format(
+                    str(xx)
+            ))
 
         if not all(isinstance(item, int) for item in xx):
-            raise Exception('Entries in the list/tuple are not integers. Given: {}'.format(str(xx)))
+            raise Exception(
+                'Entries in the list/tuple are not integers. Given: {}'.format(
+                    str(xx)
+            ))
 
         return func(xx)
 
@@ -612,7 +629,11 @@ def get_dice(args):
             raise Exception("Both die sides are given and die values are given. Only pass one")
 
         elif isinstance(args.die_sides,int) and args.die_sides > 0:
-            values = range(args.die_start,args.die_start + args.die_step*args.die_sides, args.die_step)
+            values = range(
+                args.die_start,
+                args.die_start + args.die_step*args.die_sides,
+                args.die_step,
+            )
 
         elif len(args.die_values) > 0:
             values = args.die_values
@@ -820,7 +841,9 @@ def determine_compare_func_helper(param_list):
         This function edits the passed parameter list in place
         """
         if len(_vars['param_list']) == 0:
-            raise Exception('Not enough arguments given to determine comparision function for conditional.')
+            raise Exception(
+                'Not enough arguments given to determine comparision function for conditional.'
+            )
 
         comparison_str = _vars['param_list'].pop(0)
 
@@ -896,7 +919,9 @@ def get_basic_operation(operation_str, param_list = []):
 
 def get_shift_operation(param_list, conditoinal_func):
     if len(param_list) < 1:
-        raise Exception("The 'shift' operation requires at least one parameter to determine shift value.")
+        raise Exception(
+            "The 'shift' operation requires at least one parameter to determine shift value."
+        )
 
     only_one_param = len(param_list) == 1
 
@@ -930,14 +955,20 @@ def get_shift_operation(param_list, conditoinal_func):
 
 def get_scale_operation(param_list, conditoinal_func):
     if len(param_list) < 1:
-        raise Exception("The 'scale' operation requires at least one parameter to determine shift value.")
+        raise Exception(
+            "The 'scale' operation requires at least one parameter to determine shift value."
+        )
 
     round_option_dict = {
         'r-ceil': lambda xx: math.ceil(xx),
         'r-floor': lambda xx: math.floor(xx),
         'r-truncate': lambda xx: int(xx),
-        'r-half-up': lambda xx: decimal.Decimal(xx).quantize(decimal.Decimal('1'),rounding=decimal.ROUND_HALF_UP),
-        'r-half-down': lambda xx: decimal.Decimal(xx).quantize(decimal.Decimal('1'),rounding=decimal.ROUND_HALF_DOWN),
+        'r-half-up': lambda xx: decimal.Decimal(xx).quantize(
+            decimal.Decimal('1'),rounding=decimal.ROUND_HALF_UP
+        ),
+        'r-half-down': lambda xx: decimal.Decimal(xx).quantize(
+            decimal.Decimal('1'),rounding=decimal.ROUND_HALF_DOWN
+        ),
     }
 
     param_list_copy = list(param_list)
@@ -982,10 +1013,14 @@ def get_scale_operation(param_list, conditoinal_func):
 
 def get_bound_operation(param_list, conditoinal_func):
     if len(param_list) < 2:
-        raise Exception("The 'bound' operation requires at least two parameters to determine min/max bounds.")
+        raise Exception(
+            "The 'bound' operation requires at least two parameters to determine min/max bounds."
+        )
 
     if len(param_list) % 2 != 0:
-        raise Exception("The 'bound' operation requires parameters in pairs to determine min/max bounds.")
+        raise Exception(
+            "The 'bound' operation requires parameters in pairs to determine min/max bounds."
+        )
 
     only_one_pair = len(param_list) == 2
 
@@ -998,7 +1033,10 @@ def get_bound_operation(param_list, conditoinal_func):
         upper_bounds = temp_value[1::2]
 
     if len(lower_bounds) != len(upper_bounds):
-        raise Exception("Error during parsing parameters for 'bound', miss match on lower and upper bound sizes")
+        raise Exception(" ".join([
+            "Error during parsing parameters for 'bound',",
+            "miss match on lower and upper bound sizes",
+        ]))
 
     for low,high in zip(lower_bounds,upper_bounds):
         if low > high:
@@ -1068,7 +1106,9 @@ def get_reroll_operation(param_list, comparison_func):
 
 def get_select_operation(param_list):
     if len(param_list) < 1:
-        raise Exception("The 'select' operation requires at least one parameter which is the select index.")
+        raise Exception(
+            "The 'select' operation requires at least one parameter which is the select index."
+        )
 
     try:
         select_indices = tuple(int(item) for item in param_list)
@@ -1099,12 +1139,17 @@ def get_slice_apply_operation(slice_params, other_param_list, should_memorize = 
         raise Exception("The parameter(s) passed must be in integer(s)")
 
     if len(other_param_list) == 0:
-        raise Exception("The 'slice-apply' operation requires extra parameters for another operation.")
+        raise Exception(
+            "The 'slice-apply' operation requires extra parameters for another operation."
+        )
 
     # only grab info for the second function
     # since it is this function that will be split off
     second_operator_str = other_param_list[0]
-    second_operator_params = list(itertools.takewhile(lambda xx: xx not in OPERATIONS_DICT, other_param_list[1:]))
+    second_operator_params = list(itertools.takewhile(
+        lambda xx: xx not in OPERATIONS_DICT,
+        other_param_list[1:],
+    ))
     second_operator = get_operator(
         second_operator_str,
         param_list = second_operator_params,
@@ -1164,7 +1209,11 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
     conditional_params = []
     if len(param_list) > 0 and param_list[0] == 'if':
         if operation_str in IF_ABLE_OPERATIONS:
-            conditional_params = list(itertools.takewhile(lambda xx: xx != 'then', param_list[1:]))
+            conditional_params = list(
+                itertools.takewhile(
+                    lambda xx: xx != 'then',
+                    param_list[1:],
+            ))
             param_list = param_list[1+len(conditional_params):]
 
             if len(param_list) > 0 and param_list[0] == 'then':
@@ -1174,7 +1223,11 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
 
     conditoinal_func = determine_compare_func(conditional_params)
 
-    cur_params = list(itertools.takewhile(lambda xx: xx not in OPERATIONS_DICT, param_list))
+    cur_params = list(itertools.takewhile(
+        lambda xx: xx not in OPERATIONS_DICT,
+        param_list,
+    ))
+
     apply_nested_operation = True
 
     param_list = param_list[len(cur_params):]
