@@ -505,13 +505,6 @@ if any(char in COMPARE_KEYWORDS_SET for char in BRACKET_CHARS):
     raise Exception('The bracket chars you set cannot be an existing keyword.')
 
 
-FORMATTER_PERCENT = "{{value:{percent_formatter}}} %".format(
-    percent_formatter = "{}.{}f".format(
-        len("100.") + ARGS.percent_decimal_place,
-        ARGS.percent_decimal_place,
-    ),
-)
-
 def always_true(*args, **kwargs):
     return True
 
@@ -1304,36 +1297,37 @@ def display_data(args,counter_dict):
     total = sum(counter_dict.values())
 
     _temp_key = list(counter_dict.keys())[0]
-    is_key_array_like = isinstance(_temp_key, (tuple,list))
-    num_items_in_key = 1*(not is_key_array_like) or len(_temp_key)
+    num_items_in_key = len(_temp_key)
 
-    if is_key_array_like:
-        all_keys = []
-        for key_set in counter_dict:
-            all_keys.extend(key_set)
-        num_key_digits = find_max_digits(all_keys)
+    all_keys = []
+    for key_set in counter_dict:
+        all_keys.extend(key_set)
+    num_key_digits = find_max_digits(all_keys)
 
-    else:
-        num_key_digits = find_max_digits(counter_dict.keys())
-
-    key_formater = "{{key:{num_key_digits}d}}".format(
+    sub_key_formater = "{{key:{num_key_digits}d}}".format(
         num_key_digits=num_key_digits
     )
 
-    if is_key_array_like:
-        sub_key_formater = key_formater
-        key_formater = "{{key:>{num_char}s}}".format(
-            num_char=sum([
-                num_items_in_key*num_key_digits, # room for all the digits
-                (num_items_in_key - 1)*len(","), # room for all the seperators
-            ]),
-        )
+    key_formater = "{{key:>{num_char}s}}".format(
+        num_char=sum([
+            num_items_in_key*num_key_digits, # room for all the digits
+            (num_items_in_key - 1)*len(","), # room for all the seperators
+        ]),
+    )
 
     num_count_digits = find_max_digits(counter_dict.values())
 
-    formatter_count = "{{value:{num_count_digits}d}}".format(
-        num_count_digits=num_count_digits,
-    )
+    if args.show_counts:
+        value_formater = "{{value:{num_count_digits}d}}".format(
+            num_count_digits=num_count_digits,
+        )
+    else:
+        value_formater = "{{value:{percent_formatter}}} %".format(
+            percent_formatter = "{}.{}f".format(
+                len("100.") + ARGS.percent_decimal_place,
+                ARGS.percent_decimal_place,
+            ),
+        )
 
     full_formater = "{key}: {value} {bar}"
 
@@ -1348,22 +1342,14 @@ def display_data(args,counter_dict):
 
         percent = 100 * float(count_value) / total
 
-        key_string = ""
-        value_string = ""
+        key_string = key_formater.format(
+            key=",".join(sub_key_formater.format(key=_key) for _key in key)
+        )
+        value_string = value_formater.format(
+            value=count_value if args.show_counts else percent
+        )
+
         bar_string = ""
-
-        if is_key_array_like:
-            key_string = key_formater.format(
-                key=",".join(sub_key_formater.format(key=_key) for _key in key)
-            )
-        else:
-            key_string = key_formater.format(key=key)
-
-        if args.show_counts:
-            value_string = formatter_count.format(value=count_value)
-        else:
-            value_string = FORMATTER_PERCENT.format(value=percent)
-
         if args.bar_size > 0:
             bar = int(percent * args.bar_size) * args.bar_char
             bar_string = args.bar_prefix + bar
