@@ -620,6 +620,9 @@ def get_dice(args):
         return tuple(values for _ in range(args.num_dice))
 
 def get_outcome_simulator(dice, num_iterations):
+    """
+    Return an iterator that randomly selects dice a fixed number of times
+    """
     return zip(*tuple(itertools.starmap(
             random.choice, itertools.repeat((die,), num_iterations)
         )
@@ -627,6 +630,11 @@ def get_outcome_simulator(dice, num_iterations):
     ))
 
 def get_outcome_generator(args):
+    """
+    based off the args return an iterator that
+    enumerates all the possible dice rolls
+    or simulates dice rolls.
+    """
     dice = get_dice(args)
     iterator = None
 
@@ -638,6 +646,7 @@ def get_outcome_generator(args):
     else:
         raise Exception('The number of simulation iterations must be a positive integer')
 
+    # an iterator that yields (dice_outcome, count)
     return zip(iterator, itertools.repeat(1))
 
 
