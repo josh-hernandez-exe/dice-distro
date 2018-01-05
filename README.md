@@ -781,7 +781,6 @@ You can use the `--no-output` to not render any output.
 ```
 You can then load the data using `--load <file_names>`.
 If you supply more than one file name, the distributions are **multiplied**.
-This makes calculating some larger dice pools to be easier.
 ```
 ➔ python dice_distro.py --load /tmp/1d6.json /tmp/1d8.json --apply sum
  2:   2.08 % |====
@@ -798,6 +797,20 @@ This makes calculating some larger dice pools to be easier.
 13:   4.17 % |========
 14:   2.08 % |====
 ```
+This makes calculating some larger dice pools to be easier.
+For example, calculating the distribution for eight D20.
+The normal example will take a very long time to run:
+```
+➔ # do not run, this will take a very long time
+➔ python dice_distro.py -d 20 -n 8  --apply sum --show-counts
+```
+While the example using file save runs much faster:
+```
+➔ python dice_distro.py -d 20 -n 2 --apply sum --save /tmp/sum-2d20.json --no-output
+➔ python dice_distro.py --load /tmp/sum-2d20.json /tmp/sum-2d20.json --apply sum --save /tmp/sum-4d20.json --no-output
+➔ python dice_distro.py --load /tmp/sum-4d20.json /tmp/sum-4d20.json --apply sum --show-counts
+```
+**Note** that this only applies if you can break down your problem into a product of smaller distributions.
 
 ### Advance Conditionals on Unitary Operations
 Operations that that only change a single die value can be applied conditinoally.
