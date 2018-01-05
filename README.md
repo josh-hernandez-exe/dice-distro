@@ -2,8 +2,8 @@
 
 This program was meant to be used as a command line tool.
 It only uses built-in modules to calculate everything, but uses brute force calculations.
-This has been tested with `Python 2.7.x` and `Python 3.5.x`,
-though it should work for all versions that are `Python 3.x`.
+This has been tested with `Python 2.7.x`, `Python 3.5.x`, and `Python 3.6.x`.
+Though it should work for all versions that are `Python 3.x`.
 
 **Note**: This tool enumerates all possible outcomes (treating the dice as distinguishable).
 This gives it the flexibility to calculated different kinds of distributions with many restrictions,
