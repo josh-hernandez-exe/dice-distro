@@ -662,33 +662,41 @@ def determine_compare_func(param_list):
     that can be parsed into a conditional function
     """
     param_groups_1 = []
-    cur_group = []
+    _var = {
+        'group': list(),
+    }
+    def _add_group():
+        if len(_var['group']) > 0:
+            param_groups_1.append(_var['group'])
+            _var['group'] = []
+
+    left_len = len(BRACKET_CHARS[0])
+    left_len = len(BRACKET_CHARS[1])
     for item in param_list:
-        if item.startswith(BRACKET_CHARS[0]) or item.startswith(BRACKET_CHARS[1]):
-            if len(cur_group) > 0:
-                param_groups_1.append(cur_group)
-                cur_group = []
-            param_groups_1.append(item[0])
-            if len(item) > 1: cur_group.append(item[1:])
+        did_parse = False
+        for bracket in BRACKET_CHARS:
+            if item.startswith(bracket):
+                _add_group()
+                param_groups_1.append(bracket)
+                if len(item) > len(bracket): _var['group'].append(item[len(bracket):])
+                did_parse = True
+            elif item.endswith(bracket):
+                _add_group()
+                param_groups_1.append(bracket)
+                if len(item) > len(bracket): _var['group'].append(item[:-len(bracket)])
+                did_parse = True
 
-        elif item.endswith(BRACKET_CHARS[0]) or item.endswith(BRACKET_CHARS[1]):
-            if len(cur_group) > 0:
-                param_groups_1.append(cur_group)
-                cur_group = []
-            param_groups_1.append(item[-1])
-            if len(item) > 1: cur_group.append(item[:-1])
-
+        if did_parse:
+            # we parsed so continue on to the next item
+            continue
         elif item in BOOLEAN_LOGIC_OPERATORS:
-            if len(cur_group) > 0:
-                param_groups_1.append(cur_group)
-                cur_group = []
+            _add_group()
             param_groups_1.append(item)
-        else:
-            cur_group.append(item)
 
-    if len(cur_group) > 0:
-        param_groups_1.append(cur_group)
-        cur_group = []
+        else:
+            _var['group'].append(item)
+
+    _add_group()
 
     # turn parameters into functions
     param_group_funcs = [
