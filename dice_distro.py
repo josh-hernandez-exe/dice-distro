@@ -22,10 +22,10 @@ OPERATIONS_DICT = {
     'min':lambda xx: (min(xx),),
     'max':lambda xx: (max(xx),),
     'set':lambda xx: tuple(sorted(xx)),
-    'prod':lambda xx: functools.reduce(operator.mul, xx, 1),
-    'bit-or':lambda xx: functools.reduce(operator.or_, xx, 0),
-    'bit-xor':lambda xx: functools.reduce(operator.xor, xx),
-    'bit-and':lambda xx: functools.reduce(operator.and_, xx),
+    'prod':lambda xx: (functools.reduce(operator.mul, xx, 1),),
+    'bit-or':lambda xx: (functools.reduce(operator.or_, xx, 0),),
+    'bit-xor':lambda xx: (functools.reduce(operator.xor, xx),),
+    'bit-and':lambda xx: (functools.reduce(operator.and_, xx),),
     'shift': None, # This will get defined later if used
     'scale': None, # This will get defined later if used
     'bound': None, # This will get defined later if used

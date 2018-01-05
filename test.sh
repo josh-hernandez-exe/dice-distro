@@ -20,7 +20,15 @@ echo "Starting Test" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-xor && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-and && \
     # Test basic operations with parameters
-    $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply sum  2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum 2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply min 2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply max 2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply set 2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply prod 2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-or 2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-xor 2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-and 2 && \
+    # Test shift
     $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply shift 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply shift 2 -1 && \
     # Test scale operations with all the different rounding options
