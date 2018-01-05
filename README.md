@@ -726,51 +726,6 @@ The above is the equvalent in saying:
 12:   5.4784 % |==========
 ```
 
-### Weighted Dice
-Since this program uses enumeration to calculate the distribution,
-weighted dice can't simply be added with a parameter with weights.
-To work around that, you must make a custom die with repeated values on the faces.
-
-The following example shows a weighted D6.
-```
-➔ python dice_distro.py --die-values \
-    1 1 1 1 1 1 \
-    2 2 2 2 2 \
-    3 3 3 3 \
-    4 4 4 \
-    5 5 \
-    6
-1:  28.57 % |=========================================================
-2:  23.81 % |===============================================
-3:  19.05 % |======================================
-4:  14.29 % |============================
-5:   9.52 % |===================
-6:   4.76 % |=========
-```
-
-The following example shows two the above weighted D6 then summing the values.
-```
-➔ python dice_distro.py --die-values \
-    1 1 1 1 1 1 \
-    2 2 2 2 2 \
-    3 3 3 3 \
-    4 4 4 \
-    5 5 \
-    6 \
-    -n 2 --apply sum
- 2:   8.16 % |================
- 3:  13.61 % |===========================
- 4:  16.55 % |=================================
- 5:  17.23 % |==================================
- 6:  15.87 % |===============================
- 7:  12.70 % |=========================
- 8:   7.94 % |===============
- 9:   4.54 % |=========
-10:   2.27 % |====
-11:   0.91 % |=
-12:   0.23 % |
-```
-
 ### Saving/Loading/Suppresing Output
 You can use the `--save <file_name>` flag to save the data to a file.
 Then use it later for other calculations.
@@ -811,6 +766,53 @@ While the example using file save runs much faster:
 ➔ python dice_distro.py --load /tmp/sum-4d20.json /tmp/sum-4d20.json --apply sum --show-counts
 ```
 **Note** that this only applies if you can break down your problem into a product of smaller distributions.
+
+
+### Weighted Dice
+Since this program uses enumeration to calculate the distribution,
+weighted dice can't simply be added with a parameter with weights.
+To work around that, you must make a custom die with repeated values on the faces.
+
+The following example shows a weighted D6.
+```
+➔ python dice_distro.py --die-values \
+    1 1 1 1 1 1 \
+    2 2 2 2 2 \
+    3 3 3 3 \
+    4 4 4 \
+    5 5 \
+    6
+1:  28.57 % |=========================================================
+2:  23.81 % |===============================================
+3:  19.05 % |======================================
+4:  14.29 % |============================
+5:   9.52 % |===================
+6:   4.76 % |=========
+```
+The following example shows two the above weighted D6 then summing the values.
+```
+➔ python dice_distro.py --die-values \
+    1 1 1 1 1 1 \
+    2 2 2 2 2 \
+    3 3 3 3 \
+    4 4 4 \
+    5 5 \
+    6 \
+    -n 2 --apply sum
+ 2:   8.16 % |================
+ 3:  13.61 % |===========================
+ 4:  16.55 % |=================================
+ 5:  17.23 % |==================================
+ 6:  15.87 % |===============================
+ 7:  12.70 % |=========================
+ 8:   7.94 % |===============
+ 9:   4.54 % |=========
+10:   2.27 % |====
+11:   0.91 % |=
+12:   0.23 % |
+```
+**Note** that after you create the distribution for the weight die you want, you can save the distribution.
+After which you can load up and speed up future calculations using your weighted die.
 
 ### Advance Conditionals on Unitary Operations
 Operations that that only change a single die value can be applied conditinoally.
