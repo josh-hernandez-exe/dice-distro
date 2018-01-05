@@ -49,7 +49,6 @@ IF_ABLE_OPERATIONS = set([
 
 BASIC_COMPARE_DICT = {
     'eq':lambda aa,bb,cc=None: aa == bb,
-    'neq': lambda aa,bb,cc=None: aa != bb,
     'gt':lambda aa,bb,cc=None: aa > bb,
     'ge':lambda aa,bb,cc=None: aa >= bb,
     'lt':lambda aa,bb,cc=None: aa < bb,
