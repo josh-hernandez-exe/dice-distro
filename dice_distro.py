@@ -56,7 +56,6 @@ BASIC_COMPARE_DICT = {
     'le':lambda aa,bb,cc=None: aa <= bb,
 }
 
-
 class CustomFormatter(argparse.HelpFormatter):
     """
     Utilized code from:
@@ -101,6 +100,18 @@ class CustomFormatter(argparse.HelpFormatter):
                     _help += ' (default: %(default)s)'
         return _help
 
+def parse_int(compare_func, type_string):
+    if not hasattr(compare_func,'__call__'):
+        raise Exception('A function must be passed to parse_int.')
+
+    def parse_int_compare(value):
+        ivalue = int(value)
+        if not compare_func(ivalue):
+            raise argparse.ArgumentTypeError("{} is an invalid {} int value".format(value,type_string))
+        return ivalue
+
+    return parse_int_compare
+
 parser = argparse.ArgumentParser(
     formatter_class=CustomFormatter,
     description="\n".join([
@@ -133,7 +144,7 @@ single_type_group = parser.add_argument_group(
 
 single_type_group.add_argument(
     "--num-dice","-n",
-    type=int,
+    type=parse_int(lambda xx: xx > 0, 'positive'),
     default=1,
     help="Number of dice simulated",
 )
@@ -142,7 +153,7 @@ single_type_group_side_option = single_type_group.add_mutually_exclusive_group()
 
 single_type_group_side_option.add_argument(
     "--die-sides","-d",
-    type=int,
+    type=parse_int(lambda xx: xx > 0, 'positive'),
     help=" ".join([
         "Number of sides the dice simulated should have.",
         "The value given must be a positive integer.",
@@ -197,7 +208,7 @@ multi_type_group = parser.add_argument_group(
 
 multi_type_group.add_argument(
     "--multi-die-sides",
-    type=int,
+    type=parse_int(lambda xx: xx > 0, 'positive'),
     nargs="+",
     help=" ".join([
         "Number of sides the dice simulated should have.",
@@ -346,7 +357,7 @@ bar_group = parser.add_argument_group(
 
 bar_group.add_argument(
     "--bar-size",
-    type=int,
+    type=parse_int(lambda xx: xx >= 0, 'non-negative'),
     default = 2,
     help=" ".join([
         "The approximate number of '--bar-char'(s) that count as 1 percent.",
@@ -410,7 +421,7 @@ display_format_exclusive_options = display_output_group.add_mutually_exclusive_g
 
 display_format_exclusive_options.add_argument(
     "--percent-decimal-place","-pdp",
-    type=int,
+    type=parse_int(lambda xx: xx > 0, 'positive'),
     default = 2,
     help="The number of digits that will be displayed after the decimal place.",
 )
@@ -440,7 +451,7 @@ simulate_group = parser.add_argument_group(
 simulate_group.add_argument(
     '--simulate',
     dest='simulate_num_iterations',
-    type=int,
+    type=parse_int(lambda xx: xx > 0, 'positive'),
     default = None,
     help=" ".join([
         "The number of simulated dice rols that will occur.",
