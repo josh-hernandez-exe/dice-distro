@@ -5,7 +5,8 @@ python_exe="python$1"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 dice_distro_file="$DIR/dice_distro.py"
-test_params="--show-args"
+test_params_with_output="--show-args"
+test_params="$test_params_with_output --no-output"
 
 echo "Starting Test" && \
     $python_exe $dice_distro_file $test_params --help && \
@@ -77,12 +78,12 @@ echo "Starting Test" && \
     # Test file save and load with distrobution product
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --save /tmp/2d6.json && \
     $python_exe $dice_distro_file $test_params --load /tmp/2d6.json /tmp/2d6.json --apply sum && \
-    # Test display options
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 --no-output && \
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum --show-counts && \
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum --sort value && \
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum --bar-size 0 && \
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum --bar-size 2 --bar-char '@#' --bar-prefix '<|' && \
     # Test simulate
     $python_exe $dice_distro_file $test_params -d 40 -n 6 --apply max --simulate 100000 && \
+    # Test display options
+    $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 && \
+    $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum --show-counts && \
+    $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum --sort value && \
+    $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum --bar-size 0 && \
+    $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum --bar-size 2 --bar-char '@#' --bar-prefix '<|' && \
     echo "End of Test"
