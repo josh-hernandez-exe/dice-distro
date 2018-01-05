@@ -825,6 +825,23 @@ In this example we:
    3, 101:   6.25 % |============
    3, 104:   6.25 % |============
 ```
+You can even use boolean logic operations (`not`, `and`, `or`) and even nest them as well.
+Due to issues with bash, the bracket char cannot be `(` or `)`.
+The defaults are `[` and `]`, but if you don't like those, you can change them.
+```
+➔ python dice_distro.py -d 10 --apply shift if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ] then 100
+  2:  10.00 % |====================
+  3:  10.00 % |====================
+  4:  10.00 % |====================
+  5:  10.00 % |====================
+  8:  10.00 % |====================
+  9:  10.00 % |====================
+ 10:  10.00 % |====================
+101:  10.00 % |====================
+106:  10.00 % |====================
+107:  10.00 % |====================
+
+```
 
 # Simulating Dice Rolls
 
@@ -889,5 +906,5 @@ Enumerating all the outcomes would take quite a while.
 If I find time in the future, I plan to (in no specific order):
 - Add parallelization the work so that options with a large enumeration set can be computed faster
     - also allowing larger numbers of simulated dice throws.
-+ Add boolean logic (`or`/`and`/`not`) to the conditional parser
-    * This will require an implementation for brackets
+- Actual unit tests
+	- Logic parser needs to be tested more thoroughly.

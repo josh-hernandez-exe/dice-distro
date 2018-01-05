@@ -53,6 +53,9 @@ echo "Starting Test" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply reroll if mod 2 eq 1 && \
     # Test slice-apply
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply slice-apply 2 sum max && \
+    # Test complex if-block with nested boolean logic
+    $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ] then 100 && \
+    $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not '<|' ge 2 and le 3 '|>' and '<|' gt 5 and lt 8 '|>' then 100 --bracket-chars '<|' '|>' && \
     # Test custom single die type options
     $python_exe $dice_distro_file $test_params -d 10 -n 2 --die-start 0 && \
     $python_exe $dice_distro_file $test_params -d 10 -n 2 --die-start 0 --die-step 10 && \
