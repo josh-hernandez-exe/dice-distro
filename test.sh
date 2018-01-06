@@ -5,7 +5,7 @@ python_exe="python$1"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 dice_distro_file="$DIR/dice_distro.py"
-test_params_with_output="--show-args"
+test_params_with_output="--show-args --check-input"
 test_params="$test_params_with_output --no-output"
 
 echo "Starting Test with $python_exe" && \
@@ -44,8 +44,6 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bound 2 5 3 4 && \
     # Test chained operation with bound
     $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply shift 2 bound 1 6 && \
-    # Test if-block
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply shift if mod 2 3 eq 0 1 then 10 100 && \
     # Test Select operation
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply select 1 && \
     $python_exe $dice_distro_file $test_params -d 4 -n 4 --apply select -1 -2 -3 && \
@@ -55,16 +53,18 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 8 -n 5 --apply select -1 -2 -3 select 0 1 sum && \
     $python_exe $dice_distro_file $test_params -d 8 -n 5 --apply select -1 -2 -3 select 0 1 select 1 && \
     $python_exe $dice_distro_file $test_params -d 8 -n 5 --apply select -1 -4 -2 -3 sum 2 select 0 && \
-    $python_exe $dice_distro_file $test_params -d 8 -n 5 --apply select -1 -2 -3 select 0 1 select 1 --memorize && \
+    $python_exe $dice_distro_file $test_params -d 8 -n 5 --apply select -1 -2 -3 select 0 1 select 1 --memorize-input && \
+    # Test slice-apply
+    $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply slice-apply 2 sum max && \
+    # Test if-block
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply shift if mod 2 3 eq 0 1 then 10 100 && \
+    # Test complex if-block with nested boolean logic
+    $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ] then 100 && \
+    $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not '<|' ge 2 and le 3 '|>' and '<|' gt 5 and lt 8 '|>' then 100 --bracket-chars '<|' '|>' && \
     # Test Reroll
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply reroll if lt 4 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply sum 2 reroll if lt 7 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply reroll if mod 2 eq 1 && \
-    # Test slice-apply
-    $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply slice-apply 2 sum max && \
-    # Test complex if-block with nested boolean logic
-    $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ] then 100 && \
-    $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not '<|' ge 2 and le 3 '|>' and '<|' gt 5 and lt 8 '|>' then 100 --bracket-chars '<|' '|>' && \
     # Test custom single die type options
     $python_exe $dice_distro_file $test_params -d 10 -n 2 --die-start 0 && \
     $python_exe $dice_distro_file $test_params -d 10 -n 2 --die-start 0 --die-step 10 && \

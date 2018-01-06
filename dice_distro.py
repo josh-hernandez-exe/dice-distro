@@ -19,6 +19,7 @@ if (2,0) <= sys.version_info < (3, 0):
 OPERATIONS_DICT = {
     'id':tuple,
     'sum':lambda xx: (sum(xx),),
+    # 'sum':sum,
     'min':lambda xx: (min(xx),),
     'max':lambda xx: (max(xx),),
     'set':lambda xx: tuple(sorted(xx)),
@@ -146,8 +147,8 @@ Single Die Options
 """
 
 single_type_group = parser.add_argument_group(
-    'Single Die Type Options',
-    'Use these flags when wanting to roll a specific die type.',
+    title='Single Die Type Options',
+    description='Use these flags when wanting to roll a specific die type.',
 )
 
 single_type_group.add_argument(
@@ -211,8 +212,11 @@ Multi Die Options
 ========================================================================================
 """
 multi_type_group = parser.add_argument_group(
-    'Multi Die Type Options',
-    'Use these flags when wanting to roll multiple types of dies at once.',
+    title='Multi Die Type Options',
+    description=" ".join([
+        'Use these flags when wanting to roll multiple types of dies at once.',
+        'When using flags from this group, the \'--multi-die-sides\' flag is required.',
+    ]),
 )
 
 multi_type_group.add_argument(
@@ -221,9 +225,12 @@ multi_type_group.add_argument(
     nargs="+",
     help=" ".join([
         "Number of sides the dice simulated should have.",
+        "This parameter is always used in when creating non-identical",
+        "dice to roll (multi-die-type) and thus is required."
         "The value given must be a positive integer.",
         "The values on the die will start from '--die-start'",
-        "and fill up the sides of the die incrementing by '--die-step'.",
+        "and fill up the sides of the die incrementing by '--die-step'",
+        ", unless you use '--multi-die-values' to specify each value on each die."
     ]),
 )
 
@@ -269,8 +276,8 @@ Operation Options
 ========================================================================================
 """
 op_group = parser.add_argument_group(
-    'Operation Options',
-    'Options how to deal with the result of rolls of the dice.',
+    title='Operation Options',
+    description='Options how to deal with the result of rolls of the dice.',
 )
 
 op_group.add_argument(
@@ -345,13 +352,24 @@ op_group.add_argument(
 )
 
 op_group.add_argument(
-    "--memorize",
+    "--memorize-input",
     action='store_true',
     help=" ".join([
-        "An option for cashing results.",
+        "An option for cashing results when applying the operation to a set of dice.",
         "This will hash the results of a roll, and save the result.",
         "This speeds up some calculations, but adds overhead since you",
         "must calculate the hash of the input.",
+    ]),
+)
+
+op_group.add_argument(
+    "--check-input",
+    action='store_true',
+    help=" ".join([
+        "This option will add a validation step to make sure the dice input",
+        "from one operation is approximate for the next.",
+        "This flag will give some context to when an error has occured at the",
+        "expsense of extending runtime."
     ]),
 )
 
@@ -361,8 +379,8 @@ Bar Options
 ========================================================================================
 """
 bar_group = parser.add_argument_group(
-    'Bar Options',
-    'Options related to the bar rendering',
+    title='Bar Options',
+    description='Options related to the bar rendering',
 )
 
 bar_group.add_argument(
@@ -401,8 +419,8 @@ Display Output Options
 ========================================================================================
 """
 display_output_group = parser.add_argument_group(
-    'Display Output Options',
-    'Options related to displaying calculated information',
+    title='Display Output Options',
+    description='Options related to displaying calculated information',
 )
 
 display_output_group.add_argument(
@@ -450,8 +468,8 @@ Simulate Options
 ========================================================================================
 """
 simulate_group = parser.add_argument_group(
-    'Simulate Options',
-    ' '.join([
+    title='Simulate Options',
+    description=' '.join([
         'Options related to simulating the dice rolls rather than enumerating all the outcomes.',
         'Useful if the compute time of calculating all the outcomes takes too long.',
         'This will only provide an approximation of the results.',
@@ -475,8 +493,8 @@ File Save/Load Options
 ========================================================================================
 """
 file_save_load_options = parser.add_argument_group(
-    'Save/Load Options',
-    ' '.join([
+    title='Save/Load Options',
+    description=' '.join([
         'Options related to saving data and loading data'
     ]),
 )
@@ -504,9 +522,7 @@ file_save_load_options.add_argument(
     ]),
 )
 
-
 ARGS = parser.parse_args()
-
 
 BRACKET_CHARS = ARGS.bracket_chars
 BRACKET_SET = set(BRACKET_CHARS)
@@ -551,21 +567,46 @@ def docstring_format(*sub,**kwargs):
     return decorator
 
 def dice_input_checker(func):
-    @functools.wraps(func)
-    def wrapper(xx):
+    func_str_info = "\n".join([
+        "Func Name: {}".format(func.__name__),
+        "Doc String: {}".format(func.__doc__)
+    ])
+
+    def check_is_tuple(xx,kind):
         if not isinstance(xx, (list, tuple)):
             raise Exception(
-                'Input of operation is not an instance of `list` or `tuple`. Given: {}'.format(
-                    str(xx)
-            ))
+                "\n".join([
+                    func_str_info,
+                    '{} of operation is not an instance of `list` or `tuple`. Given: {}'.format(
+                        kind.title(),
+                        str(xx),
+                    ),
+                ])
+            )
 
+    def check_all_int(xx, kind):
         if not all(isinstance(item, int) for item in xx):
             raise Exception(
-                'Entries in the list/tuple are not integers. Given: {}'.format(
-                    str(xx)
-            ))
+                "\n".join([
+                    func_str_info,
+                    'Entries in the {} list/tuple are not integers. Given: {}'.format(
+                        kind.lower(),
+                        str(xx),
+                    ),
+                ])
+            )
 
-        return func(xx)
+    @functools.wraps(func)
+    def wrapper(xx):
+        check_is_tuple(xx,'input')
+        check_all_int(xx,'input')
+
+        result = func(xx)
+
+        check_is_tuple(result,'output')
+        check_all_int(result,'output')
+
+        return result
 
     return wrapper
 
@@ -585,63 +626,111 @@ def memorize(func):
 
     return wrapper
 
-def get_dice(args):
-    if isinstance(args.multi_die_sides, (list,tuple)):
-        dice = []
+def get_single_dice(args):
+    """
+    Create a tuple of 'args.num_dice' many dice
+    where each die is the same.
+    """
+    if all([
+        isinstance(args.die_sides,int) and args.die_sides > 0,
+        isinstance(args.die_values,(list,tuple)) and len(args.die_values) > 0
+    ]):
+        raise Exception("Both die sides are given and die values are given. Only pass one")
 
-        if isinstance(args.multi_die_values, (list,tuple)) and len(args.multi_die_values) > 0:
-            die = []
-            for value in args.multi_die_values:
-                die.append(value)
-                if len(die) == args.multi_die_sides[len(dice)]:
-                    dice.append(tuple(die))
-                    die = []
+    elif isinstance(args.die_sides,int) and args.die_sides > 0:
+        values = range(
+            args.die_start,
+            args.die_start + args.die_step*args.die_sides,
+            args.die_step,
+        )
 
-            if len(dice) != len(args.multi_die_sides):
-                raise Exception("Not enough die values were given")
+    elif len(args.die_values) > 0:
+        values = args.die_values
 
-            if sum(len(item) for item in dice) != len(args.multi_die_values):
-                raise Exception("Not all die values were used")
-
-        else:
-            if isinstance(args.multi_die_start, (list,tuple)) and len(args.multi_die_start) > 0:
-                if len(args.multi_die_start) != len(args.multi_die_sides):
-                    raise Exception("Multi die starts must have parallel values to multi die sides")
-
-                start_values = args.multi_die_start
-            else:
-                start_values = tuple(1 for _ in args.multi_die_sides)
-
-            if isinstance(args.multi_die_step, (list,tuple)) and len(args.multi_die_step) > 0:
-                if len(args.multi_die_step) != len(args.multi_die_step):
-                    raise Exception("Multi die steps must have parallel values to multi die sides")
-
-                step_values = args.multi_die_step
-            else:
-                step_values = tuple(1 for _ in args.multi_die_sides)
-
-            for start,step,size in zip(start_values, step_values, args.multi_die_sides):
-                dice.append(range(start,start+step*size, step))
-
-        return tuple(dice)
     else:
-        if isinstance(args.die_sides,int) and len(args.die_values) > 0:
-            raise Exception("Both die sides are given and die values are given. Only pass one")
+        raise Exception('Must pass in one of \'--die\' or \'--die-values\'')
 
-        elif isinstance(args.die_sides,int) and args.die_sides > 0:
-            values = range(
-                args.die_start,
-                args.die_start + args.die_step*args.die_sides,
-                args.die_step,
-            )
+    return tuple(values for _ in range(args.num_dice))
 
-        elif len(args.die_values) > 0:
-            values = args.die_values
+def get_multi_dice(args):
+    """
+    Create a tuple of dice were each die may not have the same number
+    of sides as any other die
+    """
+    dice = []
 
+    if not isinstance(args.multi_die_sides, (list,tuple)) or len(args.multi_die_sides) == 0:
+        raise Exception(
+            "The parameter '--multi-die-sides' is a required parameter for multi-die-type rolls"
+        )
+
+    if isinstance(args.multi_die_values, (list,tuple)) and len(args.multi_die_values) > 0:
+        """
+        Process args to return dice were each die has unique specified values
+        Values are specified from 'args.multi_die_values' and values are grouped
+        into sections specified by args.multi_die_sides.
+        """
+
+        die = []
+        for value in args.multi_die_values:
+            die.append(value)
+            if len(die) == args.multi_die_sides[len(dice)]:
+                dice.append(tuple(die))
+                die = []
+
+        if len(dice) != len(args.multi_die_sides):
+            raise Exception("Not enough die values were given")
+
+        if sum(len(item) for item in dice) != len(args.multi_die_values):
+            raise Exception("Not all die values were used")
+
+    else:
+        """
+        Process args to return dice you specify a:
+        - start value
+        - increment vlaue
+        - number of steps to take (number of sides on the die)
+        """
+        if isinstance(args.multi_die_start, (list,tuple)) and len(args.multi_die_start) > 0:
+            if len(args.multi_die_start) != len(args.multi_die_sides):
+                raise Exception("Multi die starts must have parallel values to multi die sides")
+
+            start_values = args.multi_die_start
         else:
-            raise Exception('Must pass in one of \'--die\' or \'--die-values\'')
+            start_values = tuple(1 for _ in args.multi_die_sides)
 
-        return tuple(values for _ in range(args.num_dice))
+        if isinstance(args.multi_die_step, (list,tuple)) and len(args.multi_die_step) > 0:
+            if len(args.multi_die_step) != len(args.multi_die_step):
+                raise Exception("Multi die steps must have parallel values to multi die sides")
+
+            step_values = args.multi_die_step
+        else:
+            step_values = tuple(1 for _ in args.multi_die_sides)
+
+        for start,step,size in zip(start_values, step_values, args.multi_die_sides):
+            dice.append(range(start,start+step*size, step))
+
+    return tuple(dice)
+
+def get_dice(args):
+    is_using_single_type = any([
+        isinstance(args.die_values,(list,tuple)) and len(args.die_values) > 0,
+        isinstance(args.die_sides,int) and args.die_sides > 0,
+    ])
+
+    is_using_multi_type = isinstance(args.multi_die_sides, (list,tuple)) and len(args.multi_die_sides) > 0
+
+    if is_using_single_type and is_using_multi_type:
+        raise Exception(" ".join([
+            "You cannot use both types of die generation.",
+            "Single die type and multi die type are mutually exclusive die generation schemes."
+        ]))
+    elif is_using_multi_type:
+        return get_multi_dice(args)
+    elif is_using_single_type:
+        return get_single_dice(args)
+    else:
+        raise Exception("No flags were given for dice generation.")
 
 def get_outcome_simulator(dice, num_iterations):
     """
@@ -672,7 +761,6 @@ def get_outcome_generator(args):
 
     # an iterator that yields (dice_outcome, count)
     return zip(iterator, itertools.repeat(1))
-
 
 def find_max_digits(iterable):
     if not all(isinstance(xx, (int, float)) for xx in iterable):
@@ -1129,7 +1217,12 @@ def get_select_operation(param_list):
 
     return multi_select_func
 
-def get_slice_apply_operation(slice_params, other_param_list, should_memorize = False):
+def get_slice_apply_operation(
+    slice_params,
+    other_param_list,
+    should_memorize = False,
+    should_check_input = False,
+):
     if len(slice_params) != 1:
         raise Exception("The 'slice-apply' operation requires the first parameter to slice size.")
 
@@ -1154,6 +1247,7 @@ def get_slice_apply_operation(slice_params, other_param_list, should_memorize = 
         second_operator_str,
         param_list = second_operator_params,
         should_memorize = should_memorize,
+        should_check_input = should_check_input,
     )
 
     # third operation is needed to be considered so that each subsequent
@@ -1167,6 +1261,7 @@ def get_slice_apply_operation(slice_params, other_param_list, should_memorize = 
             third_operator_str,
             param_list = third_operator_params,
             should_memorize = should_memorize,
+            should_check_input = should_check_input,
         )
     else:
         third_operator_str = 'id'
@@ -1203,7 +1298,12 @@ def get_slice_apply_operation(slice_params, other_param_list, should_memorize = 
 
     return slice_apply_func
 
-def get_operator(operation_str, param_list = [], should_memorize = True):
+def get_operator(
+    operation_str,
+    param_list = [],
+    should_memorize = True,
+    should_check_input = True,
+):
     orignal_params = list(param_list)
 
     conditional_params = []
@@ -1251,13 +1351,13 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
         _operator = get_select_operation(cur_params)
 
     elif operation_str == 'slice-apply':
-        _operator = get_slice_apply_operation(cur_params, param_list, should_memorize)
+        _operator = get_slice_apply_operation(cur_params, param_list, should_memorize, should_check_input)
         apply_nested_operation = False
 
     else:
         raise Exception("operation string '{}' is not valid".format(operation_str))
 
-    if apply_nested_operation and len(param_list):
+    if apply_nested_operation and len(param_list) > 0:
         # Apply a nested operation
 
         other_operator_str = param_list[0]
@@ -1267,6 +1367,7 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
             other_operator_str,
             param_list = other_operator_params,
             should_memorize = should_memorize,
+            should_check_input = should_check_input,
         )
 
         _first_operation = _operator
@@ -1288,13 +1389,13 @@ def get_operator(operation_str, param_list = [], should_memorize = True):
 
         _operator = composite_operation
 
-    _operator = dice_input_checker(_operator)
+    if should_check_input:
+        _operator = dice_input_checker(_operator)
 
     if should_memorize:
-        # return an function that cashes the results to speed up runtime at the cost of memory
         _operator = memorize(_operator)
 
-    return dice_input_checker(_operator)
+    return _operator
 
 def save_data(counter_dict, save_file_path):
     save_dict = dict()
@@ -1424,8 +1525,6 @@ def display_data(args,counter_dict):
         ))
 
 def main():
-    counter_dict = Counter()
-
     if ARGS.show_args:
         print(ARGS)
 
@@ -1437,7 +1536,9 @@ def main():
     else:
         iterator = get_outcome_generator(ARGS)
 
-    _operator = get_operator(ARGS.apply[0], ARGS.apply[1:], ARGS.memorize)
+    _operator = get_operator(ARGS.apply[0], ARGS.apply[1:], ARGS.memorize_input, ARGS.check_input)
+
+    counter_dict = Counter()
 
     # the next two lines is the majority of the program run time for larger values
     for item,count in iterator:
