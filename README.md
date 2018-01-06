@@ -119,6 +119,168 @@ Or you can drastically change how the bars get rendered.
 12:   2.78 % <|@#@#@#@#@#
 ```
 
+## Editing Die Values
+
+### Rolling a True D10
+This program by default will treat a D10 to begin at `1` and have values all the way up to `10`.
+If we want the lowest value to start at `0` we can do the following.
+```
+➔ python dice_distro.py -d 10 -n 2 --die-start 0 --apply sum
+ 0:   1.00 % |==
+ 1:   2.00 % |====
+ 2:   3.00 % |======
+ 3:   4.00 % |========
+ 4:   5.00 % |==========
+ 5:   6.00 % |============
+ 6:   7.00 % |==============
+ 7:   8.00 % |================
+ 8:   9.00 % |==================
+ 9:  10.00 % |====================
+10:   9.00 % |==================
+11:   8.00 % |================
+12:   7.00 % |==============
+13:   6.00 % |============
+14:   5.00 % |==========
+15:   4.00 % |========
+16:   3.00 % |======
+17:   2.00 % |====
+18:   1.00 % |==
+```
+
+Or other type of D10 (some refer to as a D100, but does not have 100 sides)
+```
+➔ python dice_distro.py -d 10 -n 2 --die-start 0 --die-step 10 --apply sum
+  0:   1.00 % |==
+ 10:   2.00 % |====
+ 20:   3.00 % |======
+ 30:   4.00 % |========
+ 40:   5.00 % |==========
+ 50:   6.00 % |============
+ 60:   7.00 % |==============
+ 70:   8.00 % |================
+ 80:   9.00 % |==================
+ 90:  10.00 % |====================
+100:   9.00 % |==================
+110:   8.00 % |================
+120:   7.00 % |==============
+130:   6.00 % |============
+140:   5.00 % |==========
+150:   4.00 % |========
+160:   3.00 % |======
+170:   2.00 % |====
+180:   1.00 % |==
+```
+
+### Rolling Custom Values
+You can manually set the values on the sides of the die.
+```
+➔ python dice_distro.py -n 2 --die-values 0 10 100 -1000 --apply sum
+-2000:   6.25 % |============
+-1000:  12.50 % |=========================
+ -990:  12.50 % |=========================
+ -900:  12.50 % |=========================
+    0:   6.25 % |============
+   10:  12.50 % |=========================
+   20:   6.25 % |============
+  100:  12.50 % |=========================
+  110:  12.50 % |=========================
+  200:   6.25 % |============
+```
+
+### Rolling a D12 D8 and D6
+```
+➔ python dice_distro.py --multi-die-sides 12 8 6 --apply sum
+ 3:   0.17 % |
+ 4:   0.52 % |=
+ 5:   1.04 % |==
+ 6:   1.74 % |===
+ 7:   2.60 % |=====
+ 8:   3.65 % |=======
+ 9:   4.69 % |=========
+10:   5.73 % |===========
+11:   6.60 % |=============
+12:   7.29 % |==============
+13:   7.81 % |===============
+14:   8.16 % |================
+15:   8.16 % |================
+16:   7.81 % |===============
+17:   7.29 % |==============
+18:   6.60 % |=============
+19:   5.73 % |===========
+20:   4.69 % |=========
+21:   3.65 % |=======
+22:   2.60 % |=====
+23:   1.74 % |===
+24:   1.04 % |==
+25:   0.52 % |=
+26:   0.17 % |
+```
+
+### Roll Multiple Types of Dice with Non-Default Values
+When rolling multiple types of die, the default start and step will be `1`.
+This can be changed with `--multi-die-start` and `--multi-die-step`.
+Both flags are optional, but when using one, the values you pass are in parallel with the values given
+in relation to `--multi-die-sides`.
+```
+➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-start -2 0 1 --multi-die-step 3 2 1
+-2, 0, 1:   4.17 % |========
+-2, 0, 2:   4.17 % |========
+-2, 2, 1:   4.17 % |========
+-2, 2, 2:   4.17 % |========
+-2, 4, 1:   4.17 % |========
+-2, 4, 2:   4.17 % |========
+ 1, 0, 1:   4.17 % |========
+ 1, 0, 2:   4.17 % |========
+ 1, 2, 1:   4.17 % |========
+ 1, 2, 2:   4.17 % |========
+ 1, 4, 1:   4.17 % |========
+ 1, 4, 2:   4.17 % |========
+ 4, 0, 1:   4.17 % |========
+ 4, 0, 2:   4.17 % |========
+ 4, 2, 1:   4.17 % |========
+ 4, 2, 2:   4.17 % |========
+ 4, 4, 1:   4.17 % |========
+ 4, 4, 2:   4.17 % |========
+ 7, 0, 1:   4.17 % |========
+ 7, 0, 2:   4.17 % |========
+ 7, 2, 1:   4.17 % |========
+ 7, 2, 2:   4.17 % |========
+ 7, 4, 1:   4.17 % |========
+ 7, 4, 2:   4.17 % |========
+```
+
+### Roll Multiple Types of Dice with Specific Values
+- One D4 with values from 0 to 3.
+- One D3 with values of 10, 20, and 30.
+- One D2 with values of 100 and 200.
+```
+➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200
+  0, 10,100:   4.17 % |========
+  0, 10,200:   4.17 % |========
+  0, 20,100:   4.17 % |========
+  0, 20,200:   4.17 % |========
+  0, 30,100:   4.17 % |========
+  0, 30,200:   4.17 % |========
+  1, 10,100:   4.17 % |========
+  1, 10,200:   4.17 % |========
+  1, 20,100:   4.17 % |========
+  1, 20,200:   4.17 % |========
+  1, 30,100:   4.17 % |========
+  1, 30,200:   4.17 % |========
+  2, 10,100:   4.17 % |========
+  2, 10,200:   4.17 % |========
+  2, 20,100:   4.17 % |========
+  2, 20,200:   4.17 % |========
+  2, 30,100:   4.17 % |========
+  2, 30,200:   4.17 % |========
+  3, 10,100:   4.17 % |========
+  3, 10,200:   4.17 % |========
+  3, 20,100:   4.17 % |========
+  3, 20,200:   4.17 % |========
+  3, 30,100:   4.17 % |========
+  3, 30,200:   4.17 % |========
+```
+
 ## Functional Examples
 
 ### Distinguishable Dice
@@ -402,166 +564,6 @@ Instructions:
 8:  12.50 % |=========================
 ```
 
-### Rolling a True D10
-This program by default will treat a D10 to begin at `1` and have values all the way up to `10`.
-If we want the lowest value to start at `0` we can do the following.
-```
-➔ python dice_distro.py -d 10 -n 2 --die-start 0 --apply sum
- 0:   1.00 % |==
- 1:   2.00 % |====
- 2:   3.00 % |======
- 3:   4.00 % |========
- 4:   5.00 % |==========
- 5:   6.00 % |============
- 6:   7.00 % |==============
- 7:   8.00 % |================
- 8:   9.00 % |==================
- 9:  10.00 % |====================
-10:   9.00 % |==================
-11:   8.00 % |================
-12:   7.00 % |==============
-13:   6.00 % |============
-14:   5.00 % |==========
-15:   4.00 % |========
-16:   3.00 % |======
-17:   2.00 % |====
-18:   1.00 % |==
-```
-
-Or other type of D10 (some refer to as a D100, but does not have 100 sides)
-```
-➔ python dice_distro.py -d 10 -n 2 --die-start 0 --die-step 10 --apply sum
-  0:   1.00 % |==
- 10:   2.00 % |====
- 20:   3.00 % |======
- 30:   4.00 % |========
- 40:   5.00 % |==========
- 50:   6.00 % |============
- 60:   7.00 % |==============
- 70:   8.00 % |================
- 80:   9.00 % |==================
- 90:  10.00 % |====================
-100:   9.00 % |==================
-110:   8.00 % |================
-120:   7.00 % |==============
-130:   6.00 % |============
-140:   5.00 % |==========
-150:   4.00 % |========
-160:   3.00 % |======
-170:   2.00 % |====
-180:   1.00 % |==
-```
-
-### Rolling Custom Values
-You can manually set the values on the sides of the die.
-```
-➔ python dice_distro.py -n 2 --die-values 0 10 100 -1000 --apply sum
--2000:   6.25 % |============
--1000:  12.50 % |=========================
- -990:  12.50 % |=========================
- -900:  12.50 % |=========================
-    0:   6.25 % |============
-   10:  12.50 % |=========================
-   20:   6.25 % |============
-  100:  12.50 % |=========================
-  110:  12.50 % |=========================
-  200:   6.25 % |============
-```
-
-### Rolling a D12 D8 and D6
-```
-➔ python dice_distro.py --multi-die-sides 12 8 6 --apply sum
- 3:   0.17 % |
- 4:   0.52 % |=
- 5:   1.04 % |==
- 6:   1.74 % |===
- 7:   2.60 % |=====
- 8:   3.65 % |=======
- 9:   4.69 % |=========
-10:   5.73 % |===========
-11:   6.60 % |=============
-12:   7.29 % |==============
-13:   7.81 % |===============
-14:   8.16 % |================
-15:   8.16 % |================
-16:   7.81 % |===============
-17:   7.29 % |==============
-18:   6.60 % |=============
-19:   5.73 % |===========
-20:   4.69 % |=========
-21:   3.65 % |=======
-22:   2.60 % |=====
-23:   1.74 % |===
-24:   1.04 % |==
-25:   0.52 % |=
-26:   0.17 % |
-```
-
-### Roll Multiple Types of Dice with Non-Default Values
-When rolling multiple types of die, the default start and step will be `1`.
-This can be changed with `--multi-die-start` and `--multi-die-step`.
-Both flags are optional, but when using one, the values you pass are in parallel with the values given
-in relation to `--multi-die-sides`.
-```
-➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-start -2 0 1 --multi-die-step 3 2 1
--2, 0, 1:   4.17 % |========
--2, 0, 2:   4.17 % |========
--2, 2, 1:   4.17 % |========
--2, 2, 2:   4.17 % |========
--2, 4, 1:   4.17 % |========
--2, 4, 2:   4.17 % |========
- 1, 0, 1:   4.17 % |========
- 1, 0, 2:   4.17 % |========
- 1, 2, 1:   4.17 % |========
- 1, 2, 2:   4.17 % |========
- 1, 4, 1:   4.17 % |========
- 1, 4, 2:   4.17 % |========
- 4, 0, 1:   4.17 % |========
- 4, 0, 2:   4.17 % |========
- 4, 2, 1:   4.17 % |========
- 4, 2, 2:   4.17 % |========
- 4, 4, 1:   4.17 % |========
- 4, 4, 2:   4.17 % |========
- 7, 0, 1:   4.17 % |========
- 7, 0, 2:   4.17 % |========
- 7, 2, 1:   4.17 % |========
- 7, 2, 2:   4.17 % |========
- 7, 4, 1:   4.17 % |========
- 7, 4, 2:   4.17 % |========
-```
-
-### Roll Multiple Types of Dice with Specific Values
-- One D4 with values from 0 to 3.
-- One D3 with values of 10, 20, and 30.
-- One D2 with values of 100 and 200.
-```
-➔ python dice_distro.py --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200
-  0, 10,100:   4.17 % |========
-  0, 10,200:   4.17 % |========
-  0, 20,100:   4.17 % |========
-  0, 20,200:   4.17 % |========
-  0, 30,100:   4.17 % |========
-  0, 30,200:   4.17 % |========
-  1, 10,100:   4.17 % |========
-  1, 10,200:   4.17 % |========
-  1, 20,100:   4.17 % |========
-  1, 20,200:   4.17 % |========
-  1, 30,100:   4.17 % |========
-  1, 30,200:   4.17 % |========
-  2, 10,100:   4.17 % |========
-  2, 10,200:   4.17 % |========
-  2, 20,100:   4.17 % |========
-  2, 20,200:   4.17 % |========
-  2, 30,100:   4.17 % |========
-  2, 30,200:   4.17 % |========
-  3, 10,100:   4.17 % |========
-  3, 10,200:   4.17 % |========
-  3, 20,100:   4.17 % |========
-  3, 20,200:   4.17 % |========
-  3, 30,100:   4.17 % |========
-  3, 30,200:   4.17 % |========
-```
-
 ### Nested Selecting
 
 This example rolls five D8 and applies the following instructions:
@@ -735,48 +737,6 @@ The above is the equvalent in saying:
 12:   5.4784 % |==========
 ```
 
-### Saving/Loading/Suppresing Output
-You can use the `--save <file_name>` flag to save the data to a file.
-Then use it later for other calculations.
-You can use the `--no-output` to not render any output.
-```
-➔ python dice_distro.py -d 6 --no-output --save /tmp/1d6.json
-➔ python dice_distro.py -d 8 --no-output --save /tmp/1d8.json
-```
-You can then load the data using `--load <file_names>`.
-If you supply more than one file name, the distributions are **multiplied**.
-```
-➔ python dice_distro.py --load /tmp/1d6.json /tmp/1d8.json --apply sum
- 2:   2.08 % |====
- 3:   4.17 % |========
- 4:   6.25 % |============
- 5:   8.33 % |================
- 6:  10.42 % |====================
- 7:  12.50 % |=========================
- 8:  12.50 % |=========================
- 9:  12.50 % |=========================
-10:  10.42 % |====================
-11:   8.33 % |================
-12:   6.25 % |============
-13:   4.17 % |========
-14:   2.08 % |====
-```
-This makes calculating some larger dice pools to be easier.
-For example, calculating the distribution for eight D20.
-The normal example will take a very long time to run:
-```
-➔ # do not run, this will take a very long time
-➔ python dice_distro.py -d 20 -n 8  --apply sum --show-counts
-```
-While the example using file save runs much faster:
-```
-➔ python dice_distro.py -d 20 -n 2 --apply sum --save /tmp/sum-2d20.json --no-output
-➔ python dice_distro.py --load /tmp/sum-2d20.json /tmp/sum-2d20.json --apply sum --save /tmp/sum-4d20.json --no-output
-➔ python dice_distro.py --load /tmp/sum-4d20.json /tmp/sum-4d20.json --apply sum --show-counts
-```
-**Note** that this only applies if you can break down your problem into a product of smaller distributions.
-
-
 ### Weighted Dice
 Since this program uses enumeration to calculate the distribution,
 weighted dice can't simply be added with a parameter with weights.
@@ -866,6 +826,47 @@ The defaults are `[` and `]`, but if you don't like those, you can change them.
 107:  10.00 % |====================
 
 ```
+
+### Optimization Using Saving/Loading Output
+You can use the `--save <file_name>` flag to save the data to a file.
+Then use it later for other calculations.
+You can use the `--no-output` to not render any output.
+```
+➔ python dice_distro.py -d 6 --no-output --save /tmp/1d6.json
+➔ python dice_distro.py -d 8 --no-output --save /tmp/1d8.json
+```
+You can then load the data using `--load <file_names>`.
+If you supply more than one file name, the distributions are **multiplied**.
+```
+➔ python dice_distro.py --load /tmp/1d6.json /tmp/1d8.json --apply sum
+ 2:   2.08 % |====
+ 3:   4.17 % |========
+ 4:   6.25 % |============
+ 5:   8.33 % |================
+ 6:  10.42 % |====================
+ 7:  12.50 % |=========================
+ 8:  12.50 % |=========================
+ 9:  12.50 % |=========================
+10:  10.42 % |====================
+11:   8.33 % |================
+12:   6.25 % |============
+13:   4.17 % |========
+14:   2.08 % |====
+```
+This makes calculating some larger dice pools to be easier.
+For example, calculating the distribution for eight D20.
+The normal example will take a very long time to run:
+```
+➔ # do not run, this will take a very long time
+➔ python dice_distro.py -d 20 -n 8  --apply sum --show-counts
+```
+While the example using file save runs much faster:
+```
+➔ python dice_distro.py -d 20 -n 2 --apply sum --save /tmp/sum-2d20.json --no-output
+➔ python dice_distro.py --load /tmp/sum-2d20.json /tmp/sum-2d20.json --apply sum --save /tmp/sum-4d20.json --no-output
+➔ python dice_distro.py --load /tmp/sum-4d20.json /tmp/sum-4d20.json --apply sum --show-counts
+```
+**Note** that this only applies if you can break down your problem into a product of smaller distributions.
 
 # Simulating Dice Rolls
 
