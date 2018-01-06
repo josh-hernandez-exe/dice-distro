@@ -341,7 +341,7 @@ that will be applied to the selected values.
 ```
 
 ### Conditional Rerolling
-Roll a D6, if the value is greater than 4 (the `` value), keep the value.
+Roll a D6, if the value is greater than 4, keep the value.
 Otherwise reroll, repeat to a max of three rolls.
 Keep the final roll, regardless of outcome.
 To change the max reroll count, change the number of dice that are rolled (the `-n` parameter).
@@ -354,6 +354,15 @@ To change the max reroll count, change the number of dice that are rolled (the `
 5:  29.17 % |==========================================================
 6:  29.17 % |==========================================================
 ```
+**Note**: Since this program enumerates the dice outcome, you need "another" die to reroll.
+Since each reroll can be thought of as a new independent die roll.
+The real calculation just rolls all the indpendent dice needed,
+looks at the first one, if the condition is met, then keep that (regarless of the other die results).
+If it didn't keep the value, it looks at the next die and apply the condition,
+and repeats until there are no more dice in the pool.
+A limitation to the design is that you have to predetermine the max amount of rerolls.
+This program cannot indefinitely reroll conditionally.
+An example condition that is *not* possible is, "Roll a D6, reroll so long as the result is 3."
 
 ### Conditional Rerolling with Multiple Dice
 Roll two D6 and sum their values. If the value is equal to or greater than 7, keep the value.
