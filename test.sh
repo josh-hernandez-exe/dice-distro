@@ -65,6 +65,11 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply reroll if lt 4 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply sum 2 reroll if lt 7 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply reroll if mod 2 eq 1 && \
+    # # Test Memorize
+    $python_exe $dice_distro_file $test_params --memorize-input -d 6 -n 4 --apply sum 2 sum && \
+    $python_exe $dice_distro_file $test_params --memorize-input -d 6 -n 4 --apply slice-apply 2 sum sum && \
+    $python_exe $dice_distro_file $test_params --memorize-input -d 6 -n 4 --apply select -1 -2 sum && \
+    $python_exe $dice_distro_file $test_params --memorize-input -d 6 -n 4 --apply set sum && \
     # Test custom single die type options
     $python_exe $dice_distro_file $test_params -d 10 -n 2 --die-start 0 && \
     $python_exe $dice_distro_file $test_params -d 10 -n 2 --die-start 0 --die-step 10 && \

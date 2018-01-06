@@ -19,7 +19,6 @@ if (2,0) <= sys.version_info < (3, 0):
 OPERATIONS_DICT = {
     'id':tuple,
     'sum':lambda xx: (sum(xx),),
-    # 'sum':sum,
     'min':lambda xx: (min(xx),),
     'max':lambda xx: (max(xx),),
     'set':lambda xx: tuple(sorted(xx)),
@@ -359,6 +358,7 @@ op_group.add_argument(
         "This will hash the results of a roll, and save the result.",
         "This speeds up some calculations, but adds overhead since you",
         "must calculate the hash of the input.",
+        "This flag is not useful if input doesn't repeat."
     ]),
 )
 
@@ -573,7 +573,7 @@ def dice_input_checker(func):
     ])
 
     def check_is_tuple(xx,kind):
-        if not isinstance(xx, (list, tuple)):
+        if not isinstance(xx, tuple):
             raise Exception(
                 "\n".join([
                     func_str_info,
@@ -1291,7 +1291,7 @@ def get_slice_apply_operation(
             if len(dice) < slice_size:
                 continue
             else:
-                results.extend(second_operator(dice))
+                results.extend(second_operator(tuple(dice)))
                 dice = []
 
         return third_operator(tuple(results))
@@ -1303,21 +1303,24 @@ def get_operator(
     param_list = [],
     should_memorize = True,
     should_check_input = True,
+    first_operation = False,
 ):
-    orignal_params = list(param_list)
+    # make a shallow copy
+    _param_list = list(param_list)
+    # _param_list = list(item for item in param_list if len(item) > 0)
 
     conditional_params = []
-    if len(param_list) > 0 and param_list[0] == 'if':
+    if len(_param_list) > 0 and _param_list[0] == 'if':
         if operation_str in IF_ABLE_OPERATIONS:
             conditional_params = list(
                 itertools.takewhile(
                     lambda xx: xx != 'then',
-                    param_list[1:],
+                    _param_list[1:],
             ))
-            param_list = param_list[1+len(conditional_params):]
+            _param_list = _param_list[1+len(conditional_params):]
 
-            if len(param_list) > 0 and param_list[0] == 'then':
-                param_list = param_list[1:]
+            if len(_param_list) > 0 and _param_list[0] == 'then':
+                _param_list = _param_list[1:]
         else:
             raise Exception('This operation is not if-able.')
 
@@ -1325,12 +1328,12 @@ def get_operator(
 
     cur_params = list(itertools.takewhile(
         lambda xx: xx not in OPERATIONS_DICT,
-        param_list,
+        _param_list,
     ))
 
     apply_nested_operation = True
 
-    param_list = param_list[len(cur_params):]
+    _param_list = _param_list[len(cur_params):]
 
     if operation_str in BASIC_OPERATIONS:
         _operator = get_basic_operation(operation_str, cur_params)
@@ -1351,17 +1354,22 @@ def get_operator(
         _operator = get_select_operation(cur_params)
 
     elif operation_str == 'slice-apply':
-        _operator = get_slice_apply_operation(cur_params, param_list, should_memorize, should_check_input)
+        _operator = get_slice_apply_operation(
+            slice_params=cur_params,
+            other_param_list=_param_list,
+            should_memorize=should_memorize,
+            should_check_input=should_check_input,
+        )
         apply_nested_operation = False
 
     else:
         raise Exception("operation string '{}' is not valid".format(operation_str))
 
-    if apply_nested_operation and len(param_list) > 0:
+    if apply_nested_operation and len(_param_list) > 0:
         # Apply a nested operation
 
-        other_operator_str = param_list[0]
-        other_operator_params = param_list[1:]
+        other_operator_str = _param_list[0]
+        other_operator_params = _param_list[1:]
 
         other_operator = get_operator(
             other_operator_str,
@@ -1392,7 +1400,11 @@ def get_operator(
     if should_check_input:
         _operator = dice_input_checker(_operator)
 
-    if should_memorize:
+    if should_memorize and not first_operation:
+        """
+        The top level operation will never benifit from memorize
+        since all inputs will be unique by design
+        """
         _operator = memorize(_operator)
 
     return _operator
@@ -1536,7 +1548,14 @@ def main():
     else:
         iterator = get_outcome_generator(ARGS)
 
-    _operator = get_operator(ARGS.apply[0], ARGS.apply[1:], ARGS.memorize_input, ARGS.check_input)
+    _operator = get_operator(
+        operation_str = ARGS.apply[0],
+        # remove any entries that are empty strings
+        param_list = list(item for item in ARGS.apply[1:] if len(item) > 0),
+        should_memorize = ARGS.memorize_input,
+        should_check_input = ARGS.check_input,
+        first_operation = True,
+    )
 
     counter_dict = Counter()
 
