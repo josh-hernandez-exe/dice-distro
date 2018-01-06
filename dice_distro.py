@@ -55,6 +55,19 @@ BASIC_COMPARE_DICT = {
     'le':lambda aa,bb,cc=None: aa <= bb,
 }
 
+LOGIC_START_KEYWORD = 'if'
+
+LOGIC_END_KEYWORD = 'then'
+
+LOGIC_KEYWORDS = set([
+    LOGIC_START_KEYWORD,
+    LOGIC_END_KEYWORD,
+])
+
+BOOLEAN_LOGIC_OPERATOR_ORDER = ['not', 'and', 'or']
+BOOLEAN_LOGIC_OPERATORS = set(BOOLEAN_LOGIC_OPERATOR_ORDER)
+
+
 class CustomFormatter(argparse.HelpFormatter):
     """
     Utilized code from:
@@ -293,7 +306,7 @@ op_group.add_argument(
         # Explain if-block synatx
         "Some operations can be applied conditionally, denoted by an",
         "if-block between the operation string and its parameters.",
-        "The 'then' keyword can be used to denote the end",
+        "Denote the end by using the keyword '{}'".format(LOGIC_END_KEYWORD),
         "of the conditional statement",
         "if more operation or parameters are needed.",
         "Example Syntax:",
@@ -527,8 +540,6 @@ ARGS = parser.parse_args()
 BRACKET_CHARS = ARGS.bracket_chars
 BRACKET_SET = set(BRACKET_CHARS)
 
-BOOLEAN_LOGIC_OPERATOR_ORDER = ['not', 'and', 'or']
-BOOLEAN_LOGIC_OPERATORS = set(BOOLEAN_LOGIC_OPERATOR_ORDER)
 
 COMPARE_KEYWORDS_SET = set.union(
     set([
@@ -1307,19 +1318,18 @@ def get_operator(
 ):
     # make a shallow copy
     _param_list = list(param_list)
-    # _param_list = list(item for item in param_list if len(item) > 0)
 
     conditional_params = []
-    if len(_param_list) > 0 and _param_list[0] == 'if':
+    if len(_param_list) > 0 and _param_list[0] == LOGIC_START_KEYWORD:
         if operation_str in IF_ABLE_OPERATIONS:
             conditional_params = list(
                 itertools.takewhile(
-                    lambda xx: xx != 'then',
+                    lambda xx: xx != LOGIC_END_KEYWORD,
                     _param_list[1:],
             ))
             _param_list = _param_list[1+len(conditional_params):]
 
-            if len(_param_list) > 0 and _param_list[0] == 'then':
+            if len(_param_list) > 0 and _param_list[0] == LOGIC_END_KEYWORD:
                 _param_list = _param_list[1:]
         else:
             raise Exception('This operation is not if-able.')
