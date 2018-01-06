@@ -25,7 +25,7 @@ tested_versions=""
 missing_versions=""
 
 for num in $version_list; do
-    which "python$num" > /dev/null
+    which "python$num" > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         $test_file $num
         test_status=$?
@@ -40,10 +40,17 @@ for num in $version_list; do
 done
 
 echo ""
-echo "The following versions of python have been tested:"
+
+if [[ $tested_versions == "" ]]; then
+    echo "No tests have been run."
+    exit 1
+else
+    echo "The following versions of python have been tested:"
     for num in $tested_versions; do
         echo "python$num"
     done
+fi
+
 
 if [[ $is_missing_versions -eq 1 ]]; then
     echo "The following python versions are not available on this machine:"
