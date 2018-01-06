@@ -39,22 +39,23 @@ for num in $version_list; do
     fi
 done
 
-echo ""
 
-if [[ $tested_versions == "" ]]; then
-    echo "No tests have been run."
-    exit 1
-else
-    echo "The following versions of python have been tested:"
-    for num in $tested_versions; do
+if [[ $is_missing_versions -eq 1 ]]; then
+    echo ""
+    echo "The following python versions are not available on this machine:"
+    for num in $missing_versions; do
         echo "python$num"
     done
 fi
 
-
-if [[ $is_missing_versions -eq 1 ]]; then
-    echo "The following python versions are not available on this machine:"
-    for num in $missing_versions; do
+if [[ $tested_versions == "" ]]; then
+    echo ""
+    echo "No tests have been run."
+    exit 1
+else
+    echo ""
+    echo "The following versions of python have been tested:"
+    for num in $tested_versions; do
         echo "python$num"
     done
 fi
