@@ -1427,30 +1427,33 @@ def save_data(counter_dict, save_file_path):
         json.dump(save_dict, file_stream)
 
 def load_data(file_path):
-    counter_dict = Counter()
-
     if not os.path.isfile(file_path):
         raise Exception('File path give to load is not a file.')
 
     with open(file_path) as file_stream:
         load_dict = json.load(file_stream)
 
+    counter_dict = Counter()
+
     for key,value in load_dict.items():
         new_key = None
+
         try:
-            new_key = tuple(json.loads(key))
+            new_key = int(key)
         except:
-            # key is not a list
+            # key is not a int
             try:
-                new_key = int(key)
+                new_key = tuple(json.loads(key))
             except:
                 raise Exception("Key in file is not valid")
+            else:
+                if not all(isinstance(entry,int) for entry in new_key):
+                    raise Exception("Key in file is not valid")
 
         if not isinstance(value, int):
             raise Exception("Values given in file are not integers.")
 
-
-        counter_dict[new_key] = value
+        counter_dict[new_key]+= value
 
     return counter_dict
 
