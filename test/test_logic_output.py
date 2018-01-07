@@ -56,9 +56,6 @@ class TestIndexIndependentLogic(TestLogicBase):
             index_independent_test_value_set
         )
 
-        # with self.assertRaises(TypeError):
-        #     s.split(2)
-
     def test2(self):
         compare_func = dice_distro.determine_compare_func("""
             mod 5 lt 2 or mod 7 gt 3 and mod 3 eq 1
@@ -126,7 +123,7 @@ index_dependent_test_06 = [
 ]
 
 class TestIndexDependentLogic(TestLogicBase):
-    def test2(self):
+    def test1(self):
         mod_array_0 = [2, 3, 4, 5,  6,  7]
         cmp_array_0 = [1, 2, 3, 4,  3,  2]
         mod_array_1 = [3, 5, 7, 9, 11, 13]
