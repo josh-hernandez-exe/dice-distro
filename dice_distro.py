@@ -67,6 +67,16 @@ LOGIC_KEYWORDS = set([
 BOOLEAN_LOGIC_OPERATOR_ORDER = ['not', 'and', 'or']
 BOOLEAN_LOGIC_OPERATORS = set(BOOLEAN_LOGIC_OPERATOR_ORDER)
 
+COMPARE_KEYWORDS_SET = set.union(
+    set([
+        'mod',
+    ]),
+    set(BASIC_COMPARE_DICT.keys()),
+    BOOLEAN_LOGIC_OPERATORS,
+)
+
+BRACKET_CHARS = ["[", "]"]
+
 
 class CustomFormatter(argparse.HelpFormatter):
     """
@@ -353,17 +363,6 @@ op_group.add_argument(
 )
 
 op_group.add_argument(
-    "--bracket-chars",
-    type=str,
-    nargs=2,
-    default=['[',']'],
-    help=" ".join([
-        "You can redfine what the delimiter for brackets are.",
-        "You must give two values, for the left brackets, then the right."
-    ]),
-)
-
-op_group.add_argument(
     "--memorize-input",
     action='store_true',
     help=" ".join([
@@ -534,24 +533,6 @@ file_save_load_options.add_argument(
         "The file path of where you want the data saved.",
     ]),
 )
-
-ARGS = parser.parse_args()
-
-BRACKET_CHARS = ARGS.bracket_chars
-BRACKET_SET = set(BRACKET_CHARS)
-
-
-COMPARE_KEYWORDS_SET = set.union(
-    set([
-        'mod',
-    ]),
-    set(BASIC_COMPARE_DICT.keys()),
-    BOOLEAN_LOGIC_OPERATORS,
-)
-
-if any(char in COMPARE_KEYWORDS_SET for char in BRACKET_CHARS):
-    raise Exception('The bracket chars you set cannot be an existing keyword.')
-
 
 def always_true(*args, **kwargs):
     return True
@@ -1513,8 +1494,8 @@ def display_data(args,counter_dict):
     else:
         value_formater = "{{value:{percent_formatter}}} %".format(
             percent_formatter = "{}.{}f".format(
-                len("100.") + ARGS.percent_decimal_place,
-                ARGS.percent_decimal_place,
+                len("100.") + args.percent_decimal_place,
+                args.percent_decimal_place,
             ),
         )
 
@@ -1550,23 +1531,25 @@ def display_data(args,counter_dict):
         ))
 
 def main():
-    if ARGS.show_args:
-        print(ARGS)
+    args = parser.parse_args()
 
-    if isinstance(ARGS.load_file_paths, (list,tuple)) and len(ARGS.load_file_paths) > 0:
+    if args.show_args:
+        print(args)
+
+    if isinstance(args.load_file_paths, (list,tuple)) and len(args.load_file_paths) > 0:
         iterator = counter_dict_product(*tuple(
             load_data(file_path)
-            for file_path in ARGS.load_file_paths
+            for file_path in args.load_file_paths
         ))
     else:
-        iterator = get_outcome_generator(ARGS)
+        iterator = get_outcome_generator(args)
 
     _operator = get_operator(
-        operation_str = ARGS.apply[0],
+        operation_str = args.apply[0],
         # remove any entries that are empty strings
-        param_list = list(item for item in ARGS.apply[1:] if len(item) > 0),
-        should_memorize = ARGS.memorize_input,
-        should_check_input = ARGS.check_input,
+        param_list = list(item for item in args.apply[1:] if len(item) > 0),
+        should_memorize = args.memorize_input,
+        should_check_input = args.check_input,
         first_operation = True,
     )
 
@@ -1576,11 +1559,11 @@ def main():
     for item,count in iterator:
         counter_dict[_operator(item)] += count
 
-    if ARGS.save_file_path is not None:
-        save_data(counter_dict, ARGS.save_file_path)
+    if args.save_file_path is not None:
+        save_data(counter_dict, args.save_file_path)
 
-    if ARGS.display_output:
-        display_data(ARGS,counter_dict)
+    if args.display_output:
+        display_data(args,counter_dict)
 
 if __name__ == '__main__':
     main()

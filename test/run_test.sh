@@ -2,16 +2,20 @@
 
 python_exe="python$1"
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT_DIR="$( cd "$( dirname $CUR_DIR )" && pwd )"
 
-dice_distro_file="$DIR/dice_distro.py"
+dice_distro_file="$PROJECT_ROOT_DIR/dice_distro.py"
 test_params_with_output="--show-args --check-input"
 test_params="$test_params_with_output --no-output"
 
 echo "Starting Test with $python_exe" && \
+    # Test help render
     $python_exe $dice_distro_file $test_params --help && \
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 && \
+    # Run unit tests
+    $python_exe -m unittest discover && \
     # Test basic operations
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply min && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply max && \
@@ -59,8 +63,7 @@ echo "Starting Test with $python_exe" && \
     # Test if-block
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply shift if mod 2 3 eq 0 1 then 10 100 && \
     # Test complex if-block with nested boolean logic
-    $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ] then 100 && \
-    $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not '<|' ge 2 and le 3 '|>' and '<|' gt 5 and lt 8 '|>' then 100 --bracket-chars '<|' '|>' && \
+    $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8 ] then 100 && \
     # Test Reroll
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply reroll if lt 4 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply sum 2 reroll if lt 7 && \
