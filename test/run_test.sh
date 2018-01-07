@@ -64,6 +64,9 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply slice-apply 2 sum max && \
     # Test if-block
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply shift 10 100 if mod 2 3 eq 0 1 && \
+    # Test if-else block
+    $python_exe $dice_distro_file $test_params -d 10 -n 1 --apply shift 100 if mod 5 eq 2 else shift 10 if mod 2 eq 1 else scale 0 && \
+    $python_exe $dice_distro_file $test_params -d 10 -n 2 --apply shift 100 if mod 5 eq 2 else shift 10 if mod 2 eq 1 else scale 0 then sum && \
     # Test complex if-block with nested boolean logic
     $python_exe $dice_distro_file $test_params -d 10 --apply shift 100 if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8 ]&& \
     # Test Reroll
