@@ -932,7 +932,7 @@ If I find time in the future, I plan to (in no specific order):
 - Add parallelization the work so that options with a large enumeration set can be computed faster
     - also allowing larger numbers of simulated dice throws.
     - there are current issues with pickeling the operation function applied to the dice roll
-- Actual unit tests
+- Expand the unit tests
 	- Logic parser needs to be tested more thoroughly.
 - Add `else` to conditionals
 	- will need parser refactor
