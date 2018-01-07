@@ -411,7 +411,7 @@ Thus selection index `-2` is the second last element
 ### Rolling Four D4 (Indistinguishable)
 The possible outcomes treating the dice as indistinguishable.
 ```
-➔ python dice_distro.py -d 4 -n 4 --apply set
+➔ python dice_distro.py -d 4 -n 4 --apply sort
 1,1,1,1:   0.39 % |
 1,1,1,2:   1.56 % |===
 1,1,1,3:   1.56 % |===
@@ -593,7 +593,7 @@ This example rolls five D8 and applies the following instructions:
 We roll four D4 group them into 2 pairs.
 Then sum their values, and treat the results as indistinguishable.
 ```
-➔ python dice_distro.py -d 4 -n 4 --apply sum 2 set
+➔ python dice_distro.py -d 4 -n 4 --apply sum 2 sort
 2,2:   0.39 % |
 2,3:   1.56 % |===
 2,4:   2.34 % |====
@@ -983,8 +983,6 @@ If I find time in the future, I plan to (in no specific order):
     - there are current issues with pickeling the operation function applied to the dice roll
 - Expand the unit tests
 	- Logic parser needs to be tested more thoroughly.
-- More operations
-	- add a `fix` keyword to edit the die to a specific value
 - More logic keywords
 	- most will need parser refactor
 		- `else`

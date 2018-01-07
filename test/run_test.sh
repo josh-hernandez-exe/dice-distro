@@ -19,7 +19,7 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply min && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply max && \
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply set && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sort && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply prod && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-or && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-xor && \
@@ -28,7 +28,7 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply min 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply max 2 && \
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply set 2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sort 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply prod 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-or 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-xor 2 && \
@@ -43,6 +43,8 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply scale r-half-up 0.5 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply scale r-half-down 0.5 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply scale 0.5 0.333 prod && \
+    # Test set-to
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply set-to 1 && \
     # Test bound
     $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply bound 3 4 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bound 2 5 3 4 && \
@@ -72,7 +74,7 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params --memorize-input -d 6 -n 4 --apply sum 2 sum && \
     $python_exe $dice_distro_file $test_params --memorize-input -d 6 -n 4 --apply slice-apply 2 sum sum && \
     $python_exe $dice_distro_file $test_params --memorize-input -d 6 -n 4 --apply select -1 -2 sum && \
-    $python_exe $dice_distro_file $test_params --memorize-input -d 6 -n 4 --apply set sum && \
+    $python_exe $dice_distro_file $test_params --memorize-input -d 6 -n 4 --apply sort sum && \
     # # Test Custom Functions
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --custom "$CUR_DIR/mock_custom_func.py" --apply custom_sum && \
     # Test custom single die type options

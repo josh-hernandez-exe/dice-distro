@@ -22,13 +22,14 @@ OPERATIONS_DICT = {
     'sum':lambda xx: (sum(xx),),
     'min':lambda xx: (min(xx),),
     'max':lambda xx: (max(xx),),
-    'set':lambda xx: tuple(sorted(xx)),
+    'sort':lambda xx: tuple(sorted(xx)),
     'prod':lambda xx: (functools.reduce(operator.mul, xx, 1),),
     'bit-or':lambda xx: (functools.reduce(operator.or_, xx, 0),),
     'bit-xor':lambda xx: (functools.reduce(operator.xor, xx),),
     'bit-and':lambda xx: (functools.reduce(operator.and_, xx),),
     'shift': None, # This will get defined later if used
     'scale': None, # This will get defined later if used
+    'set-to': None, # This will get defined later if used
     'bound': None, # This will get defined later if used
     'select': None, # This will get defined later if used
     'reroll': None, # This will get defined later if used,
@@ -45,6 +46,7 @@ BASIC_OPERATIONS = set(
 IF_ABLE_OPERATIONS = set([
     'shift',
     'scale',
+    'set-to',
     'bound',
     'select',
     'reroll',
@@ -1100,6 +1102,42 @@ def get_shift_operation(param_list, conditoinal_func):
 
     return shift_func
 
+def get_set_to_operation(param_list, conditoinal_func):
+    if len(param_list) < 1:
+        raise Exception(
+            "The 'set-to' operation requires at least one parameter to determine set value."
+        )
+
+    only_one_param = len(param_list) == 1
+
+    try:
+        set_to_values = tuple(int(item) for item in param_list)
+    except:
+        raise Exception("The parameter(s) passed must be in integer(s)")
+
+    @docstring_format(
+        set_to_values=str(set_to_values),
+    )
+    def shift_func(xx):
+        """
+        Set-To Function
+        Shift Values: {set_to_values}
+        """
+        if only_one_param:
+            iterable = zip(
+                xx,
+                itertools.repeat(set_to_values[0],len(xx)),
+            )
+        else:
+            iterable = zip(xx, set_to_values)
+
+        return tuple(
+            set_value if conditoinal_func(item,index) else item
+            for index, (item,set_value) in enumerate(iterable)
+        )
+
+    return shift_func
+
 def get_scale_operation(param_list, conditoinal_func):
     if len(param_list) < 1:
         raise Exception(
@@ -1409,6 +1447,9 @@ def get_operator(
 
     elif operation_str == 'scale':
         _operator = get_scale_operation(cur_params, conditoinal_func)
+
+    elif operation_str == 'set-to':
+        _operator = get_set_to_operation(cur_params, conditoinal_func)
 
     elif operation_str == 'bound':
         _operator = get_bound_operation(cur_params, conditoinal_func)
