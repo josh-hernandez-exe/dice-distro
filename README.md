@@ -934,5 +934,12 @@ If I find time in the future, I plan to (in no specific order):
     - there are current issues with pickeling the operation function applied to the dice roll
 - Expand the unit tests
 	- Logic parser needs to be tested more thoroughly.
-- Add `else` to conditionals
-	- will need parser refactor
+- More operations
+	- add a `fix` keyword to edit the die to a specific value
+- More logic keywords
+	- most will need parser refactor
+		- `else`
+			- Note: `1 if 0 else 3 if 0 else 4`
+		- `any`/`all`
+			- I need to decide if after the condition is checked if you apply the operation to all the dice or only the ones that resulted in `true`
+				- or if there is a way to syntactically do both in a clean way
