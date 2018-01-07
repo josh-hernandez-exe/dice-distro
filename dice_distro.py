@@ -1451,13 +1451,31 @@ def get_operator(
             else_parameters = full_conditional_params[len(cur_conditional_params):]
 
             if len(else_parameters) > 0 and else_parameters[0] == LOGIC_ELSE_KEYWORD:
-                else_operation = get_operator(
+                else_operation_str =  else_parameters[1]
+
+                if else_operation_str not in ELSE_ABLE_OPERATIONS:
+                    raise Exception('Operation cannot be in an else')
+
+                _else_operation = get_operator(
                     operation_str = else_parameters[1],
                     param_list = else_parameters[2:],
                     should_memorize=should_memorize,
                     should_check_input=should_check_input,
                     first_operation=first_operation,
                 )
+
+                @functools.wraps(_else_operation)
+                def else_wrapper(xx):
+                    result = _else_operation(xx)
+
+                    if len(result) != len(xx):
+                        raise Exception(
+                            "Operations in 'else' statement result size do not match input size of 'if'"
+                        )
+
+                    return result
+
+                else_operation = else_wrapper
 
             # remove the if
             _param_list = _param_list[1+len(full_conditional_params):]
