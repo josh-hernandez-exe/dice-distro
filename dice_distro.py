@@ -407,9 +407,11 @@ op_group.add_argument(
         "Make sure that all file names are unique."
         "Any function accessable can be used as operations in",
         "the '--apply' command string. Your functions should expect the",
-        "first parameter to be a tuple of integers (the dice rolls).",
+        "first parameter to be a tuple of ints (the dice rolls).",
         "If you pass your operation parameters, they will be passed as",
         "positional args after the first.",
+        "The function must either return an ints or an ordered",
+        "list/tuple of ints."
     ]),
 )
 
@@ -1435,6 +1437,9 @@ def get_operator(
                 result = tuple(result)
             elif not isinstance(result, tuple):
                 raise Exception("Custom function has returned a value that is not supported.")
+
+            if any(not isinstance(item,int) for item in result):
+                raise Exception("Values passed are not all ints.")
 
             return result
 
