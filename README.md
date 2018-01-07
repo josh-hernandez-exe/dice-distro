@@ -532,7 +532,7 @@ Otherwise, reroll.
 The rolls are parsed two at a time, so if you have `-n 8` will have a max of four rolls.
 **Note** that its up to the user to make sure that there is enough dice.
 ```
-➔ python dice_distro.py -d 6 -n 4 --apply sum  2 reroll if lt 7
+➔ python dice_distro.py -d 6 -n 4 --apply sum 2 reroll if lt 7
  2:   1.16 % |==
  3:   2.31 % |====
  4:   3.47 % |======
@@ -791,7 +791,7 @@ In this example we:
 - For the first die, if it is an even number, subtract 10
 - For the second die, if it is equivalent to 1 mod 3, add 100
 ```
-➔ python dice_distro.py -d 4 -n 2 --apply shift if mod 2 3 eq 0 1 then -10 100
+➔ python dice_distro.py -d 4 -n 2 --apply shift -10 100 if mod 2 3 eq 0 1
   -8,   2:   6.25 % |============
   -8,   3:   6.25 % |============
   -8, 101:   6.25 % |============
@@ -813,7 +813,7 @@ You can even use boolean logic operations (`not`, `and`, `or`) and even nest the
 Due to issues with bash, the bracket char cannot be `(` or `)`,
 but instead are `[` and `]`.
 ```
-➔ python dice_distro.py -d 10 --apply shift if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ] then 100
+➔ python dice_distro.py -d 10 --apply shift 100 if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ]
   2:  10.00 % |====================
   3:  10.00 % |====================
   4:  10.00 % |====================
