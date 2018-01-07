@@ -61,7 +61,6 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply shift if mod 2 3 eq 0 1 then 10 100 && \
     # Test complex if-block with nested boolean logic
     $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ] then 100 && \
-    $python_exe $dice_distro_file $test_params -d 10 --apply shift if eq 1 or not '<|' ge 2 and le 3 '|>' and '<|' gt 5 and lt 8 '|>' then 100 --bracket-chars '<|' '|>' && \
     # Test Reroll
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply reroll if lt 4 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply sum 2 reroll if lt 7 && \

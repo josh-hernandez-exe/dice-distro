@@ -810,8 +810,8 @@ In this example we:
    3, 104:   6.25 % |============
 ```
 You can even use boolean logic operations (`not`, `and`, `or`) and even nest them as well.
-Due to issues with bash, the bracket char cannot be `(` or `)`.
-The defaults are `[` and `]`, but if you don't like those, you can change them.
+Due to issues with bash, the bracket char cannot be `(` or `)`,
+but instead are `[` and `]`.
 ```
 ➔ python dice_distro.py -d 10 --apply shift if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ] then 100
   2:  10.00 % |====================
