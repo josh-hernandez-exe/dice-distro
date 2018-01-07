@@ -2,7 +2,7 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-test_file="$DIR/test.sh"
+test_file="$DIR/test_options.sh"
 
 # NOTE: python2 and python3 are alias
 #       for the default python sub-version (2.x or 3.x)

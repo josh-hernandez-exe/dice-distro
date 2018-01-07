@@ -2,9 +2,10 @@
 
 python_exe="python$1"
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT_DIR="$( cd "$( dirname $CUR_DIR )" && pwd )"
 
-dice_distro_file="$DIR/dice_distro.py"
+dice_distro_file="$PROJECT_ROOT_DIR/dice_distro.py"
 test_params_with_output="--show-args --check-input"
 test_params="$test_params_with_output --no-output"
 
