@@ -983,7 +983,3 @@ If I find time in the future, I plan to (in no specific order):
     - there are current issues with pickeling the operation function applied to the dice roll
 - Expand the unit tests
 	- Logic parser needs to be tested more thoroughly.
-- More logic keywords
-	- most will need parser refactor
-		- `else`
-			- Note: `1 if 0 else 3 if 0 else 4`
