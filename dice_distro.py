@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import importlib
 import argparse
 import decimal
 import functools
@@ -33,6 +34,8 @@ OPERATIONS_DICT = {
     'reroll': None, # This will get defined later if used,
     'slice-apply': None, # This will get defined later if used,
 }
+
+CUSTOM_OPERATIONS_DICT = dict()
 
 BASIC_OPERATIONS = set(
     key for key,value in OPERATIONS_DICT.items() if value is not None
@@ -394,6 +397,22 @@ op_group.add_argument(
     ]),
 )
 
+op_group.add_argument(
+    "--custom",
+    type=str,
+    nargs="*",
+    default = [],
+    help=" ".join([
+        "These files will be imported by the program as python files.",
+        "Make sure that all file names are unique."
+        "Any function accessable can be used as operations in",
+        "the '--apply' command string. Your functions should expect the",
+        "first parameter to be a tuple of integers (the dice rolls).",
+        "If you pass your operation parameters, they will be passed as",
+        "positional args after the first.",
+    ]),
+)
+
 """
 ========================================================================================
 Bar Options
@@ -626,6 +645,36 @@ def memorize(func):
         return result
 
     return wrapper
+
+def load_custom_files(file_paths):
+    custom_dirs = set()
+    file_names = set()
+
+    for path in file_paths:
+        abs_path = os.path.abspath(path)
+        file_dir = os.path.dirname(abs_path)
+        prefix_path,ext = os.path.splitext(abs_path)
+        basename = os.path.basename(prefix_path)
+
+        if basename in file_names:
+            raise Exception("File name is not unique")
+
+        if not os.path.isfile(abs_path):
+            raise Exception("File path give is not a valid file: {}".format(path))
+
+        file_names.add(basename)
+        custom_dirs.add(file_dir)
+
+    for dir_path in custom_dirs:
+        sys.path.append(dir_path)
+
+    for module_name in file_names:
+        the_module = importlib.import_module(module_name)
+
+        for attr_name in dir(the_module):
+            attr_object = getattr(the_module, attr_name, None)
+            if hasattr(attr_object, "__call__"):
+                CUSTOM_OPERATIONS_DICT[attr_name] = attr_object
 
 def get_single_dice(args):
     """
@@ -1311,13 +1360,17 @@ def get_operator(
 
     # parse parameters for current operation
     cur_params = list(itertools.takewhile(
-        lambda xx: xx not in OPERATIONS_DICT and xx not in LOGIC_KEYWORDS,
+        lambda xx: (
+            xx not in OPERATIONS_DICT and
+            xx not in CUSTOM_OPERATIONS_DICT and
+            xx not in LOGIC_KEYWORDS
+        ),
         _param_list,
     ))
     _param_list = _param_list[len(cur_params):]
 
     # parse conditional statement
-    conditional_params = []
+    conditional_params = None
     if len(_param_list) > 0 and _param_list[0] == LOGIC_START_KEYWORD:
         if operation_str in IF_ABLE_OPERATIONS:
             conditional_params = list(
@@ -1332,7 +1385,10 @@ def get_operator(
         else:
             raise Exception('This operation is not if-able.')
 
-    conditoinal_func = determine_compare_func(conditional_params)
+        conditoinal_func = determine_compare_func(conditional_params)
+
+    elif operation_str in IF_ABLE_OPERATIONS:
+        conditoinal_func = always_true
 
     apply_nested_operation = True
 
@@ -1363,6 +1419,26 @@ def get_operator(
         )
         apply_nested_operation = False
 
+    elif operation_str in CUSTOM_OPERATIONS_DICT:
+        custom_func = CUSTOM_OPERATIONS_DICT[operation_str]
+        @functools.wraps(custom_func)
+        def custom_operation(xx):
+            result = None
+            if len(cur_params) == 0:
+                result = custom_func(xx)
+            else:
+                result = custom_func(xx,*tuple(cur_params))
+
+            if isinstance(result, int):
+                result = (result,)
+            elif isinstance(result, list):
+                result = tuple(result)
+            elif not isinstance(result, tuple):
+                raise Exception("Custom function has returned a value that is not supported.")
+
+            return result
+
+        _operator = custom_operation
     else:
         raise Exception("operation string '{}' is not valid".format(operation_str))
 
@@ -1553,6 +1629,9 @@ def main():
         ))
     else:
         iterator = get_outcome_generator(args)
+
+    if isinstance(args.custom, (list,tuple)) and len(args.custom) > 0:
+        load_custom_files(args.custom)
 
     _operator = get_operator(
         operation_str = args.apply[0],
