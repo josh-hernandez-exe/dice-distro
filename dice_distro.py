@@ -404,7 +404,9 @@ op_group.add_argument(
     default = [],
     help=" ".join([
         "These files will be imported by the program as python files.",
-        "Make sure that all file names are unique."
+        "Make sure that all file names are unique, as well as all",
+        "function names between files. Any function prefixed with '_'",
+        "will also not be included.",
         "Any function accessable can be used as operations in",
         "the '--apply' command string. Your functions should expect the",
         "first parameter to be a tuple of ints (the dice rolls).",
@@ -674,8 +676,13 @@ def load_custom_files(file_paths):
         the_module = importlib.import_module(module_name)
 
         for attr_name in dir(the_module):
+            if attr_name.startswith("_"): continue
+
             attr_object = getattr(the_module, attr_name, None)
             if hasattr(attr_object, "__call__"):
+                if attr_name in CUSTOM_OPERATIONS_DICT:
+                    raise Exception('operation_name collision, please make sure you ')
+
                 CUSTOM_OPERATIONS_DICT[attr_name] = attr_object
 
 def get_single_dice(args):
@@ -1423,13 +1430,10 @@ def get_operator(
 
     elif operation_str in CUSTOM_OPERATIONS_DICT:
         custom_func = CUSTOM_OPERATIONS_DICT[operation_str]
+
         @functools.wraps(custom_func)
         def custom_operation(xx):
-            result = None
-            if len(cur_params) == 0:
-                result = custom_func(xx)
-            else:
-                result = custom_func(xx,*tuple(cur_params))
+            result = custom_func(xx,*tuple(cur_params))
 
             if isinstance(result, int):
                 result = (result,)
