@@ -868,6 +868,55 @@ While the example using file save runs much faster:
 ```
 **Note** that this only applies if you can break down your problem into a product of smaller distributions.
 
+# Custom Operations
+If you are trying to do something very complicated,
+and you feel that the tools given are restrictive
+you can make your very own custom operations.
+Make a python file, and write a function.
+
+The function signature should be:
+- First parameter is a tuple of order ints (the dice roll)
+- Parameters passed in from `--apply`
+The return value should be any of:
+- An `int`
+- A `list` or `tuple` of `int`s
+
+Lets say that the following is saved in `/tmp/custom_funcs.py`:
+```python
+def myshift(dice,*args):
+	# do stuff
+	if len(args) > 0:
+		print(args)
+	return [value + 2 for value in dice]
+```
+Then to invoke your custom function you can run
+```
+➔ python dice_distro.py -d 6 -n 1 --custom /tmp/custom_funcs.py --apply myshift
+3:  16.67 % |=================================
+4:  16.67 % |=================================
+5:  16.67 % |=================================
+6:  16.67 % |=================================
+7:  16.67 % |=================================
+8:  16.67 % |=================================
+```
+And if you were passing parameters:
+```
+➔ python dice_distro.py -d 6 -n 1 --custom /tmp/custom_funcs.py --apply myshift 1 2 hi 3
+('1', '2', 'hi', '3')
+('1', '2', 'hi', '3')
+('1', '2', 'hi', '3')
+('1', '2', 'hi', '3')
+('1', '2', 'hi', '3')
+('1', '2', 'hi', '3')
+3:  16.67 % |=================================
+4:  16.67 % |=================================
+5:  16.67 % |=================================
+6:  16.67 % |=================================
+7:  16.67 % |=================================
+8:  16.67 % |=================================
+```
+This should allow you all the flexablity required to do anything else that isn't implemented.
+
 # Simulating Dice Rolls
 
 If the enumeration of all outcomes takes too long, you can choose to simulate the dice rolls.
@@ -940,6 +989,3 @@ If I find time in the future, I plan to (in no specific order):
 	- most will need parser refactor
 		- `else`
 			- Note: `1 if 0 else 3 if 0 else 4`
-		- `any`/`all`
-			- I need to decide if after the condition is checked if you apply the operation to all the dice or only the ones that resulted in `true`
-				- or if there is a way to syntactically do both in a clean way
