@@ -57,10 +57,19 @@ BASIC_COMPARE_DICT = {
 
 LOGIC_START_KEYWORD = 'if'
 
+LOGIC_ELSE_KEYWORD = 'else'
+
 LOGIC_END_KEYWORD = 'then'
+
+# Logical conditions can end with `else` or `then`
+LOGIC_END_DELIMITERS = set([
+    LOGIC_ELSE_KEYWORD,
+    LOGIC_END_KEYWORD,
+])
 
 LOGIC_KEYWORDS = set([
     LOGIC_START_KEYWORD,
+    LOGIC_ELSE_KEYWORD,
     LOGIC_END_KEYWORD,
 ])
 
@@ -1300,6 +1309,14 @@ def get_operator(
     # make a shallow copy
     _param_list = list(param_list)
 
+    # parse parameters for current operation
+    cur_params = list(itertools.takewhile(
+        lambda xx: xx not in OPERATIONS_DICT and xx not in LOGIC_KEYWORDS,
+        _param_list,
+    ))
+    _param_list = _param_list[len(cur_params):]
+
+    # parse conditional statement
     conditional_params = []
     if len(_param_list) > 0 and _param_list[0] == LOGIC_START_KEYWORD:
         if operation_str in IF_ABLE_OPERATIONS:
@@ -1317,14 +1334,7 @@ def get_operator(
 
     conditoinal_func = determine_compare_func(conditional_params)
 
-    cur_params = list(itertools.takewhile(
-        lambda xx: xx not in OPERATIONS_DICT,
-        _param_list,
-    ))
-
     apply_nested_operation = True
-
-    _param_list = _param_list[len(cur_params):]
 
     if operation_str in BASIC_OPERATIONS:
         _operator = get_basic_operation(operation_str, cur_params)
