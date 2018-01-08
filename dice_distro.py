@@ -18,7 +18,7 @@ if (2,0) <= sys.version_info < (3, 0):
     zip = itertools.izip
 
 OPERATIONS_DICT = {
-    'id':tuple,
+    'id':lambda xx: xx,
     'sum':lambda xx: (sum(xx),),
     'min':lambda xx: (min(xx),),
     'max':lambda xx: (max(xx),),
@@ -48,8 +48,14 @@ IF_ABLE_OPERATIONS = set([
     'scale',
     'set-to',
     'bound',
-    'select',
     'reroll',
+])
+
+ELSE_ABLE_OPERATIONS = set([
+    'shift',
+    'scale',
+    'set-to',
+    'bound',
 ])
 
 BASIC_COMPARE_DICT = {
@@ -65,12 +71,6 @@ LOGIC_START_KEYWORD = 'if'
 LOGIC_ELSE_KEYWORD = 'else'
 
 LOGIC_END_KEYWORD = 'then'
-
-# Logical conditions can end with `else` or `then`
-LOGIC_END_DELIMITERS = set([
-    LOGIC_ELSE_KEYWORD,
-    LOGIC_END_KEYWORD,
-])
 
 LOGIC_KEYWORDS = set([
     LOGIC_START_KEYWORD,
@@ -389,13 +389,13 @@ op_group.add_argument(
 )
 
 op_group.add_argument(
-    "--check-input",
-    action='store_true',
+    "--skip-checks",
+    action='store_false',
+    dest="should_valdiate_input",
     help=" ".join([
-        "This option will add a validation step to make sure the dice input",
+        "This option will skip add a validation step to make sure the dice input",
         "from one operation is approximate for the next.",
-        "This flag will give some context to when an error has occured at the",
-        "expsense of extending runtime."
+        "This flag will speed up run time at the expense of more obscure errors.",
     ]),
 )
 
@@ -686,6 +686,58 @@ def load_custom_files(file_paths):
                     raise Exception('operation_name collision, please make sure you ')
 
                 CUSTOM_OPERATIONS_DICT[attr_name] = attr_object
+
+
+def custom_func_wrapper(
+    custom_func,
+    cur_params = tuple(),
+    should_validate = True,
+):
+    @functools.wraps(custom_func)
+    def custom_operation(xx):
+        result = custom_func(xx,*tuple(cur_params))
+
+        if not should_validate:
+            # short ciruit the checks
+            pass
+
+        elif isinstance(result, int):
+            result = (result,)
+        elif isinstance(result, list):
+            result = tuple(result)
+        elif not isinstance(result, tuple):
+            raise Exception("Custom function has returned a value that is not supported.")
+
+        if should_validate and any(not isinstance(item,int) for item in result):
+            raise Exception("Values passed are not all ints.")
+
+        return result
+
+    return custom_operation
+
+
+def composed_func_wrapper(
+    first_func,
+    second_func,
+):
+    @docstring_format(
+        first_func.__doc__,
+        second_func.__doc__,
+    )
+    def composite_operation(xx):
+        """
+        --------------------
+        First Operation Doc:
+        {}
+        --------------------
+        Second Operation Doc:
+        {}
+        --------------------
+        """
+        return second_func(first_func(xx))
+
+    return composite_operation
+
 
 def get_single_dice(args):
     """
@@ -1066,7 +1118,7 @@ def get_basic_operation(operation_str, param_list = []):
 
     return _operator
 
-def get_shift_operation(param_list, conditoinal_func):
+def get_shift_operation(param_list, conditoinal_func, else_operation):
     if len(param_list) < 1:
         raise Exception(
             "The 'shift' operation requires at least one parameter to determine shift value."
@@ -1095,14 +1147,16 @@ def get_shift_operation(param_list, conditoinal_func):
         else:
             iterable = zip(xx, shift_values)
 
+        else_results = else_operation(xx)
+
         return tuple(
-            item+shift if conditoinal_func(item,index) else item
+            item+shift if conditoinal_func(item,index) else else_results[index]
             for index, (item,shift) in enumerate(iterable)
         )
 
     return shift_func
 
-def get_set_to_operation(param_list, conditoinal_func):
+def get_set_to_operation(param_list, conditoinal_func, else_operation):
     if len(param_list) < 1:
         raise Exception(
             "The 'set-to' operation requires at least one parameter to determine set value."
@@ -1118,7 +1172,7 @@ def get_set_to_operation(param_list, conditoinal_func):
     @docstring_format(
         set_to_values=str(set_to_values),
     )
-    def shift_func(xx):
+    def set_to_func(xx):
         """
         Set-To Function
         Shift Values: {set_to_values}
@@ -1131,14 +1185,16 @@ def get_set_to_operation(param_list, conditoinal_func):
         else:
             iterable = zip(xx, set_to_values)
 
+        else_results = else_operation(xx)
+
         return tuple(
-            set_value if conditoinal_func(item,index) else item
+            set_value if conditoinal_func(item,index) else else_results[index]
             for index, (item,set_value) in enumerate(iterable)
         )
 
-    return shift_func
+    return set_to_func
 
-def get_scale_operation(param_list, conditoinal_func):
+def get_scale_operation(param_list, conditoinal_func, else_operation):
     if len(param_list) < 1:
         raise Exception(
             "The 'scale' operation requires at least one parameter to determine shift value."
@@ -1189,14 +1245,16 @@ def get_scale_operation(param_list, conditoinal_func):
         else:
             iterable = zip(xx, scale_values)
 
+        else_results = else_operation(xx)
+
         return tuple(
-            scale_operation(item,scale_factor) if conditoinal_func(item,index) else item
+            scale_operation(item,scale_factor) if conditoinal_func(item,index) else else_results[index]
             for index,(item,scale_factor) in enumerate(iterable)
         )
 
     return scale_func
 
-def get_bound_operation(param_list, conditoinal_func):
+def get_bound_operation(param_list, conditoinal_func, else_operation):
     if len(param_list) < 2:
         raise Exception(
             "The 'bound' operation requires at least two parameters to determine min/max bounds."
@@ -1253,8 +1311,10 @@ def get_bound_operation(param_list, conditoinal_func):
         else:
             iterable = zip(xx, lower_bounds, upper_bounds)
 
+        else_results = else_operation(xx)
+
         return tuple(
-            bound_value_func(item, upper, lower) if conditoinal_func(item,index) else item
+            bound_value_func(item, upper, lower) if conditoinal_func(item,index) else else_results[index]
             for index,(item,lower,upper) in enumerate(iterable)
         )
 
@@ -1318,7 +1378,7 @@ def get_slice_apply_operation(
     slice_params,
     other_param_list,
     should_memorize = False,
-    should_check_input = False,
+    should_validate = True,
 ):
     if len(slice_params) != 1:
         raise Exception("The 'slice-apply' operation requires the first parameter to slice size.")
@@ -1344,7 +1404,7 @@ def get_slice_apply_operation(
         second_operator_str,
         param_list = second_operator_params,
         should_memorize = should_memorize,
-        should_check_input = should_check_input,
+        should_validate = should_validate,
     )
 
     # third operation is needed to be considered so that each subsequent
@@ -1358,7 +1418,7 @@ def get_slice_apply_operation(
             third_operator_str,
             param_list = third_operator_params,
             should_memorize = should_memorize,
-            should_check_input = should_check_input,
+            should_validate = should_validate,
         )
     else:
         third_operator_str = 'id'
@@ -1395,12 +1455,82 @@ def get_slice_apply_operation(
 
     return slice_apply_func
 
+def parse_next_conditional_syntax(
+    param_list,
+    should_memorize = False,
+    should_validate = False,
+):
+    # make a shallow copy
+    _param_list = list(param_list)
+
+    # parse conditional statement
+    conditoinal_func = None
+    else_operation = None
+    if len(_param_list) > 0 and _param_list[0] == LOGIC_START_KEYWORD:
+        full_conditional_params = list(
+            itertools.takewhile(
+                lambda xx: xx != LOGIC_END_KEYWORD,
+                _param_list[1:],
+        ))
+
+        cur_conditional_params = list(
+            itertools.takewhile(
+                lambda xx: (
+                    xx != LOGIC_ELSE_KEYWORD and
+                    xx != LOGIC_END_KEYWORD
+                ),
+                _param_list[1:],
+        ))
+
+        conditoinal_func = determine_compare_func(cur_conditional_params)
+
+        else_parameters = full_conditional_params[len(cur_conditional_params):]
+
+        if len(else_parameters) > 0 and else_parameters[0] == LOGIC_ELSE_KEYWORD:
+            else_operation_str =  else_parameters[1]
+
+            if else_operation_str not in ELSE_ABLE_OPERATIONS:
+                raise Exception('Operation cannot be in an else')
+
+            _else_operation = get_operator(
+                operation_str = else_parameters[1],
+                param_list = else_parameters[2:],
+                should_memorize=should_memorize,
+                should_validate=should_validate,
+            )
+
+            @functools.wraps(_else_operation)
+            def else_wrapper(xx):
+                result = _else_operation(xx)
+
+                if should_validate and len(result) != len(xx):
+                    raise Exception(
+                        "Operations in 'else' statement result size do not match input size of 'if'"
+                    )
+
+                return result
+
+            else_operation = else_wrapper
+
+        # remove the if
+        _param_list = _param_list[1+len(full_conditional_params):]
+
+        # remove the then
+        if len(_param_list) > 0 and _param_list[0] == LOGIC_END_KEYWORD:
+                _param_list = _param_list[1:]
+
+    return (
+        conditoinal_func,
+        else_operation,
+        _param_list
+    )
+
 def get_operator(
     operation_str,
     param_list = [],
     should_memorize = True,
-    should_check_input = True,
-    first_operation = False,
+    should_validate = True,
+    is_first_operation = False,
 ):
     # make a shallow copy
     _param_list = list(param_list)
@@ -1416,26 +1546,23 @@ def get_operator(
     ))
     _param_list = _param_list[len(cur_params):]
 
-    # parse conditional statement
-    conditional_params = None
-    if len(_param_list) > 0 and _param_list[0] == LOGIC_START_KEYWORD:
-        if operation_str in IF_ABLE_OPERATIONS:
-            conditional_params = list(
-                itertools.takewhile(
-                    lambda xx: xx != LOGIC_END_KEYWORD,
-                    _param_list[1:],
-            ))
-            _param_list = _param_list[1+len(conditional_params):]
+    (
+        conditoinal_func,
+        else_operation,
+        _param_list, # the current param_list after parsing though the conditional
+    ) = parse_next_conditional_syntax(
+        _param_list,
+        should_memorize = should_memorize,
+        should_validate = should_validate,
+    )
 
-            if len(_param_list) > 0 and _param_list[0] == LOGIC_END_KEYWORD:
-                _param_list = _param_list[1:]
-        else:
-            raise Exception('This operation is not if-able.')
-
-        conditoinal_func = determine_compare_func(conditional_params)
-
-    elif operation_str in IF_ABLE_OPERATIONS:
+    if operation_str in IF_ABLE_OPERATIONS and not hasattr(conditoinal_func, "__call__"):
         conditoinal_func = always_true
+    elif operation_str not in IF_ABLE_OPERATIONS and hasattr(conditoinal_func, "__call__"):
+        raise Exception('This operation is not if-able.')
+
+    if operation_str in ELSE_ABLE_OPERATIONS and not hasattr(else_operation, "__call__"):
+        else_operation = OPERATIONS_DICT['id']
 
     apply_nested_operation = True
 
@@ -1443,16 +1570,16 @@ def get_operator(
         _operator = get_basic_operation(operation_str, cur_params)
 
     elif operation_str == 'shift':
-        _operator = get_shift_operation(cur_params, conditoinal_func)
+        _operator = get_shift_operation(cur_params, conditoinal_func, else_operation)
 
     elif operation_str == 'scale':
-        _operator = get_scale_operation(cur_params, conditoinal_func)
+        _operator = get_scale_operation(cur_params, conditoinal_func, else_operation)
 
     elif operation_str == 'set-to':
-        _operator = get_set_to_operation(cur_params, conditoinal_func)
+        _operator = get_set_to_operation(cur_params, conditoinal_func, else_operation)
 
     elif operation_str == 'bound':
-        _operator = get_bound_operation(cur_params, conditoinal_func)
+        _operator = get_bound_operation(cur_params, conditoinal_func, else_operation)
 
     elif operation_str == 'reroll':
         _operator = get_reroll_operation(cur_params, conditoinal_func)
@@ -1465,30 +1592,17 @@ def get_operator(
             slice_params=cur_params,
             other_param_list=_param_list,
             should_memorize=should_memorize,
-            should_check_input=should_check_input,
+            should_validate=should_validate,
         )
         apply_nested_operation = False
 
     elif operation_str in CUSTOM_OPERATIONS_DICT:
-        custom_func = CUSTOM_OPERATIONS_DICT[operation_str]
+        _operator = custom_func_wrapper(
+            CUSTOM_OPERATIONS_DICT[operation_str],
+            cur_params,
+            should_validate,
+        )
 
-        @functools.wraps(custom_func)
-        def custom_operation(xx):
-            result = custom_func(xx,*tuple(cur_params))
-
-            if isinstance(result, int):
-                result = (result,)
-            elif isinstance(result, list):
-                result = tuple(result)
-            elif not isinstance(result, tuple):
-                raise Exception("Custom function has returned a value that is not supported.")
-
-            if any(not isinstance(item,int) for item in result):
-                raise Exception("Values passed are not all ints.")
-
-            return result
-
-        _operator = custom_operation
     else:
         raise Exception("operation string '{}' is not valid".format(operation_str))
 
@@ -1502,32 +1616,18 @@ def get_operator(
             other_operator_str,
             param_list = other_operator_params,
             should_memorize = should_memorize,
-            should_check_input = should_check_input,
+            should_validate = should_validate,
         )
 
-        _first_operation = _operator
-
-        @docstring_format(
-            first_operation_str=operation_str,
-            first_operation_params=str(cur_params),
-            other_operator_str=other_operator_str,
-            other_operator_params=str(other_operator_params),
+        _operator = composed_func_wrapper(
+            first_func=_operator,
+            second_func=other_operator
         )
-        def composite_operation(xx):
-            """
-            First Operation: {first_operation_str}
-            First Operation Parameters: {first_operation_params}
-            Other Operation: {other_operator_str}
-            Other Operation Parameters: {other_operator_params}
-            """
-            return other_operator(_first_operation(xx))
 
-        _operator = composite_operation
-
-    if should_check_input:
+    if should_validate:
         _operator = dice_input_checker(_operator)
 
-    if should_memorize and not first_operation:
+    if should_memorize and not is_first_operation:
         """
         The top level operation will never benifit from memorize
         since all inputs will be unique by design
@@ -1688,8 +1788,8 @@ def main():
         # remove any entries that are empty strings
         param_list = list(item for item in args.apply[1:] if len(item) > 0),
         should_memorize = args.memorize_input,
-        should_check_input = args.check_input,
-        first_operation = True,
+        should_validate = args.should_valdiate_input,
+        is_first_operation = True,
     )
 
     counter_dict = Counter()
