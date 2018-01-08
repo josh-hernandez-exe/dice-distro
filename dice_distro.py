@@ -1503,7 +1503,7 @@ def parse_next_conditional_syntax(
             def else_wrapper(xx):
                 result = _else_operation(xx)
 
-                if len(result) != len(xx):
+                if should_validate and len(result) != len(xx):
                     raise Exception(
                         "Operations in 'else' statement result size do not match input size of 'if'"
                     )
