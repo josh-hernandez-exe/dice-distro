@@ -14,7 +14,7 @@ import sys
 
 from collections import Counter
 
-if (2,0) <= sys.version_info < (3, 0):
+if (2, 0) <= sys.version_info < (3, 0):
     zip = itertools.izip
 
 OPERATIONS_DICT = {
@@ -39,7 +39,7 @@ OPERATIONS_DICT = {
 CUSTOM_OPERATIONS_DICT = dict()
 
 BASIC_OPERATIONS = set(
-    key for key,value in OPERATIONS_DICT.items() if value is not None
+    key for key, value in OPERATIONS_DICT.items() if value is not None
 )
 
 # set of operations that support an if-block
@@ -59,11 +59,11 @@ ELSE_ABLE_OPERATIONS = set([
 ])
 
 BASIC_COMPARE_DICT = {
-    'eq':lambda aa,bb,cc=None: aa == bb,
-    'gt':lambda aa,bb,cc=None: aa > bb,
-    'ge':lambda aa,bb,cc=None: aa >= bb,
-    'lt':lambda aa,bb,cc=None: aa < bb,
-    'le':lambda aa,bb,cc=None: aa <= bb,
+    'eq':lambda aa, bb, cc=None: aa == bb,
+    'gt':lambda aa, bb, cc=None: aa > bb,
+    'ge':lambda aa, bb, cc=None: aa >= bb,
+    'lt':lambda aa, bb, cc=None: aa < bb,
+    'le':lambda aa, bb, cc=None: aa <= bb,
 }
 
 LOGIC_START_KEYWORD = 'if'
@@ -142,7 +142,7 @@ class CustomFormatter(argparse.HelpFormatter):
         return _help
 
 def parse_int(compare_func, type_string):
-    if not hasattr(compare_func,'__call__'):
+    if not hasattr(compare_func, '__call__'):
         raise Exception('A function must be passed to parse_int.')
 
     def parse_int_compare(value):
@@ -188,7 +188,7 @@ single_type_group = parser.add_argument_group(
 )
 
 single_type_group.add_argument(
-    "--num-dice","-n",
+    "--num-dice", "-n",
     type=parse_int(lambda xx: xx > 0, 'positive'),
     default=1,
     help="Number of dice simulated",
@@ -197,7 +197,7 @@ single_type_group.add_argument(
 single_type_group_side_option = single_type_group.add_mutually_exclusive_group()
 
 single_type_group_side_option.add_argument(
-    "--die-sides","-d",
+    "--die-sides", "-d",
     type=parse_int(lambda xx: xx > 0, 'positive'),
     help=" ".join([
         "Number of sides the dice simulated should have.",
@@ -320,7 +320,7 @@ op_group.add_argument(
     "--apply",
     type=str,
     nargs="*",
-    default = ['id'],
+    default=['id'],
     help="\n".join([
         "D|"
         # Intro block
@@ -343,7 +343,7 @@ op_group.add_argument(
         "leave the input unchanged.",
         # Define math operations operation
         "The following operations:",
-        "'sum', 'min', 'max', 'set', 'prod', 'bit-or', 'bit-xor', 'bit-and',",
+        "'sum', 'min', 'max', 'set', 'prod', 'bit-or', 'bit-xor', 'bit-and'",
         "apply their assosiated operation to all the dice.",
         "An optional parameter can be given for a block-size, for block-wise application.",
         "If the a block-size parameter is used, the results will be treated",
@@ -358,7 +358,7 @@ op_group.add_argument(
         "lower bound (can be spcified per die).",
         # Define reroll operation
         "The 'reroll' will assume ordered dice rolls.",
-        "To be useful, 'reroll' should be given an if block,",
+        "To be useful, 'reroll' should be given an if block",
         "otherwise, the die is always rerolled and the final roll will just be used.",
         # Define slice-apply operation
         "The 'slice-apply' will take an block-size parameter to split the current",
@@ -403,7 +403,7 @@ op_group.add_argument(
     "--custom",
     type=str,
     nargs="*",
-    default = [],
+    default=[],
     help=" ".join([
         "These files will be imported by the program as python files.",
         "Make sure that all file names are unique, as well as all",
@@ -432,7 +432,7 @@ bar_group = parser.add_argument_group(
 bar_group.add_argument(
     "--bar-size",
     type=parse_int(lambda xx: xx >= 0, 'non-negative'),
-    default = 2,
+    default=2,
     help=" ".join([
         "The approximate number of '--bar-char'(s) that count as 1 percent.",
         "If '--bar-size' is set to zero, then no bars will be displayed.",
@@ -442,7 +442,7 @@ bar_group.add_argument(
 bar_group.add_argument(
     "--bar-char",
     type=str,
-    default = "=",
+    default="=",
     help=" ".join([
         "The fill string used for the bar charts.",
         "One percent is represented as this string repeated '--bar-size' times.",
@@ -452,7 +452,7 @@ bar_group.add_argument(
 bar_group.add_argument(
     "--bar-prefix",
     type=str,
-    default = "|",
+    default="|",
     help=" ".join([
         "A prefix string used before the bar chart but after the display of percentage.",
         "Will not be displayed if '--bar-size' is set to zero.",
@@ -472,8 +472,8 @@ display_output_group = parser.add_argument_group(
 display_output_group.add_argument(
     "--sort",
     type=str,
-    choices=["key","value"],
-    default = 'key',
+    choices=["key", "value"],
+    default='key',
     help=" ".join([
         "This defines how the output is sorted.",
         "Key refers to the die results.",
@@ -494,9 +494,9 @@ display_output_group.add_argument(
 display_format_exclusive_options = display_output_group.add_mutually_exclusive_group()
 
 display_format_exclusive_options.add_argument(
-    "--percent-decimal-place","-pdp",
+    "--percent-decimal-place", "-pdp",
     type=parse_int(lambda xx: xx > 0, 'positive'),
-    default = 2,
+    default=2,
     help="The number of digits that will be displayed after the decimal place.",
 )
 
@@ -526,7 +526,7 @@ simulate_group.add_argument(
     '--simulate',
     dest='simulate_num_iterations',
     type=parse_int(lambda xx: xx > 0, 'positive'),
-    default = None,
+    default=None,
     help=" ".join([
         "The number of simulated dice rols that will occur.",
         "If this option is not provided, then enumerating all outcomes will take place.",
@@ -550,7 +550,7 @@ file_save_load_options.add_argument(
     dest='load_file_paths',
     type=str,
     nargs="*",
-    default = None,
+    default=None,
     help=" ".join([
         "The file path of where you want the data loaded from.",
         "NOTE: If this parameter is used, all dice generation parameters will be ignored.",
@@ -562,7 +562,7 @@ file_save_load_options.add_argument(
     '--save',
     dest='save_file_path',
     type=str,
-    default = None,
+    default=None,
     help=" ".join([
         "The file path of where you want the data saved.",
     ]),
@@ -586,9 +586,9 @@ def apply_or(*funcs):
         return any(func(*args, **kwargs) for func in funcs)
     return or_func
 
-def docstring_format(*sub,**kwargs):
+def docstring_format(*args, **kwargs):
     def decorator(func):
-        func.__doc__ = func.__doc__.format(*sub,**kwargs)
+        func.__doc__ = func.__doc__.format(*args, **kwargs)
         return func
     return decorator
 
@@ -598,7 +598,7 @@ def dice_input_checker(func):
         "Doc String: {}".format(func.__doc__)
     ])
 
-    def check_is_tuple(xx,kind):
+    def check_is_tuple(xx, kind):
         if not isinstance(xx, tuple):
             raise Exception(
                 "\n".join([
@@ -624,13 +624,13 @@ def dice_input_checker(func):
 
     @functools.wraps(func)
     def wrapper(xx):
-        check_is_tuple(xx,'input')
-        check_all_int(xx,'input')
+        check_is_tuple(xx, 'input')
+        check_all_int(xx, 'input')
 
         result = func(xx)
 
-        check_is_tuple(result,'output')
-        check_all_int(result,'output')
+        check_is_tuple(result, 'output')
+        check_all_int(result, 'output')
 
         return result
 
@@ -641,7 +641,7 @@ def memorize(func):
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        key = (tuple(args),frozenset(kwargs.items()))
+        key = (tuple(args), frozenset(kwargs.items()))
 
         if key in cashe: return cashe[key]
 
@@ -659,7 +659,7 @@ def load_custom_files(file_paths):
     for path in file_paths:
         abs_path = os.path.abspath(path)
         file_dir = os.path.dirname(abs_path)
-        prefix_path,ext = os.path.splitext(abs_path)
+        prefix_path, _ = os.path.splitext(abs_path)
         basename = os.path.basename(prefix_path)
 
         if basename in file_names:
@@ -690,12 +690,12 @@ def load_custom_files(file_paths):
 
 def custom_func_wrapper(
     custom_func,
-    cur_params = tuple(),
-    should_validate = True,
+    cur_params=tuple(),
+    should_validate=True,
 ):
     @functools.wraps(custom_func)
     def custom_operation(xx):
-        result = custom_func(xx,*tuple(cur_params))
+        result = custom_func(xx, *tuple(cur_params))
 
         if not should_validate:
             # short ciruit the checks
@@ -708,7 +708,7 @@ def custom_func_wrapper(
         elif not isinstance(result, tuple):
             raise Exception("Custom function has returned a value that is not supported.")
 
-        if should_validate and any(not isinstance(item,int) for item in result):
+        if should_validate and any(not isinstance(item, int) for item in result):
             raise Exception("Values passed are not all ints.")
 
         return result
@@ -745,19 +745,19 @@ def get_single_dice(args):
     where each die is the same.
     """
     if all([
-        isinstance(args.die_sides,int) and args.die_sides > 0,
-        isinstance(args.die_values,(list,tuple)) and len(args.die_values) > 0
+        isinstance(args.die_sides, int) and args.die_sides > 0,
+        isinstance(args.die_values, (list, tuple)) and args.die_values,
     ]):
         raise Exception("Both die sides are given and die values are given. Only pass one")
 
-    elif isinstance(args.die_sides,int) and args.die_sides > 0:
+    elif isinstance(args.die_sides, int) and args.die_sides > 0:
         values = range(
             args.die_start,
             args.die_start + args.die_step*args.die_sides,
             args.die_step,
         )
 
-    elif len(args.die_values) > 0:
+    elif args.die_values:
         values = args.die_values
 
     else:
@@ -772,12 +772,12 @@ def get_multi_dice(args):
     """
     dice = []
 
-    if not isinstance(args.multi_die_sides, (list,tuple)) or len(args.multi_die_sides) == 0:
+    if not isinstance(args.multi_die_sides, (list, tuple)) or not args.multi_die_sides:
         raise Exception(
             "The parameter '--multi-die-sides' is a required parameter for multi-die-type rolls"
         )
 
-    if isinstance(args.multi_die_values, (list,tuple)) and len(args.multi_die_values) > 0:
+    if isinstance(args.multi_die_values, (list, tuple)) and args.multi_die_values:
         """
         Process args to return dice were each die has unique specified values
         Values are specified from 'args.multi_die_values' and values are grouped
@@ -804,7 +804,7 @@ def get_multi_dice(args):
         - increment vlaue
         - number of steps to take (number of sides on the die)
         """
-        if isinstance(args.multi_die_start, (list,tuple)) and len(args.multi_die_start) > 0:
+        if isinstance(args.multi_die_start, (list, tuple)) and args.multi_die_start:
             if len(args.multi_die_start) != len(args.multi_die_sides):
                 raise Exception("Multi die starts must have parallel values to multi die sides")
 
@@ -812,7 +812,7 @@ def get_multi_dice(args):
         else:
             start_values = tuple(1 for _ in args.multi_die_sides)
 
-        if isinstance(args.multi_die_step, (list,tuple)) and len(args.multi_die_step) > 0:
+        if isinstance(args.multi_die_step, (list, tuple)) and args.multi_die_step:
             if len(args.multi_die_step) != len(args.multi_die_step):
                 raise Exception("Multi die steps must have parallel values to multi die sides")
 
@@ -820,18 +820,18 @@ def get_multi_dice(args):
         else:
             step_values = tuple(1 for _ in args.multi_die_sides)
 
-        for start,step,size in zip(start_values, step_values, args.multi_die_sides):
-            dice.append(range(start,start+step*size, step))
+        for start, step, size in zip(start_values, step_values, args.multi_die_sides):
+            dice.append(range(start, start+step*size, step))
 
     return tuple(dice)
 
 def get_dice(args):
     is_using_single_type = any([
-        isinstance(args.die_values,(list,tuple)) and len(args.die_values) > 0,
-        isinstance(args.die_sides,int) and args.die_sides > 0,
+        isinstance(args.die_values, (list, tuple)) and args.die_values,
+        isinstance(args.die_sides, int) and args.die_sides > 0,
     ])
 
-    is_using_multi_type = isinstance(args.multi_die_sides, (list,tuple)) and len(args.multi_die_sides) > 0
+    is_using_multi_type = isinstance(args.multi_die_sides, (list, tuple)) and args.multi_die_sides
 
     if is_using_single_type and is_using_multi_type:
         raise Exception(" ".join([
@@ -868,7 +868,7 @@ def get_outcome_generator(args):
         iterator = itertools.product(*dice)
 
     elif args.simulate_num_iterations > 0:
-        iterator = get_outcome_simulator(dice,args.simulate_num_iterations)
+        iterator = get_outcome_simulator(dice, args.simulate_num_iterations)
     else:
         raise Exception('The number of simulation iterations must be a positive integer')
 
@@ -888,7 +888,7 @@ def find_max_digits(iterable):
     ))
 
 def determine_compare_func(param_list):
-    if len(param_list) == 0: return always_true
+    if not param_list: return always_true
 
     """
     parse input into groups delimited by brackets and logical operations
@@ -904,8 +904,6 @@ def determine_compare_func(param_list):
             param_groups_1.append(_var['group'])
             _var['group'] = []
 
-    left_len = len(BRACKET_CHARS[0])
-    left_len = len(BRACKET_CHARS[1])
     for item in param_list:
         did_parse = False
         for bracket in BRACKET_CHARS:
@@ -934,7 +932,7 @@ def determine_compare_func(param_list):
 
     # turn parameters into functions
     param_group_funcs = [
-        determine_compare_func_helper(item) if isinstance(item,(list,tuple)) else item
+        determine_compare_func_helper(item) if isinstance(item, (list, tuple)) else item
         for item in param_groups_1
     ]
 
@@ -952,15 +950,15 @@ def _parse_param_logic(logic_param_groups):
     # re-parse into a tree structure based off the brackets
     param_groups_2 = []
     stack = []
-    for index,item in enumerate(logic_param_groups):
+    for index, item in enumerate(logic_param_groups):
         if item == BRACKET_CHARS[0]:
             stack.append(index)
         elif item == BRACKET_CHARS[1]:
             open_index = stack.pop()
-            if len(stack) == 0:
+            if not stack:
                 # found matching close bracket to first opening bracket
                 param_groups_2.append(logic_param_groups[open_index+1:index])
-        elif len(stack) == 0:
+        elif not stack:
             param_groups_2.append(item)
 
     """
@@ -972,15 +970,15 @@ def _parse_param_logic(logic_param_groups):
     if there are brackets, the recursive call will take of that.
     """
 
-    if len(stack) > 0:
+    if stack:
         raise Exception('Parsing Error of if-block')
 
     # we recursively parse anything in brackets
     param_groups_3 = []
-    while len(param_groups_2) > 0:
+    while param_groups_2:
         item = param_groups_2.pop(0)
 
-        if isinstance(item,(list,tuple)):
+        if isinstance(item, (list, tuple)):
             param_groups_3.append(_parse_param_logic(item))
         else:
             param_groups_3.append(item)
@@ -1019,7 +1017,7 @@ def _parse_param_logic(logic_param_groups):
                     raise Exception('Parsing Error of if-block')
 
                 operator_apply = apply_and if item == 'and' else apply_or
-                new_func = operator_apply(left_func,right_func)
+                new_func = operator_apply(left_func, right_func)
 
                 param_groups_3[index-1] = new_func
                 del param_groups_3[index+1]
@@ -1031,7 +1029,7 @@ def _parse_param_logic(logic_param_groups):
     return param_groups_3[0]
 
 def determine_compare_func_helper(param_list):
-    if len(param_list) == 0: return always_true
+    if not param_list: return always_true
 
     _vars = {
         'param_list': list(param_list),
@@ -1041,7 +1039,7 @@ def determine_compare_func_helper(param_list):
         """
         This function edits the passed parameter list in place
         """
-        if len(_vars['param_list']) == 0:
+        if not _vars['param_list']:
             raise Exception(
                 'Not enough arguments given to determine comparision function for conditional.'
             )
@@ -1063,9 +1061,9 @@ def determine_compare_func_helper(param_list):
             other_comparison = _determine_compare_func()
 
             if len(mod_values) == 1:
-                return lambda aa,bb,cc=None: other_comparison(aa % mod_values[0], bb)
+                return lambda aa, bb, cc=None: other_comparison(aa % mod_values[0], bb)
             else:
-                return lambda aa,bb,cc=None: other_comparison(aa % mod_values[cc], bb)
+                return lambda aa, bb, cc=None: other_comparison(aa % mod_values[cc], bb)
         else:
             raise Exception('Comparison string invalid')
 
@@ -1076,7 +1074,7 @@ def determine_compare_func_helper(param_list):
     except:
         raise Exception("The parameter(s) passed must be in integer(s)")
 
-    if len(compare_values) == 0:
+    if not compare_values:
         raise Exception('No compare values where given.')
 
     @docstring_format(
@@ -1101,7 +1099,7 @@ def get_basic_operation(operation_str, param_list = []):
     an array like result.
     """
 
-    if len(param_list) == 0:
+    if not param_list:
         _operator = OPERATIONS_DICT[operation_str]
 
     elif len(param_list) == 1:
@@ -1142,7 +1140,7 @@ def get_shift_operation(param_list, conditoinal_func, else_operation):
         if only_one_param:
             iterable = zip(
                 xx,
-                itertools.repeat(shift_values[0],len(xx)),
+                itertools.repeat(shift_values[0], len(xx)),
             )
         else:
             iterable = zip(xx, shift_values)
@@ -1150,8 +1148,8 @@ def get_shift_operation(param_list, conditoinal_func, else_operation):
         else_results = else_operation(xx)
 
         return tuple(
-            item+shift if conditoinal_func(item,index) else else_results[index]
-            for index, (item,shift) in enumerate(iterable)
+            item+shift if conditoinal_func(item, index) else else_results[index]
+            for index, (item, shift) in enumerate(iterable)
         )
 
     return shift_func
@@ -1180,7 +1178,7 @@ def get_set_to_operation(param_list, conditoinal_func, else_operation):
         if only_one_param:
             iterable = zip(
                 xx,
-                itertools.repeat(set_to_values[0],len(xx)),
+                itertools.repeat(set_to_values[0], len(xx)),
             )
         else:
             iterable = zip(xx, set_to_values)
@@ -1188,8 +1186,8 @@ def get_set_to_operation(param_list, conditoinal_func, else_operation):
         else_results = else_operation(xx)
 
         return tuple(
-            set_value if conditoinal_func(item,index) else else_results[index]
-            for index, (item,set_value) in enumerate(iterable)
+            set_value if conditoinal_func(item, index) else else_results[index]
+            for index, (item, set_value) in enumerate(iterable)
         )
 
     return set_to_func
@@ -1201,14 +1199,16 @@ def get_scale_operation(param_list, conditoinal_func, else_operation):
         )
 
     round_option_dict = {
-        'r-ceil': lambda xx: math.ceil(xx),
-        'r-floor': lambda xx: math.floor(xx),
-        'r-truncate': lambda xx: int(xx),
+        'r-ceil': math.ceil,
+        'r-floor': math.floor,
+        'r-truncate': int,
         'r-half-up': lambda xx: decimal.Decimal(xx).quantize(
-            decimal.Decimal('1'),rounding=decimal.ROUND_HALF_UP
+            decimal.Decimal('1'),
+            rounding = decimal.ROUND_HALF_UP,
         ),
         'r-half-down': lambda xx: decimal.Decimal(xx).quantize(
-            decimal.Decimal('1'),rounding=decimal.ROUND_HALF_DOWN
+            decimal.Decimal('1'),
+            rounding = decimal.ROUND_HALF_DOWN,
         ),
     }
 
@@ -1220,7 +1220,7 @@ def get_scale_operation(param_list, conditoinal_func, else_operation):
         round_options = param_list_copy.pop(0)
 
     round_func = round_option_dict[round_options]
-    scale_operation = lambda aa,bb: int(round_func(aa*bb))
+    scale_operation = lambda aa, bb: int(round_func(aa*bb))
 
     only_one_param = len(param_list_copy) == 1
 
@@ -1240,7 +1240,7 @@ def get_scale_operation(param_list, conditoinal_func, else_operation):
         if only_one_param:
             iterable = zip(
                 xx,
-                itertools.repeat(scale_values[0],len(xx)),
+                itertools.repeat(scale_values[0], len(xx)),
             )
         else:
             iterable = zip(xx, scale_values)
@@ -1248,8 +1248,8 @@ def get_scale_operation(param_list, conditoinal_func, else_operation):
         else_results = else_operation(xx)
 
         return tuple(
-            scale_operation(item,scale_factor) if conditoinal_func(item,index) else else_results[index]
-            for index,(item,scale_factor) in enumerate(iterable)
+            scale_operation(item, scale_factor) if conditoinal_func(item, index) else else_results[index]
+            for index, (item, scale_factor) in enumerate(iterable)
         )
 
     return scale_func
@@ -1277,15 +1277,15 @@ def get_bound_operation(param_list, conditoinal_func, else_operation):
 
     if len(lower_bounds) != len(upper_bounds):
         raise Exception(" ".join([
-            "Error during parsing parameters for 'bound',",
+            "Error during parsing parameters for 'bound'",
             "miss match on lower and upper bound sizes",
         ]))
 
-    for low,high in zip(lower_bounds,upper_bounds):
+    for low, high in zip(lower_bounds, upper_bounds):
         if low > high:
             raise Exception('Lower bound is larger than upper bound.')
 
-    def bound_value_func(item, upper, lower):
+    def bound_value_func(item, lower, upper):
         if item <= lower: return lower
         elif item >= upper: return upper
         else: return item
@@ -1300,13 +1300,12 @@ def get_bound_operation(param_list, conditoinal_func, else_operation):
         Lower Bounds: {lower_bounds}
         Upper Bounds: {upper_bounds}
         """
-        results = []
 
         if only_one_pair:
             iterable = zip(
                 xx,
-                itertools.repeat(lower_bounds[0],len(xx)),
-                itertools.repeat(upper_bounds[0],len(xx)),
+                itertools.repeat(lower_bounds[0], len(xx)),
+                itertools.repeat(upper_bounds[0], len(xx)),
             )
         else:
             iterable = zip(xx, lower_bounds, upper_bounds)
@@ -1314,14 +1313,14 @@ def get_bound_operation(param_list, conditoinal_func, else_operation):
         else_results = else_operation(xx)
 
         return tuple(
-            bound_value_func(item, upper, lower) if conditoinal_func(item,index) else else_results[index]
-            for index,(item,lower,upper) in enumerate(iterable)
+            bound_value_func(item, lower, upper) if conditoinal_func(item, index) else else_results[index]
+            for index, (item, lower, upper) in enumerate(iterable)
         )
 
     return bound_func
 
 def get_reroll_operation(param_list, comparison_func):
-    if len(param_list) > 0:
+    if param_list:
         raise Exception("Reroll doesn't take any parameters")
 
     @docstring_format(
@@ -1333,7 +1332,7 @@ def get_reroll_operation(param_list, comparison_func):
         Reroll If Contitional Function
         Conditional: {conditional_info}
         """
-        for index,item in enumerate(xx):
+        for index, item in enumerate(xx):
             if index + 1 == len(xx):
                 # last item, can't reroll anymore
                 return (item,)
@@ -1377,8 +1376,8 @@ def get_select_operation(param_list):
 def get_slice_apply_operation(
     slice_params,
     other_param_list,
-    should_memorize = False,
-    should_validate = True,
+    should_memorize=False,
+    should_validate=True,
 ):
     if len(slice_params) != 1:
         raise Exception("The 'slice-apply' operation requires the first parameter to slice size.")
@@ -1388,7 +1387,7 @@ def get_slice_apply_operation(
     except:
         raise Exception("The parameter(s) passed must be in integer(s)")
 
-    if len(other_param_list) == 0:
+    if not other_param_list:
         raise Exception(
             "The 'slice-apply' operation requires extra parameters for another operation."
         )
@@ -1402,9 +1401,9 @@ def get_slice_apply_operation(
     ))
     second_operator = get_operator(
         second_operator_str,
-        param_list = second_operator_params,
-        should_memorize = should_memorize,
-        should_validate = should_validate,
+        param_list=second_operator_params,
+        should_memorize=should_memorize,
+        should_validate=should_validate,
     )
 
     # third operation is needed to be considered so that each subsequent
@@ -1416,9 +1415,9 @@ def get_slice_apply_operation(
         third_operator_params = other_param_list[num_params_related_to_second+1:]
         third_operator = get_operator(
             third_operator_str,
-            param_list = third_operator_params,
-            should_memorize = should_memorize,
-            should_validate = should_validate,
+            param_list=third_operator_params,
+            should_memorize=should_memorize,
+            should_validate=should_validate,
         )
     else:
         third_operator_str = 'id'
@@ -1457,8 +1456,8 @@ def get_slice_apply_operation(
 
 def parse_next_conditional_syntax(
     param_list,
-    should_memorize = False,
-    should_validate = False,
+    should_memorize=False,
+    should_validate=False,
 ):
     # make a shallow copy
     _param_list = list(param_list)
@@ -1466,7 +1465,7 @@ def parse_next_conditional_syntax(
     # parse conditional statement
     conditoinal_func = None
     else_operation = None
-    if len(_param_list) > 0 and _param_list[0] == LOGIC_START_KEYWORD:
+    if _param_list and _param_list[0] == LOGIC_START_KEYWORD:
         full_conditional_params = list(
             itertools.takewhile(
                 lambda xx: xx != LOGIC_END_KEYWORD,
@@ -1486,15 +1485,15 @@ def parse_next_conditional_syntax(
 
         else_parameters = full_conditional_params[len(cur_conditional_params):]
 
-        if len(else_parameters) > 0 and else_parameters[0] == LOGIC_ELSE_KEYWORD:
-            else_operation_str =  else_parameters[1]
+        if else_parameters and else_parameters[0] == LOGIC_ELSE_KEYWORD:
+            else_operation_str = else_parameters[1]
 
             if else_operation_str not in ELSE_ABLE_OPERATIONS:
                 raise Exception('Operation cannot be in an else')
 
             _else_operation = get_operator(
-                operation_str = else_parameters[1],
-                param_list = else_parameters[2:],
+                operation_str=else_parameters[1],
+                param_list=else_parameters[2:],
                 should_memorize=should_memorize,
                 should_validate=should_validate,
             )
@@ -1516,7 +1515,7 @@ def parse_next_conditional_syntax(
         _param_list = _param_list[1+len(full_conditional_params):]
 
         # remove the then
-        if len(_param_list) > 0 and _param_list[0] == LOGIC_END_KEYWORD:
+        if _param_list and _param_list[0] == LOGIC_END_KEYWORD:
                 _param_list = _param_list[1:]
 
     return (
@@ -1527,10 +1526,10 @@ def parse_next_conditional_syntax(
 
 def get_operator(
     operation_str,
-    param_list = [],
-    should_memorize = True,
-    should_validate = True,
-    is_first_operation = False,
+    param_list=[],
+    should_memorize=True,
+    should_validate=True,
+    is_first_operation=False,
 ):
     # make a shallow copy
     _param_list = list(param_list)
@@ -1552,8 +1551,8 @@ def get_operator(
         _param_list, # the current param_list after parsing though the conditional
     ) = parse_next_conditional_syntax(
         _param_list,
-        should_memorize = should_memorize,
-        should_validate = should_validate,
+        should_memorize=should_memorize,
+        should_validate=should_validate,
     )
 
     if operation_str in IF_ABLE_OPERATIONS and not hasattr(conditoinal_func, "__call__"):
@@ -1606,7 +1605,7 @@ def get_operator(
     else:
         raise Exception("operation string '{}' is not valid".format(operation_str))
 
-    if apply_nested_operation and len(_param_list) > 0:
+    if apply_nested_operation and _param_list:
         # Apply a nested operation
 
         other_operator_str = _param_list[0]
@@ -1614,9 +1613,9 @@ def get_operator(
 
         other_operator = get_operator(
             other_operator_str,
-            param_list = other_operator_params,
-            should_memorize = should_memorize,
-            should_validate = should_validate,
+            param_list=other_operator_params,
+            should_memorize=should_memorize,
+            should_validate=should_validate,
         )
 
         _operator = composed_func_wrapper(
@@ -1639,11 +1638,11 @@ def get_operator(
 def save_data(counter_dict, save_file_path):
     save_dict = dict()
 
-    for key,value in counter_dict.items():
+    for key, value in counter_dict.items():
         new_key = None
-        if isinstance(key,(list,tuple)):
+        if isinstance(key, (list, tuple)):
             new_key = json.dumps(key)
-        elif isinstance(key,int):
+        elif isinstance(key, int):
             new_key = key
         else:
             raise Exception("Unexpected key to save: {}".format(key))
@@ -1662,7 +1661,7 @@ def load_data(file_path):
 
     counter_dict = Counter()
 
-    for key,value in load_dict.items():
+    for key, value in load_dict.items():
         new_key = None
 
         try:
@@ -1674,13 +1673,13 @@ def load_data(file_path):
             except:
                 raise Exception("Key in file is not valid")
             else:
-                if not all(isinstance(entry,int) for entry in new_key):
+                if not all(isinstance(entry, int) for entry in new_key):
                     raise Exception("Key in file is not valid")
 
         if not isinstance(value, int):
             raise Exception("Values given in file are not integers.")
 
-        counter_dict[new_key]+= value
+        counter_dict[new_key] += value
 
     return counter_dict
 
@@ -1690,16 +1689,16 @@ def counter_dict_product(*args):
         full_value = 1
 
         for key, value in items:
-            if isinstance(key, (tuple,list)):
+            if isinstance(key, (tuple, list)):
                 full_key.extend(key)
             elif isinstance(key, int):
                 full_key.append(key)
 
-            full_value*=value
+            full_value *= value
 
-        yield tuple(full_key),full_value
+        yield tuple(full_key), full_value
 
-def display_data(args,counter_dict):
+def display_data(args, counter_dict):
     total = sum(counter_dict.values())
 
     _temp_key = list(counter_dict.keys())[0]
@@ -1715,9 +1714,9 @@ def display_data(args,counter_dict):
     )
 
     key_formater = "{{key:>{num_char}s}}".format(
-        num_char=sum([
-            num_items_in_key*num_key_digits, # room for all the digits
-            (num_items_in_key - 1)*len(","), # room for all the seperators
+        num_char = sum([
+            num_items_in_key * num_key_digits, # room for all the digits
+            (num_items_in_key - 1) * len(","), # room for all the seperators
         ]),
     )
 
@@ -1729,7 +1728,7 @@ def display_data(args,counter_dict):
         )
     else:
         value_formater = "{{value:{percent_formatter}}} %".format(
-            percent_formatter = "{}.{}f".format(
+            percent_formatter="{}.{}f".format(
                 len("100.") + args.percent_decimal_place,
                 args.percent_decimal_place,
             ),
@@ -1744,7 +1743,7 @@ def display_data(args,counter_dict):
     else:
         raise Exception("Unexpected sort value")
 
-    for key,count_value in iterater:
+    for key, count_value in iterater:
 
         percent = 100 * float(count_value) / total
 
@@ -1772,7 +1771,7 @@ def main():
     if args.show_args:
         print(args)
 
-    if isinstance(args.load_file_paths, (list,tuple)) and len(args.load_file_paths) > 0:
+    if isinstance(args.load_file_paths, (list, tuple)) and args.load_file_paths:
         iterator = counter_dict_product(*tuple(
             load_data(file_path)
             for file_path in args.load_file_paths
@@ -1780,29 +1779,29 @@ def main():
     else:
         iterator = get_outcome_generator(args)
 
-    if isinstance(args.custom, (list,tuple)) and len(args.custom) > 0:
+    if isinstance(args.custom, (list, tuple)) and args.custom:
         load_custom_files(args.custom)
 
     _operator = get_operator(
-        operation_str = args.apply[0],
+        operation_str=args.apply[0],
         # remove any entries that are empty strings
-        param_list = list(item for item in args.apply[1:] if len(item) > 0),
-        should_memorize = args.memorize_input,
-        should_validate = args.should_valdiate_input,
-        is_first_operation = True,
+        param_list=list(item for item in args.apply[1:] if item),
+        should_memorize=args.memorize_input,
+        should_validate=args.should_valdiate_input,
+        is_first_operation=True,
     )
 
     counter_dict = Counter()
 
     # the next two lines is the majority of the program run time for larger values
-    for item,count in iterator:
+    for item, count in iterator:
         counter_dict[_operator(item)] += count
 
     if args.save_file_path is not None:
         save_data(counter_dict, args.save_file_path)
 
     if args.display_output:
-        display_data(args,counter_dict)
+        display_data(args, counter_dict)
 
 if __name__ == '__main__':
     main()
