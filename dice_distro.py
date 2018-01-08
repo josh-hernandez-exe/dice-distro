@@ -1403,6 +1403,78 @@ def get_slice_apply_operation(
 
     return slice_apply_func
 
+def parse_next_conditional_syntax(
+    param_list,
+    should_memorize = False,
+    should_check_input = False,
+    first_operation = False,
+):
+    # make a shallow copy
+    _param_list = list(param_list)
+
+    # parse conditional statement
+    conditoinal_func = None
+    else_operation = None
+    if len(_param_list) > 0 and _param_list[0] == LOGIC_START_KEYWORD:
+        full_conditional_params = list(
+            itertools.takewhile(
+                lambda xx: xx != LOGIC_END_KEYWORD,
+                _param_list[1:],
+        ))
+
+        cur_conditional_params = list(
+            itertools.takewhile(
+                lambda xx: (
+                    xx != LOGIC_ELSE_KEYWORD and
+                    xx != LOGIC_END_KEYWORD
+                ),
+                _param_list[1:],
+        ))
+
+        conditoinal_func = determine_compare_func(cur_conditional_params)
+
+        else_parameters = full_conditional_params[len(cur_conditional_params):]
+
+        if len(else_parameters) > 0 and else_parameters[0] == LOGIC_ELSE_KEYWORD:
+            else_operation_str =  else_parameters[1]
+
+            if else_operation_str not in ELSE_ABLE_OPERATIONS:
+                raise Exception('Operation cannot be in an else')
+
+            _else_operation = get_operator(
+                operation_str = else_parameters[1],
+                param_list = else_parameters[2:],
+                should_memorize=should_memorize,
+                should_check_input=should_check_input,
+                first_operation=first_operation,
+            )
+
+            @functools.wraps(_else_operation)
+            def else_wrapper(xx):
+                result = _else_operation(xx)
+
+                if len(result) != len(xx):
+                    raise Exception(
+                        "Operations in 'else' statement result size do not match input size of 'if'"
+                    )
+
+                return result
+
+            else_operation = else_wrapper
+
+        # remove the if
+        _param_list = _param_list[1+len(full_conditional_params):]
+
+        # remove the then
+        if len(_param_list) > 0 and _param_list[0] == LOGIC_END_KEYWORD:
+                _param_list = _param_list[1:]
+
+    return (
+        conditoinal_func,
+        else_operation,
+        _param_list
+    )
+
 def get_operator(
     operation_str,
     param_list = [],
@@ -1424,70 +1496,21 @@ def get_operator(
     ))
     _param_list = _param_list[len(cur_params):]
 
-    # parse conditional statement
-    conditoinal_func = None
-    else_operation = None
-    if len(_param_list) > 0 and _param_list[0] == LOGIC_START_KEYWORD:
-        cur_conditional_params = []
-        if operation_str in IF_ABLE_OPERATIONS:
-
-            full_conditional_params = list(
-                itertools.takewhile(
-                    lambda xx: xx != LOGIC_END_KEYWORD,
-                    _param_list[1:],
-            ))
-
-            cur_conditional_params = list(
-                itertools.takewhile(
-                    lambda xx: (
-                        xx != LOGIC_ELSE_KEYWORD and
-                        xx != LOGIC_END_KEYWORD
-                    ),
-                    _param_list[1:],
-            ))
-
-            conditoinal_func = determine_compare_func(cur_conditional_params)
-
-            else_parameters = full_conditional_params[len(cur_conditional_params):]
-
-            if len(else_parameters) > 0 and else_parameters[0] == LOGIC_ELSE_KEYWORD:
-                else_operation_str =  else_parameters[1]
-
-                if else_operation_str not in ELSE_ABLE_OPERATIONS:
-                    raise Exception('Operation cannot be in an else')
-
-                _else_operation = get_operator(
-                    operation_str = else_parameters[1],
-                    param_list = else_parameters[2:],
-                    should_memorize=should_memorize,
-                    should_check_input=should_check_input,
-                    first_operation=first_operation,
-                )
-
-                @functools.wraps(_else_operation)
-                def else_wrapper(xx):
-                    result = _else_operation(xx)
-
-                    if len(result) != len(xx):
-                        raise Exception(
-                            "Operations in 'else' statement result size do not match input size of 'if'"
-                        )
-
-                    return result
-
-                else_operation = else_wrapper
-
-            # remove the if
-            _param_list = _param_list[1+len(full_conditional_params):]
-
-            # remove the then
-            if len(_param_list) > 0 and _param_list[0] == LOGIC_END_KEYWORD:
-                    _param_list = _param_list[1:]
-        else:
-            raise Exception('This operation is not if-able.')
+    (
+        conditoinal_func,
+        else_operation,
+        _param_list
+    ) = parse_next_conditional_syntax(
+        _param_list,
+        should_memorize = should_memorize,
+        should_check_input = should_check_input,
+        first_operation = first_operation,
+    )
 
     if operation_str in IF_ABLE_OPERATIONS and not hasattr(conditoinal_func, "__call__"):
         conditoinal_func = always_true
+    elif operation_str not in IF_ABLE_OPERATIONS and hasattr(conditoinal_func, "__call__"):
+        raise Exception('This operation is not if-able.')
 
     if operation_str in ELSE_ABLE_OPERATIONS and not hasattr(else_operation, "__call__"):
         else_operation = OPERATIONS_DICT['id']
