@@ -389,13 +389,13 @@ op_group.add_argument(
 )
 
 op_group.add_argument(
-    "--check-input",
-    action='store_true',
+    "--skip-checks",
+    action='store_false',
+    dest="should_valdiate_input",
     help=" ".join([
-        "This option will add a validation step to make sure the dice input",
+        "This option will skip add a validation step to make sure the dice input",
         "from one operation is approximate for the next.",
-        "This flag will give some context to when an error has occured at the",
-        "expsense of extending runtime."
+        "This flag will speed up run time at the expense of more obscure errors.",
     ]),
 )
 
@@ -686,6 +686,58 @@ def load_custom_files(file_paths):
                     raise Exception('operation_name collision, please make sure you ')
 
                 CUSTOM_OPERATIONS_DICT[attr_name] = attr_object
+
+
+def custom_func_wrapper(
+    custom_func,
+    cur_params = tuple(),
+    should_validate = True,
+):
+    @functools.wraps(custom_func)
+    def custom_operation(xx):
+        result = custom_func(xx,*tuple(cur_params))
+
+        if not should_validate:
+            # short ciruit the checks
+            pass
+
+        elif isinstance(result, int):
+            result = (result,)
+        elif isinstance(result, list):
+            result = tuple(result)
+        elif not isinstance(result, tuple):
+            raise Exception("Custom function has returned a value that is not supported.")
+
+        if should_validate and any(not isinstance(item,int) for item in result):
+            raise Exception("Values passed are not all ints.")
+
+        return result
+
+    return custom_operation
+
+
+def composed_func_wrapper(
+    first_operation,
+    second_operation,
+):
+    @docstring_format(
+        first_operation.__doc__,
+        second_operation.__doc__,
+    )
+    def composite_operation(xx):
+        """
+        --------------------
+        First Operation Doc:
+        {}
+        --------------------
+        Second Operation Doc:
+        {}
+        --------------------
+        """
+        return second_operation(first_operation(xx))
+
+    return composite_operation
+
 
 def get_single_dice(args):
     """
@@ -1326,7 +1378,7 @@ def get_slice_apply_operation(
     slice_params,
     other_param_list,
     should_memorize = False,
-    should_check_input = False,
+    should_validate = True,
 ):
     if len(slice_params) != 1:
         raise Exception("The 'slice-apply' operation requires the first parameter to slice size.")
@@ -1352,7 +1404,7 @@ def get_slice_apply_operation(
         second_operator_str,
         param_list = second_operator_params,
         should_memorize = should_memorize,
-        should_check_input = should_check_input,
+        should_validate = should_validate,
     )
 
     # third operation is needed to be considered so that each subsequent
@@ -1366,7 +1418,7 @@ def get_slice_apply_operation(
             third_operator_str,
             param_list = third_operator_params,
             should_memorize = should_memorize,
-            should_check_input = should_check_input,
+            should_validate = should_validate,
         )
     else:
         third_operator_str = 'id'
@@ -1406,7 +1458,7 @@ def get_slice_apply_operation(
 def parse_next_conditional_syntax(
     param_list,
     should_memorize = False,
-    should_check_input = False,
+    should_validate = False,
     first_operation = False,
 ):
     # make a shallow copy
@@ -1445,7 +1497,7 @@ def parse_next_conditional_syntax(
                 operation_str = else_parameters[1],
                 param_list = else_parameters[2:],
                 should_memorize=should_memorize,
-                should_check_input=should_check_input,
+                should_validate=should_validate,
                 first_operation=first_operation,
             )
 
@@ -1479,7 +1531,7 @@ def get_operator(
     operation_str,
     param_list = [],
     should_memorize = True,
-    should_check_input = True,
+    should_validate = True,
     first_operation = False,
 ):
     # make a shallow copy
@@ -1503,7 +1555,7 @@ def get_operator(
     ) = parse_next_conditional_syntax(
         _param_list,
         should_memorize = should_memorize,
-        should_check_input = should_check_input,
+        should_validate = should_validate,
         first_operation = first_operation,
     )
 
@@ -1543,30 +1595,17 @@ def get_operator(
             slice_params=cur_params,
             other_param_list=_param_list,
             should_memorize=should_memorize,
-            should_check_input=should_check_input,
+            should_validate=should_validate,
         )
         apply_nested_operation = False
 
     elif operation_str in CUSTOM_OPERATIONS_DICT:
-        custom_func = CUSTOM_OPERATIONS_DICT[operation_str]
+        _operator = custom_func_wrapper(
+            CUSTOM_OPERATIONS_DICT[operation_str],
+            cur_params,
+            should_validate,
+        )
 
-        @functools.wraps(custom_func)
-        def custom_operation(xx):
-            result = custom_func(xx,*tuple(cur_params))
-
-            if isinstance(result, int):
-                result = (result,)
-            elif isinstance(result, list):
-                result = tuple(result)
-            elif not isinstance(result, tuple):
-                raise Exception("Custom function has returned a value that is not supported.")
-
-            if any(not isinstance(item,int) for item in result):
-                raise Exception("Values passed are not all ints.")
-
-            return result
-
-        _operator = custom_operation
     else:
         raise Exception("operation string '{}' is not valid".format(operation_str))
 
@@ -1580,29 +1619,15 @@ def get_operator(
             other_operator_str,
             param_list = other_operator_params,
             should_memorize = should_memorize,
-            should_check_input = should_check_input,
+            should_validate = should_validate,
         )
 
-        _first_operation = _operator
-
-        @docstring_format(
-            first_operation_str=operation_str,
-            first_operation_params=str(cur_params),
-            other_operator_str=other_operator_str,
-            other_operator_params=str(other_operator_params),
+        _operator = composed_func_wrapper(
+            first_operation=_operator,
+            second_operation=other_operator
         )
-        def composite_operation(xx):
-            """
-            First Operation: {first_operation_str}
-            First Operation Parameters: {first_operation_params}
-            Other Operation: {other_operator_str}
-            Other Operation Parameters: {other_operator_params}
-            """
-            return other_operator(_first_operation(xx))
 
-        _operator = composite_operation
-
-    if should_check_input:
+    if should_validate:
         _operator = dice_input_checker(_operator)
 
     if should_memorize and not first_operation:
@@ -1766,7 +1791,7 @@ def main():
         # remove any entries that are empty strings
         param_list = list(item for item in args.apply[1:] if len(item) > 0),
         should_memorize = args.memorize_input,
-        should_check_input = args.check_input,
+        should_validate = args.should_valdiate_input,
         first_operation = True,
     )
 
