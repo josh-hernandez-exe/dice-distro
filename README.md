@@ -783,7 +783,7 @@ The following example shows two the above weighted D6 then summing the values.
 **Note** that after you create the distribution for the weight die you want, you can save the distribution.
 After which you can load up and speed up future calculations using your weighted die.
 
-### Advance Conditionals on Unitary Operations
+### Advance Conditionals on Operations that Preserve Result size
 Operations that that only change a single die value can be applied conditinoally.
 These operations are `shift`, `scale`, `bound`, `select`, `reroll`.
 In this example we:
@@ -824,7 +824,40 @@ but instead are `[` and `]`.
 101:  10.00 % |====================
 106:  10.00 % |====================
 107:  10.00 % |====================
-
+```
+There is an `else` keyword as well. Note that `reroll` cannot be used with `else`.
+```
+➔ python dice_distro.py -d 10 -n 1 --apply shift 100 if mod 5 eq 2 else shift 10 if mod 2 eq 1 else scale -2
+ -20:  10.00 % |====================
+ -16:  10.00 % |====================
+ -12:  10.00 % |====================
+  -8:  10.00 % |====================
+  11:  10.00 % |====================
+  13:  10.00 % |====================
+  15:  10.00 % |====================
+  19:  10.00 % |====================
+ 102:  10.00 % |====================
+ 107:  10.00 % |====================
+```
+And you can combine that all with positional parameters as well:
+```
+➔ python dice_distro.py -d 4 -n 2 --apply shift 10 100  if mod 2 3 eq 0 1 else scale 2 3 if mod 3 2 eq 1 0 else set-to 0
+  0,  0:   6.25 % |============
+  0,  6:   6.25 % |============
+  0,101:   6.25 % |============
+  0,104:   6.25 % |============
+  2,  0:   6.25 % |============
+  2,  6:   6.25 % |============
+  2,101:   6.25 % |============
+  2,104:   6.25 % |============
+ 12,  0:   6.25 % |============
+ 12,  6:   6.25 % |============
+ 12,101:   6.25 % |============
+ 12,104:   6.25 % |============
+ 14,  0:   6.25 % |============
+ 14,  6:   6.25 % |============
+ 14,101:   6.25 % |============
+ 14,104:   6.25 % |============
 ```
 
 ### Optimization Using Saving/Loading Output
