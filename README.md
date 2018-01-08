@@ -55,7 +55,7 @@ You can change the output to show a different number of decimal places (default 
 ```
 
 You can also change the output to show the counts.
-The modules trying every combination of output, treating each die as distinguishable.
+The module is trying every combination of output, treating each die as distinguishable.
 ```
 ➔ python dice_distro.py -d 6 -n 2 --show-counts --apply sum
  2: 1 |=====
@@ -912,17 +912,18 @@ The function signature should be:
 - Parameters passed in from `--apply`
 The return value should be any of:
 - An `int`
-- A `list` or `tuple` of `int`s
+- A `list` or `tuple` where all the entries are `int`
 
 Lets say that the following is saved in `/tmp/custom_funcs.py`:
 ```python
+# Functions you want to use should not begin with `_`
 def myshift(dice,*args):
 	# do stuff
 	if len(args) > 0:
 		print(args)
 	return [value + 2 for value in dice]
 ```
-Then to invoke your custom function you can run
+Then to invoke your custom function you can run:
 ```
 ➔ python dice_distro.py -d 6 -n 1 --custom /tmp/custom_funcs.py --apply myshift
 3:  16.67 % |=================================
