@@ -717,12 +717,12 @@ def custom_func_wrapper(
 
 
 def composed_func_wrapper(
-    first_operation,
-    second_operation,
+    first_func,
+    second_func,
 ):
     @docstring_format(
-        first_operation.__doc__,
-        second_operation.__doc__,
+        first_func.__doc__,
+        second_func.__doc__,
     )
     def composite_operation(xx):
         """
@@ -734,7 +734,7 @@ def composed_func_wrapper(
         {}
         --------------------
         """
-        return second_operation(first_operation(xx))
+        return second_func(first_func(xx))
 
     return composite_operation
 
@@ -1459,7 +1459,6 @@ def parse_next_conditional_syntax(
     param_list,
     should_memorize = False,
     should_validate = False,
-    first_operation = False,
 ):
     # make a shallow copy
     _param_list = list(param_list)
@@ -1498,7 +1497,6 @@ def parse_next_conditional_syntax(
                 param_list = else_parameters[2:],
                 should_memorize=should_memorize,
                 should_validate=should_validate,
-                first_operation=first_operation,
             )
 
             @functools.wraps(_else_operation)
@@ -1532,7 +1530,7 @@ def get_operator(
     param_list = [],
     should_memorize = True,
     should_validate = True,
-    first_operation = False,
+    is_first_operation = False,
 ):
     # make a shallow copy
     _param_list = list(param_list)
@@ -1556,7 +1554,6 @@ def get_operator(
         _param_list,
         should_memorize = should_memorize,
         should_validate = should_validate,
-        first_operation = first_operation,
     )
 
     if operation_str in IF_ABLE_OPERATIONS and not hasattr(conditoinal_func, "__call__"):
@@ -1623,14 +1620,14 @@ def get_operator(
         )
 
         _operator = composed_func_wrapper(
-            first_operation=_operator,
-            second_operation=other_operator
+            first_func=_operator,
+            second_func=other_operator
         )
 
     if should_validate:
         _operator = dice_input_checker(_operator)
 
-    if should_memorize and not first_operation:
+    if should_memorize and not is_first_operation:
         """
         The top level operation will never benifit from memorize
         since all inputs will be unique by design
@@ -1792,7 +1789,7 @@ def main():
         param_list = list(item for item in args.apply[1:] if len(item) > 0),
         should_memorize = args.memorize_input,
         should_validate = args.should_valdiate_input,
-        first_operation = True,
+        is_first_operation = True,
     )
 
     counter_dict = Counter()
