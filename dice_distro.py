@@ -1499,7 +1499,7 @@ def get_operator(
     (
         conditoinal_func,
         else_operation,
-        _param_list
+        _param_list, # the current param_list after parsing though the conditional
     ) = parse_next_conditional_syntax(
         _param_list,
         should_memorize = should_memorize,
