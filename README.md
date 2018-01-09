@@ -910,6 +910,8 @@ Make a python file, and write a function.
 The function signature should be:
 - First parameter is a tuple of order ints (the dice roll)
 - Parameters passed in from `--apply`
+	- Note that your parameters should **NOT** be any function name or logical keyword
+		- The parser will assume it is not a parameter
 The return value should be any of:
 - An `int`
 - A `list` or `tuple` where all the entries are `int`
@@ -917,6 +919,7 @@ The return value should be any of:
 Lets say that the following is saved in `/tmp/custom_funcs.py`:
 ```python
 # Functions you want to use should not begin with `_`
+# nor should they be any other built in function name or keyword
 def myadd(dice,*args):
 	# do stuff
 	if len(args) > 0:
