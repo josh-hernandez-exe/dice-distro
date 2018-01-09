@@ -355,34 +355,61 @@ op_group.add_argument(
         "but has an if-block, the final 'then' is not needed.",
         # End of into block
         # Define id operation
+        "---------------",
         "The 'id' operation refers to the identity operation, which will",
         "leave the input unchanged.",
         # Define math operations operation
+        "---------------",
         "The following operations:",
         "'sum', 'min', 'max', 'set', 'prod', 'bit-or', 'bit-xor', 'bit-and'",
         "apply their assosiated operation to all the dice.",
         "An optional parameter can be given for a block-size, for block-wise application.",
         "If the a block-size parameter is used, the results will be treated",
         "as distinguishable dice.",
-        # Define set operation
-        "The 'set' enumerates the results, treating the dice is indistiguishable.",
+        # Define sort operation
+        "---------------",
+        "The 'sort' operation sorts the result.",
+        "This has the effect of enumerating the results as",
+        "if the we treated the dice as indistiguishable.",
         # Define add operation
+        "---------------",
         "The 'add' operation will add a static value to all results",
         "(you can specify the value per die).",
         # Define bound operation
+        "---------------",
         "The 'bound' operation will keep the values within specified upper and",
         "lower bound (can be spcified per die).",
         # Define reroll operation
+        "---------------",
         "The 'reroll' will assume ordered dice rolls.",
         "To be useful, 'reroll' should be given an if block",
         "otherwise, the die is always rerolled and the final roll will just be used.",
+        # Define scale
+        "---------------",
+        "The 'scale' operation multiplies the value of the die by the parameter(s) given",
+        "The parameter(s) can be floating point values but the result(s) will be rounded.",
+        "The rounding option must be given before any of the numeric scale parameter(s).",
+        "The rounding options are:",
+        "'r-ceil', 'r-floor', 'r-truncate', 'r-half-up', 'r-half-down'",
+        # Define exp
+        "---------------",
+        "The 'exp' operation exponentiates the die value by the parameter(s).",
+        "A parameter 'as-base' can be passed before any of the numeric parameter(s).",
+        "This parameter will cause the parameter(s) passed to be used as the base and the",
+        "die value as the exponent.",
+        "The parameter(s) can be floating point values but the result(s) will be rounded.",
+        "The rounding option must be given before any of the numeric scale parameter(s).",
+        "The rounding options are:",
+        "'r-ceil', 'r-floor', 'r-truncate', 'r-half-up', 'r-half-down'",
         # Define slice-apply operation
+        "---------------",
         "The 'slice-apply' will take an block-size parameter to split the current",
         "dice pool into blocks.",
         "The immideate subsequent operation is applied to each block independently.",
         "Operations applied after the immideate subsequent one will be applied to the",
         "whole dice pool again (unless 'slice-apply' is used again).",
         # Define select operation
+        "---------------",
         "The 'select' operation requires at least one integer parameter.",
         "This parameter is the index of the item in the sorted array.",
         "Example-Select-1: '--apply select  0' is the same as min.",
