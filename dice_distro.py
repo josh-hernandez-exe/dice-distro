@@ -740,7 +740,7 @@ def custom_func_wrapper(
 ):
     @functools.wraps(custom_func)
     def custom_operation(xx):
-        result = custom_func(xx, *tuple(cur_params))
+        result = custom_func(xx, *cur_params)
 
         if not should_validate:
             # short ciruit the checks
@@ -798,7 +798,7 @@ def get_single_dice(args):
     elif isinstance(args.die_sides, int) and args.die_sides > 0:
         values = range(
             args.die_start,
-            args.die_start + args.die_step*args.die_sides,
+            args.die_start + args.die_step * args.die_sides,
             args.die_step,
         )
 
@@ -866,7 +866,7 @@ def get_multi_dice(args):
             step_values = tuple(1 for _ in args.multi_die_sides)
 
         for start, step, size in zip(start_values, step_values, args.multi_die_sides):
-            dice.append(range(start, start+step*size, step))
+            dice.append(range(start, start + step * size, step))
 
     return tuple(dice)
 
@@ -894,7 +894,7 @@ def get_outcome_simulator(dice, num_iterations):
     """
     Return an iterator that randomly selects dice a fixed number of times
     """
-    return zip(*tuple(itertools.starmap(
+    return zip(*(itertools.starmap(
             random.choice, itertools.repeat((die,), num_iterations)
         )
         for die in dice
@@ -1790,7 +1790,7 @@ def load_data(file_path):
     return counter_dict
 
 def counter_dict_product(*args):
-    for items in itertools.product(*tuple(count_dict.items() for count_dict in args)):
+    for items in itertools.product(*(count_dict.items() for count_dict in args)):
         full_key = []
         full_value = 1
 
@@ -1878,7 +1878,7 @@ def main():
         print(args)
 
     if isinstance(args.load_file_paths, (list, tuple)) and args.load_file_paths:
-        iterator = counter_dict_product(*tuple(
+        iterator = counter_dict_product(*(
             load_data(file_path)
             for file_path in args.load_file_paths
         ))
