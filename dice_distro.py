@@ -1674,6 +1674,7 @@ def get_operator(
             cur_params,
             should_validate,
         )
+
     elif operation_str in BASIC_OPERATIONS:
         _operator = get_basic_operation(operation_str, cur_params)
 

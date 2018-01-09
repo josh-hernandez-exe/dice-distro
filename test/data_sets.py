@@ -51,8 +51,7 @@ index_dependent_test_06 = [
 ]
 
 # make all sets contain tuples
-_iterator = list(globals().items())
-for key, value in _iterator:
+for key, value in list(globals().items()):
 	if (
 		isinstance(value, (list, tuple)) and
 		all(isinstance(item, (list, tuple, range)) for item in value)
