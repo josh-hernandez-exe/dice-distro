@@ -29,23 +29,38 @@ OPERATIONS_DICT = {
     'bit-and':lambda xx: (functools.reduce(operator.and_, xx),),
     'add': None, # This will get defined later if used
     'scale': None, # This will get defined later if used
+    'exp': None, # This will get defined later if used
     'set-to': None, # This will get defined later if used
     'bound': None, # This will get defined later if used
     'select': None, # This will get defined later if used
     'reroll': None, # This will get defined later if used,
     'slice-apply': None, # This will get defined later if used,
 }
-
 CUSTOM_OPERATIONS_DICT = dict()
 
 BASIC_OPERATIONS = set(
     key for key, value in OPERATIONS_DICT.items() if value is not None
 )
 
+ROUNDING_OPTIONS = {
+    'r-ceil': math.ceil,
+    'r-floor': math.floor,
+    'r-truncate': int,
+    'r-half-up': lambda xx: decimal.Decimal(xx).quantize(
+        decimal.Decimal('1'),
+        rounding = decimal.ROUND_HALF_UP,
+    ),
+    'r-half-down': lambda xx: decimal.Decimal(xx).quantize(
+        decimal.Decimal('1'),
+        rounding = decimal.ROUND_HALF_DOWN,
+    ),
+}
+
 # set of operations that support an if-block
 IF_ABLE_OPERATIONS = set([
     'add',
     'scale',
+    'exp',
     'set-to',
     'bound',
     'reroll',
@@ -54,6 +69,7 @@ IF_ABLE_OPERATIONS = set([
 ELSE_ABLE_OPERATIONS = set([
     'add',
     'scale',
+    'exp',
     'set-to',
     'bound',
 ])
@@ -1198,36 +1214,25 @@ def get_scale_operation(param_list, conditoinal_func, else_operation):
             "The 'scale' operation requires at least one parameter to determine add value."
         )
 
-    round_option_dict = {
-        'r-ceil': math.ceil,
-        'r-floor': math.floor,
-        'r-truncate': int,
-        'r-half-up': lambda xx: decimal.Decimal(xx).quantize(
-            decimal.Decimal('1'),
-            rounding = decimal.ROUND_HALF_UP,
-        ),
-        'r-half-down': lambda xx: decimal.Decimal(xx).quantize(
-            decimal.Decimal('1'),
-            rounding = decimal.ROUND_HALF_DOWN,
-        ),
-    }
-
     param_list_copy = list(param_list)
 
     # set default value
     round_options = 'r-truncate'
-    if param_list_copy[0] in round_option_dict:
+    if param_list_copy[0] in ROUNDING_OPTIONS:
         round_options = param_list_copy.pop(0)
 
-    round_func = round_option_dict[round_options]
+    round_func = ROUNDING_OPTIONS[round_options]
     scale_operation = lambda aa, bb: int(round_func(aa*bb))
-
-    only_one_param = len(param_list_copy) == 1
 
     try:
         scale_values = tuple(float(item) for item in param_list_copy)
     except:
         raise Exception("The parameter(s) passed must be in float(s)")
+    else:
+        if not scale_values:
+            raise Exception("No parameters passed apply the scale operation")
+
+    only_one_param = len(scale_values) == 1
 
     @docstring_format(
         scale_values=str(scale_values),
@@ -1253,6 +1258,71 @@ def get_scale_operation(param_list, conditoinal_func, else_operation):
         )
 
     return scale_func
+
+def get_exp_operation(param_list, conditoinal_func, else_operation):
+    if len(param_list) < 1:
+        raise Exception(
+            "The 'exp' operation requires at least one parameter to determine set value."
+        )
+
+    param_list_copy = list(param_list)
+
+    # determin if there are extra optional parameters
+    done_extra_parsing = False
+    round_func = None
+    exp_operation = lambda aa, bb: aa**bb # default operation
+    while not done_extra_parsing:
+        item = param_list_copy[0]
+
+        if item == 'as-base':
+            # apply the operation where the parameters passed are treated as the base
+            param_list_copy.pop(0)
+            exp_operation = lambda aa, bb: bb**aa
+        elif item in ROUNDING_OPTIONS:
+            param_list_copy.pop(0)
+            round_func = ROUNDING_OPTIONS[item]
+        else:
+            done_extra_parsing = True
+
+    if round_func is None:
+        round_func = ROUNDING_OPTIONS['r-truncate']
+
+    exp_op_round = lambda aa, bb: int(round_func(exp_operation(aa, bb)))
+
+    try:
+        exp_values = tuple(float(item) for item in param_list_copy)
+    except:
+        raise Exception("The parameter(s) passed must be in float(s)")
+    else:
+        if not exp_values:
+            raise Exception("No parameters passed apply the exponentiation operation")
+
+    only_one_param = len(exp_values) == 1
+
+    @docstring_format(
+        exp_values=str(exp_values),
+    )
+    def exp_func(xx):
+        """
+        Exp Function
+        Shift Values: {exp_values}
+        """
+        if only_one_param:
+            iterable = zip(
+                xx,
+                itertools.repeat(exp_values[0], len(xx)),
+            )
+        else:
+            iterable = zip(xx, exp_values)
+
+        else_results = else_operation(xx)
+
+        return tuple(
+            exp_op_round(item, exp_val) if conditoinal_func(item, index) else else_results[index]
+            for index, (item, exp_val) in enumerate(iterable)
+        )
+
+    return exp_func
 
 def get_bound_operation(param_list, conditoinal_func, else_operation):
     if len(param_list) < 2:
@@ -1573,6 +1643,9 @@ def get_operator(
 
     elif operation_str == 'scale':
         _operator = get_scale_operation(cur_params, conditoinal_func, else_operation)
+
+    elif operation_str == 'exp':
+        _operator = get_exp_operation(cur_params, conditoinal_func, else_operation)
 
     elif operation_str == 'set-to':
         _operator = get_set_to_operation(cur_params, conditoinal_func, else_operation)

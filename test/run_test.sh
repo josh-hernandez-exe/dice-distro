@@ -45,6 +45,19 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply scale 0.5 0.333 prod && \
     # Test set-to
     $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply set-to 1 && \
+    # Test exp
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply exp r-ceil 2.5 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply exp r-floor 2.5 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply exp r-truncate 2.5 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply exp r-half-up 2.5 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply exp r-half-down 2.5 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply exp 2.5 3 prod && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply exp as-base r-ceil 2.5 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply exp as-base r-floor 2.5 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply exp as-base r-truncate 2.5 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply exp as-base r-half-up 2.5 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply exp as-base r-half-down 2.5 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply exp as-base 2.5 3 prod && \
     # Test bound
     $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply bound 3 4 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bound 2 5 3 4 && \
