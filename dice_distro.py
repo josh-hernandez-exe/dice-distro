@@ -771,6 +771,7 @@ def composed_func_wrapper(
     )
     def composite_operation(xx):
         """
+        Composite Operation
         --------------------
         First Operation Doc:
         {}
@@ -1137,6 +1138,18 @@ def determine_compare_func_helper(param_list):
 
     return compare_func
 
+def get_iterator(xx, *parameter_collection):
+    zip_list = []
+    zip_list.append(xx)
+
+    for parameter_list in parameter_collection:
+        if len(parameter_list) == 1:
+            zip_list.append(itertools.repeat(parameter_list[0], len(xx)))
+        else:
+            zip_list.append(parameter_list)
+
+    return zip(*zip_list)
+
 def get_basic_operation(operation_str, param_list = []):
     """
     The following operations are basic and normally do not need parameters
@@ -1161,13 +1174,11 @@ def get_basic_operation(operation_str, param_list = []):
 
     return _operator
 
-def get_add_operation(param_list, conditoinal_func, else_operation):
+def get_add_operation(param_list):
     if len(param_list) < 1:
         raise Exception(
             "The 'add' operation requires at least one parameter to determine add value."
         )
-
-    only_one_param = len(param_list) == 1
 
     try:
         add_values = tuple(int(item) for item in param_list)
@@ -1182,30 +1193,16 @@ def get_add_operation(param_list, conditoinal_func, else_operation):
         Shift Function
         Shift Values: {add_values}
         """
-        if only_one_param:
-            iterable = zip(
-                xx,
-                itertools.repeat(add_values[0], len(xx)),
-            )
-        else:
-            iterable = zip(xx, add_values)
 
-        else_results = else_operation(xx)
-
-        return tuple(
-            item+add if conditoinal_func(item, index) else else_results[index]
-            for index, (item, add) in enumerate(iterable)
-        )
+        return tuple(item+add for item, add in get_iterator(xx, add_values))
 
     return add_func
 
-def get_set_to_operation(param_list, conditoinal_func, else_operation):
+def get_set_to_operation(param_list):
     if len(param_list) < 1:
         raise Exception(
             "The 'set-to' operation requires at least one parameter to determine set value."
         )
-
-    only_one_param = len(param_list) == 1
 
     try:
         set_to_values = tuple(int(item) for item in param_list)
@@ -1220,24 +1217,12 @@ def get_set_to_operation(param_list, conditoinal_func, else_operation):
         Set-To Function
         Shift Values: {set_to_values}
         """
-        if only_one_param:
-            iterable = zip(
-                xx,
-                itertools.repeat(set_to_values[0], len(xx)),
-            )
-        else:
-            iterable = zip(xx, set_to_values)
 
-        else_results = else_operation(xx)
-
-        return tuple(
-            set_value if conditoinal_func(item, index) else else_results[index]
-            for index, (item, set_value) in enumerate(iterable)
-        )
+        return tuple(set_value for _, set_value in get_iterator(xx, set_to_values))
 
     return set_to_func
 
-def get_scale_operation(param_list, conditoinal_func, else_operation):
+def get_scale_operation(param_list):
     if len(param_list) < 1:
         raise Exception(
             "The 'scale' operation requires at least one parameter to determine add value."
@@ -1261,8 +1246,6 @@ def get_scale_operation(param_list, conditoinal_func, else_operation):
         if not scale_values:
             raise Exception("No parameters passed apply the scale operation")
 
-    only_one_param = len(scale_values) == 1
-
     @docstring_format(
         scale_values=str(scale_values),
     )
@@ -1271,24 +1254,15 @@ def get_scale_operation(param_list, conditoinal_func, else_operation):
         Shift Function
         Shift Values: {scale_values}
         """
-        if only_one_param:
-            iterable = zip(
-                xx,
-                itertools.repeat(scale_values[0], len(xx)),
-            )
-        else:
-            iterable = zip(xx, scale_values)
-
-        else_results = else_operation(xx)
 
         return tuple(
-            scale_operation(item, scale_factor) if conditoinal_func(item, index) else else_results[index]
-            for index, (item, scale_factor) in enumerate(iterable)
+            scale_operation(item, scale_factor)
+            for item, scale_factor in get_iterator(xx, scale_values)
         )
 
     return scale_func
 
-def get_exp_operation(param_list, conditoinal_func, else_operation):
+def get_exp_operation(param_list):
     if len(param_list) < 1:
         raise Exception(
             "The 'exp' operation requires at least one parameter to determine set value."
@@ -1326,8 +1300,6 @@ def get_exp_operation(param_list, conditoinal_func, else_operation):
         if not exp_values:
             raise Exception("No parameters passed apply the exponentiation operation")
 
-    only_one_param = len(exp_values) == 1
-
     @docstring_format(
         exp_values=str(exp_values),
     )
@@ -1336,24 +1308,13 @@ def get_exp_operation(param_list, conditoinal_func, else_operation):
         Exp Function
         Shift Values: {exp_values}
         """
-        if only_one_param:
-            iterable = zip(
-                xx,
-                itertools.repeat(exp_values[0], len(xx)),
-            )
-        else:
-            iterable = zip(xx, exp_values)
-
-        else_results = else_operation(xx)
-
         return tuple(
-            exp_op_round(item, exp_val) if conditoinal_func(item, index) else else_results[index]
-            for index, (item, exp_val) in enumerate(iterable)
+            exp_op_round(item, exp_val) for item, exp_val in get_iterator(xx, exp_values)
         )
 
     return exp_func
 
-def get_bound_operation(param_list, conditoinal_func, else_operation):
+def get_bound_operation(param_list):
     if len(param_list) < 2:
         raise Exception(
             "The 'bound' operation requires at least two parameters to determine min/max bounds."
@@ -1363,8 +1324,6 @@ def get_bound_operation(param_list, conditoinal_func, else_operation):
         raise Exception(
             "The 'bound' operation requires parameters in pairs to determine min/max bounds."
         )
-
-    only_one_pair = len(param_list) == 2
 
     try:
         temp_value = tuple(int(item) for item in param_list)
@@ -1393,27 +1352,15 @@ def get_bound_operation(param_list, conditoinal_func, else_operation):
         lower_bounds=str(lower_bounds),
         upper_bounds=str(upper_bounds),
     )
-    def bound_func(xx):
+    def bound_func(xx, start_index=0):
         """
         Bound Function
         Lower Bounds: {lower_bounds}
         Upper Bounds: {upper_bounds}
         """
-
-        if only_one_pair:
-            iterable = zip(
-                xx,
-                itertools.repeat(lower_bounds[0], len(xx)),
-                itertools.repeat(upper_bounds[0], len(xx)),
-            )
-        else:
-            iterable = zip(xx, lower_bounds, upper_bounds)
-
-        else_results = else_operation(xx)
-
         return tuple(
-            bound_value_func(item, lower, upper) if conditoinal_func(item, index) else else_results[index]
-            for index, (item, lower, upper) in enumerate(iterable)
+            bound_value_func(item, lower, upper)
+            for item, lower, upper in get_iterator(xx, lower_bounds, upper_bounds)
         )
 
     return bound_func
@@ -1553,6 +1500,38 @@ def get_slice_apply_operation(
 
     return slice_apply_func
 
+def get_if_else_operation(
+    if_operation,
+    else_operation,
+    conditoinal_func,
+):
+    @docstring_format(
+        conditoinal_func.__doc__,
+        if_operation.__doc__,
+        else_operation.__doc__,
+    )
+    def apply_op_if_else_compare(xx):
+        """
+        If-else operation wrapper
+        -------------------
+        Conditional func doc: {}
+
+        -------------------
+        If operation doc: {}
+
+        -------------------
+        Else operation doc: {}
+        """
+        if_results = if_operation(xx)
+        else_results = else_operation(xx)
+
+        return tuple(
+            if_results[index] if conditoinal_func(item, index) else else_results[index]
+            for index,item in enumerate(xx)
+        )
+
+    return apply_op_if_else_compare
+
 def parse_next_conditional_syntax(
     param_list,
     should_memorize=False,
@@ -1664,7 +1643,6 @@ def get_operator(
 
     apply_nested_operation = True
 
-
     if operation_str in CUSTOM_OPERATIONS_DICT:
         # consider user defined operations before built-in one
         # so if they name a operation as one built in, we use theirs
@@ -1678,20 +1656,27 @@ def get_operator(
     elif operation_str in BASIC_OPERATIONS:
         _operator = get_basic_operation(operation_str, cur_params)
 
-    elif operation_str == 'add':
-        _operator = get_add_operation(cur_params, conditoinal_func, else_operation)
+    elif operation_str in IF_ABLE_OPERATIONS and operation_str in ELSE_ABLE_OPERATIONS:
 
-    elif operation_str == 'scale':
-        _operator = get_scale_operation(cur_params, conditoinal_func, else_operation)
+        if operation_str == 'add':
+            _operator = get_add_operation(cur_params)
 
-    elif operation_str == 'exp':
-        _operator = get_exp_operation(cur_params, conditoinal_func, else_operation)
+        elif operation_str == 'scale':
+            _operator = get_scale_operation(cur_params)
 
-    elif operation_str == 'set-to':
-        _operator = get_set_to_operation(cur_params, conditoinal_func, else_operation)
+        elif operation_str == 'exp':
+            _operator = get_exp_operation(cur_params)
 
-    elif operation_str == 'bound':
-        _operator = get_bound_operation(cur_params, conditoinal_func, else_operation)
+        elif operation_str == 'set-to':
+            _operator = get_set_to_operation(cur_params)
+
+        elif operation_str == 'bound':
+            _operator = get_bound_operation(cur_params)
+
+        else:
+            raise Exception('Error while parsing.')
+
+        _operator = get_if_else_operation(_operator, else_operation, conditoinal_func)
 
     elif operation_str == 'reroll':
         _operator = get_reroll_operation(cur_params, conditoinal_func)
