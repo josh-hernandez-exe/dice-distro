@@ -372,7 +372,7 @@ The default operation is to show the results of the dice as if the results are d
 ### Rolling D6 Shifting the Value but Bounding the Results
 We roll a D6, add 2, but don't let the value exceed the values that can be possibly rolled.
 ```
-➔ python dice_distro.py --bar-size 1 -d 6 --apply shift 2 bound 1 6
+➔ python dice_distro.py --bar-size 1 -d 6 --apply add 2 bound 1 6
 3:  16.67 % |================
 4:  16.67 % |================
 5:  16.67 % |================
@@ -785,13 +785,13 @@ After which you can load up and speed up future calculations using your weighted
 
 ### Advance Conditionals on Operations that Preserve Result size
 Operations that that only change a single die value can be applied conditinoally.
-These operations are `shift`, `scale`, `bound`, `select`, `reroll`.
+These operations are `add`, `scale`, `bound`, `select`, `reroll`.
 In this example we:
 - Roll two D6
 - For the first die, if it is an even number, subtract 10
 - For the second die, if it is equivalent to 1 mod 3, add 100
 ```
-➔ python dice_distro.py -d 4 -n 2 --apply shift -10 100 if mod 2 3 eq 0 1
+➔ python dice_distro.py -d 4 -n 2 --apply add -10 100 if mod 2 3 eq 0 1
   -8,   2:   6.25 % |============
   -8,   3:   6.25 % |============
   -8, 101:   6.25 % |============
@@ -813,7 +813,7 @@ You can even use boolean logic operations (`not`, `and`, `or`) and even nest the
 Due to issues with bash, the bracket char cannot be `(` or `)`,
 but instead are `[` and `]`.
 ```
-➔ python dice_distro.py -d 10 --apply shift 100 if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ]
+➔ python dice_distro.py -d 10 --apply add 100 if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8  ]
   2:  10.00 % |====================
   3:  10.00 % |====================
   4:  10.00 % |====================
@@ -827,7 +827,7 @@ but instead are `[` and `]`.
 ```
 There is an `else` keyword as well. Note that `reroll` cannot be used with `else`.
 ```
-➔ python dice_distro.py -d 10 -n 1 --apply shift 100 if mod 5 eq 2 else shift 10 if mod 2 eq 1 else scale -2
+➔ python dice_distro.py -d 10 -n 1 --apply add 100 if mod 5 eq 2 else add 10 if mod 2 eq 1 else scale -2
  -20:  10.00 % |====================
  -16:  10.00 % |====================
  -12:  10.00 % |====================
@@ -841,7 +841,7 @@ There is an `else` keyword as well. Note that `reroll` cannot be used with `else
 ```
 And you can combine that all with positional parameters as well:
 ```
-➔ python dice_distro.py -d 4 -n 2 --apply shift 10 100  if mod 2 3 eq 0 1 else scale 2 3 if mod 3 2 eq 1 0 else set-to 0
+➔ python dice_distro.py -d 4 -n 2 --apply add 10 100  if mod 2 3 eq 0 1 else scale 2 3 if mod 3 2 eq 1 0 else set-to 0
   0,  0:   6.25 % |============
   0,  6:   6.25 % |============
   0,101:   6.25 % |============
@@ -917,7 +917,7 @@ The return value should be any of:
 Lets say that the following is saved in `/tmp/custom_funcs.py`:
 ```python
 # Functions you want to use should not begin with `_`
-def myshift(dice,*args):
+def myadd(dice,*args):
 	# do stuff
 	if len(args) > 0:
 		print(args)
@@ -925,7 +925,7 @@ def myshift(dice,*args):
 ```
 Then to invoke your custom function you can run:
 ```
-➔ python dice_distro.py -d 6 -n 1 --custom /tmp/custom_funcs.py --apply myshift
+➔ python dice_distro.py -d 6 -n 1 --custom /tmp/custom_funcs.py --apply myadd
 3:  16.67 % |=================================
 4:  16.67 % |=================================
 5:  16.67 % |=================================
@@ -935,7 +935,7 @@ Then to invoke your custom function you can run:
 ```
 And if you were passing parameters:
 ```
-➔ python dice_distro.py -d 6 -n 1 --custom /tmp/custom_funcs.py --apply myshift 1 2 hi 3
+➔ python dice_distro.py -d 6 -n 1 --custom /tmp/custom_funcs.py --apply myadd 1 2 hi 3
 ('1', '2', 'hi', '3')
 ('1', '2', 'hi', '3')
 ('1', '2', 'hi', '3')

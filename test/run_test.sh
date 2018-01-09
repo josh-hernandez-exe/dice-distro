@@ -13,7 +13,7 @@ echo "Starting Test with $python_exe" && \
     # Test help render
     $python_exe $dice_distro_file $test_params --help && \
     # Run unit tests
-    $python_exe -m unittest discover && \
+    $python_exe -m unittest discover --start-directory $CUR_DIR && \
     # Test basic operations
     $python_exe $dice_distro_file $test_params -d 6 -n 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply sum && \
@@ -33,9 +33,9 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-or 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-xor 2 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bit-and 2 && \
-    # Test shift
-    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply shift 2 && \
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply shift 2 -1 && \
+    # Test add
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply add 2 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply add 2 -1 && \
     # Test scale operations with all the different rounding options
     $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply scale r-ceil 0.5 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply scale r-floor 0.5 && \
@@ -49,7 +49,7 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply bound 3 4 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply bound 2 5 3 4 && \
     # Test chained operation with bound
-    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply shift 2 bound 1 6 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 1 --apply add 2 bound 1 6 && \
     # Test Select operation
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply select 1 && \
     $python_exe $dice_distro_file $test_params -d 4 -n 4 --apply select -1 -2 -3 && \
@@ -63,12 +63,12 @@ echo "Starting Test with $python_exe" && \
     # Test slice-apply
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply slice-apply 2 sum max && \
     # Test if-block
-    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply shift 10 100 if mod 2 3 eq 0 1 && \
+    $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply add 10 100 if mod 2 3 eq 0 1 && \
     # Test if-else block
-    $python_exe $dice_distro_file $test_params -d 10 -n 1 --apply shift 100 if mod 5 eq 2 else shift 10 if mod 2 eq 1 else scale 0 && \
-    $python_exe $dice_distro_file $test_params -d 10 -n 2 --apply shift 100 if mod 5 eq 2 else shift 10 if mod 2 eq 1 else scale 0 then sum && \
+    $python_exe $dice_distro_file $test_params -d 10 -n 1 --apply add 100 if mod 5 eq 2 else add 10 if mod 2 eq 1 else scale 0 && \
+    $python_exe $dice_distro_file $test_params -d 10 -n 2 --apply add 100 if mod 5 eq 2 else add 10 if mod 2 eq 1 else scale 0 then sum && \
     # Test complex if-block with nested boolean logic
-    $python_exe $dice_distro_file $test_params -d 10 --apply shift 100 if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8 ]&& \
+    $python_exe $dice_distro_file $test_params -d 10 --apply add 100 if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8 ]&& \
     # Test Reroll
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply reroll if lt 4 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply sum 2 reroll if lt 7 && \

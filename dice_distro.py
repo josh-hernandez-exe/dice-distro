@@ -27,7 +27,7 @@ OPERATIONS_DICT = {
     'bit-or':lambda xx: (functools.reduce(operator.or_, xx, 0),),
     'bit-xor':lambda xx: (functools.reduce(operator.xor, xx),),
     'bit-and':lambda xx: (functools.reduce(operator.and_, xx),),
-    'shift': None, # This will get defined later if used
+    'add': None, # This will get defined later if used
     'scale': None, # This will get defined later if used
     'set-to': None, # This will get defined later if used
     'bound': None, # This will get defined later if used
@@ -44,7 +44,7 @@ BASIC_OPERATIONS = set(
 
 # set of operations that support an if-block
 IF_ABLE_OPERATIONS = set([
-    'shift',
+    'add',
     'scale',
     'set-to',
     'bound',
@@ -52,7 +52,7 @@ IF_ABLE_OPERATIONS = set([
 ])
 
 ELSE_ABLE_OPERATIONS = set([
-    'shift',
+    'add',
     'scale',
     'set-to',
     'bound',
@@ -350,8 +350,8 @@ op_group.add_argument(
         "as distinguishable dice.",
         # Define set operation
         "The 'set' enumerates the results, treating the dice is indistiguishable.",
-        # Define shift operation
-        "The 'shift' operation will add a static value to all results",
+        # Define add operation
+        "The 'add' operation will add a static value to all results",
         "(you can specify the value per die).",
         # Define bound operation
         "The 'bound' operation will keep the values within specified upper and",
@@ -1116,43 +1116,43 @@ def get_basic_operation(operation_str, param_list = []):
 
     return _operator
 
-def get_shift_operation(param_list, conditoinal_func, else_operation):
+def get_add_operation(param_list, conditoinal_func, else_operation):
     if len(param_list) < 1:
         raise Exception(
-            "The 'shift' operation requires at least one parameter to determine shift value."
+            "The 'add' operation requires at least one parameter to determine add value."
         )
 
     only_one_param = len(param_list) == 1
 
     try:
-        shift_values = tuple(int(item) for item in param_list)
+        add_values = tuple(int(item) for item in param_list)
     except:
         raise Exception("The parameter(s) passed must be in integer(s)")
 
     @docstring_format(
-        shift_values=str(shift_values),
+        add_values=str(add_values),
     )
-    def shift_func(xx):
+    def add_func(xx):
         """
         Shift Function
-        Shift Values: {shift_values}
+        Shift Values: {add_values}
         """
         if only_one_param:
             iterable = zip(
                 xx,
-                itertools.repeat(shift_values[0], len(xx)),
+                itertools.repeat(add_values[0], len(xx)),
             )
         else:
-            iterable = zip(xx, shift_values)
+            iterable = zip(xx, add_values)
 
         else_results = else_operation(xx)
 
         return tuple(
-            item+shift if conditoinal_func(item, index) else else_results[index]
-            for index, (item, shift) in enumerate(iterable)
+            item+add if conditoinal_func(item, index) else else_results[index]
+            for index, (item, add) in enumerate(iterable)
         )
 
-    return shift_func
+    return add_func
 
 def get_set_to_operation(param_list, conditoinal_func, else_operation):
     if len(param_list) < 1:
@@ -1195,7 +1195,7 @@ def get_set_to_operation(param_list, conditoinal_func, else_operation):
 def get_scale_operation(param_list, conditoinal_func, else_operation):
     if len(param_list) < 1:
         raise Exception(
-            "The 'scale' operation requires at least one parameter to determine shift value."
+            "The 'scale' operation requires at least one parameter to determine add value."
         )
 
     round_option_dict = {
@@ -1568,8 +1568,8 @@ def get_operator(
     if operation_str in BASIC_OPERATIONS:
         _operator = get_basic_operation(operation_str, cur_params)
 
-    elif operation_str == 'shift':
-        _operator = get_shift_operation(cur_params, conditoinal_func, else_operation)
+    elif operation_str == 'add':
+        _operator = get_add_operation(cur_params, conditoinal_func, else_operation)
 
     elif operation_str == 'scale':
         _operator = get_scale_operation(cur_params, conditoinal_func, else_operation)
