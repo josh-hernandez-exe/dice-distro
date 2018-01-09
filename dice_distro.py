@@ -36,6 +36,7 @@ OPERATIONS_DICT = {
     'reroll': None, # This will get defined later if used,
     'slice-apply': None, # This will get defined later if used,
 }
+
 CUSTOM_OPERATIONS_DICT = dict()
 
 BASIC_OPERATIONS = set(
@@ -75,6 +76,7 @@ ELSE_ABLE_OPERATIONS = set([
 ])
 
 BASIC_COMPARE_DICT = {
+    'ne':lambda aa, bb, cc=None: aa != bb,
     'eq':lambda aa, bb, cc=None: aa == bb,
     'gt':lambda aa, bb, cc=None: aa > bb,
     'ge':lambda aa, bb, cc=None: aa >= bb,
