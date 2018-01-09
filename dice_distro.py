@@ -1664,7 +1664,17 @@ def get_operator(
 
     apply_nested_operation = True
 
-    if operation_str in BASIC_OPERATIONS:
+
+    if operation_str in CUSTOM_OPERATIONS_DICT:
+        # consider user defined operations before built-in one
+        # so if they name a operation as one built in, we use theirs
+        # instead
+        _operator = custom_func_wrapper(
+            CUSTOM_OPERATIONS_DICT[operation_str],
+            cur_params,
+            should_validate,
+        )
+    elif operation_str in BASIC_OPERATIONS:
         _operator = get_basic_operation(operation_str, cur_params)
 
     elif operation_str == 'add':
@@ -1696,13 +1706,6 @@ def get_operator(
             should_validate=should_validate,
         )
         apply_nested_operation = False
-
-    elif operation_str in CUSTOM_OPERATIONS_DICT:
-        _operator = custom_func_wrapper(
-            CUSTOM_OPERATIONS_DICT[operation_str],
-            cur_params,
-            should_validate,
-        )
 
     else:
         raise Exception("operation string '{}' is not valid".format(operation_str))
