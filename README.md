@@ -1020,3 +1020,5 @@ If I find time in the future, I plan to (in no specific order):
     - there are current issues with pickeling the operation function applied to the dice roll
 - Expand the unit tests
 	- Logic parser needs to be tested more thoroughly.
+- Replace the parser with an abstract synatx tree
+    - This will make expanding the synatx easier, but needs a total refactor on how the operations are parsed.
