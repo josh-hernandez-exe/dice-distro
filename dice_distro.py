@@ -17,13 +17,16 @@ from collections import Counter
 if (2, 0) <= sys.version_info < (3, 0):
     zip = itertools.izip
 
+def prod_values(xx):
+    return functools.reduce(operator.mul, xx, 1)
+
 OPERATIONS_DICT = {
     'id':lambda xx: xx,
     'sum':lambda xx: (sum(xx),),
     'min':lambda xx: (min(xx),),
     'max':lambda xx: (max(xx),),
     'sort':lambda xx: tuple(sorted(xx)),
-    'prod':lambda xx: (functools.reduce(operator.mul, xx, 1),),
+    'prod':lambda xx: (prod_values(xx),),
     'bit-or':lambda xx: (functools.reduce(operator.or_, xx, 0),),
     'bit-xor':lambda xx: (functools.reduce(operator.xor, xx),),
     'bit-and':lambda xx: (functools.reduce(operator.and_, xx),),
@@ -1937,20 +1940,10 @@ def load_data(file_path):
 
     return counter_dict
 
-def counter_dict_product(*args):
-    for items in itertools.product(*(count_dict.items() for count_dict in args)):
-        full_key = []
-        full_value = 1
-
-        for key, value in items:
-            if isinstance(key, (tuple, list)):
-                full_key.extend(key)
-            elif isinstance(key, int):
-                full_key.append(key)
-
-            full_value *= value
-
-        yield tuple(full_key), full_value
+def counter_dict_product(*counter_dicts):
+    for items in itertools.product(*(count_dict.items() for count_dict in counter_dicts)):
+        keys, values = zip(*items)
+        yield tuple(itertools.chain(*keys)), prod_values(values)
 
 def display_data(args, counter_dict):
     total = sum(counter_dict.values())
@@ -2049,7 +2042,7 @@ def main():
     # the next few lines is the majority of the program run time for larger values
     for dice, count in iterator:
         dice_pool, weight_values = zip(*dice)
-        counter_dict[_operator(dice_pool)] += count * functools.reduce(operator.mul, weight_values, 1)
+        counter_dict[_operator(dice_pool)] += count * prod_values(weight_values)
 
     if args.save_file_path is not None:
         save_data(counter_dict, args.save_file_path)
