@@ -1,18 +1,20 @@
+import itertools
+
 index_independent_test_value_set = [
     range(10),
-    range(-10,0),
-    range(-1000,1000),
+    range(-10,1),
+    range(-10000,10000),
 ]
 
-index_dependent_test_06 = [
-    range(-6,0),
+# Every combination of six values from -10 to 9 (inclusive)
+# this adds about [20 choose 6] = 38760 entries
+index_dependent_test_06 = list(itertools.combinations(range(-10,10), 6))
+
+index_dependent_test_06.extend([
     range(-12,0,2),
-    range(-6,6,2),
     range(-6,12,3),
     range(-5,13,3),
     range(-7,11,3),
-    range(6),
-    range(1, 7),
     range(0,12,2),
     range(1,13,2),
     range(0,18,3),
@@ -48,7 +50,7 @@ index_dependent_test_06 = [
     range(13,128+13,23),
     range(17,128+17,23),
     range(19,128+19,23),
-]
+])
 
 # make all sets contain tuples
 for key, value in list(globals().items()):
@@ -56,5 +58,4 @@ for key, value in list(globals().items()):
 		isinstance(value, (list, tuple)) and
 		all(isinstance(item, (list, tuple, range)) for item in value)
 	):
-		
 		globals()[key] = tuple(tuple(item) for item in value)
