@@ -733,6 +733,55 @@ def simple_clean_params(param_list):
 
     return temp_list
 
+def custom_func_wrapper(
+    custom_func,
+    cur_params=tuple(),
+    should_validate=True,
+):
+    @functools.wraps(custom_func)
+    def custom_operation(xx):
+        result = custom_func(xx, *cur_params)
+
+        if not should_validate:
+            # short ciruit the checks
+            pass
+
+        elif isinstance(result, int):
+            result = (result,)
+        elif isinstance(result, list):
+            result = tuple(result)
+        elif not isinstance(result, tuple):
+            raise Exception("Custom function has returned a value that is not supported.")
+
+        if should_validate and any(not isinstance(item, int) for item in result):
+            raise Exception("Values passed are not all ints.")
+
+        return result
+
+    return custom_operation
+
+def composed_func_wrapper(
+    first_func,
+    second_func,
+):
+    @docstring_format(
+        indent_text(first_func.__doc__),
+        indent_text(second_func.__doc__),
+    )
+    def composite_operation(xx):
+        """
+        Composite Operation
+        --------------------
+        First Operation Doc:
+        {}
+        --------------------
+        Second Operation Doc:
+        {}
+        --------------------
+        """
+        return second_func(first_func(xx))
+
+    return composite_operation
 
 def load_custom_files(file_paths):
     custom_dirs = set()
@@ -768,59 +817,6 @@ def load_custom_files(file_paths):
                     raise Exception('operation_name collision, please make sure you ')
 
                 CUSTOM_OPERATIONS_DICT[attr_name] = attr_object
-
-
-def custom_func_wrapper(
-    custom_func,
-    cur_params=tuple(),
-    should_validate=True,
-):
-    @functools.wraps(custom_func)
-    def custom_operation(xx):
-        result = custom_func(xx, *cur_params)
-
-        if not should_validate:
-            # short ciruit the checks
-            pass
-
-        elif isinstance(result, int):
-            result = (result,)
-        elif isinstance(result, list):
-            result = tuple(result)
-        elif not isinstance(result, tuple):
-            raise Exception("Custom function has returned a value that is not supported.")
-
-        if should_validate and any(not isinstance(item, int) for item in result):
-            raise Exception("Values passed are not all ints.")
-
-        return result
-
-    return custom_operation
-
-
-def composed_func_wrapper(
-    first_func,
-    second_func,
-):
-    @docstring_format(
-        indent_text(first_func.__doc__),
-        indent_text(second_func.__doc__),
-    )
-    def composite_operation(xx):
-        """
-        Composite Operation
-        --------------------
-        First Operation Doc:
-        {}
-        --------------------
-        Second Operation Doc:
-        {}
-        --------------------
-        """
-        return second_func(first_func(xx))
-
-    return composite_operation
-
 
 def get_single_dice(args):
     """
@@ -1165,6 +1161,10 @@ def determine_compare_func_helper(param_list):
     return compare_func
 
 def get_iterator(xx, *parameter_collection):
+    """
+    This get iterator function is specific to if-else-able
+    operations
+    """
     zip_list = []
     zip_list.append(xx)
 
