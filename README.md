@@ -739,10 +739,20 @@ The above is the equvalent in saying:
 
 ### Weighted Dice
 Since this program uses enumeration to calculate the distribution,
-weighted dice can't simply be added with a parameter with weights.
-To work around that, you must make a custom die with repeated values on the faces.
+weighted dice can't simply be added with a parameter with weights using floating points values.
+The weights must be integers as they are just considered as being counted extra times.
 
 The following example shows a weighted D6.
+```
+➔ python dice_distro.py -d 6 --die-weights 6 5 4 3 2 1
+1:  28.57 % |=========================================================
+2:  23.81 % |===============================================
+3:  19.05 % |======================================
+4:  14.29 % |============================
+5:   9.52 % |===================
+6:   4.76 % |=========
+```
+Which is the same as (but less efficent than) a custom die with repeated values on the faces.
 ```
 ➔ python dice_distro.py --die-values \
     1 1 1 1 1 1 \
@@ -751,23 +761,10 @@ The following example shows a weighted D6.
     4 4 4 \
     5 5 \
     6
-1:  28.57 % |=========================================================
-2:  23.81 % |===============================================
-3:  19.05 % |======================================
-4:  14.29 % |============================
-5:   9.52 % |===================
-6:   4.76 % |=========
 ```
 The following example shows two the above weighted D6 then summing the values.
 ```
-➔ python dice_distro.py --die-values \
-    1 1 1 1 1 1 \
-    2 2 2 2 2 \
-    3 3 3 3 \
-    4 4 4 \
-    5 5 \
-    6 \
-    -n 2 --apply sum
+➔ python dice_distro.py -d 6 -n 2 --die-weights 6 5 4 3 2 1 --apply sum
  2:   8.16 % |================
  3:  13.61 % |===========================
  4:  16.55 % |=================================

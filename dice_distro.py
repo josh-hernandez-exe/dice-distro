@@ -260,6 +260,19 @@ single_type_group_side_option.add_argument(
     ]),
 )
 
+single_type_group.add_argument(
+    "--die-weights",
+    type=int,
+    nargs="+",
+    default=[],
+    help=" ".join([
+        "The number of times a die resulted will be counted.",
+        "In other words the weighting of a die.",
+        "Values are expected to be integers.",
+    ]),
+)
+
+
 """
 ========================================================================================
 Multi Die Options
@@ -318,6 +331,20 @@ multi_type_group.add_argument(
     default=[],
     help=" ".join([
         "The values the die should have.",
+        "Values are expected to be integers.",
+        "If using this option, '--multi-die-sides' must set.",
+        "The values are grabed in order.",
+    ]),
+)
+
+multi_type_group.add_argument(
+    "--multi-die-weights",
+    type=int,
+    nargs="+",
+    default=[],
+    help=" ".join([
+        "The number of times a die resulted will be counted.",
+        "In other words the weighting of a die.",
         "Values are expected to be integers.",
         "If using this option, '--multi-die-sides' must set.",
         "The values are grabed in order.",
@@ -834,19 +861,29 @@ def get_single_dice(args):
         raise Exception("Both die sides are given and die values are given. Only pass one")
 
     elif isinstance(args.die_sides, int) and args.die_sides > 0:
-        values = range(
+        face_values = range(
             args.die_start,
             args.die_start + args.die_step * args.die_sides,
             args.die_step,
         )
 
     elif args.die_values:
-        values = args.die_values
+        face_values = args.die_values
 
     else:
         raise Exception('Must pass in one of \'--die\' or \'--die-values\'')
 
-    return tuple(values for _ in range(args.num_dice))
+    if isinstance(args.die_weights, (list, tuple)) and args.die_weights:
+        if len(face_values) != len(args.die_weights):
+            raise Exception(
+                "The number of die counts must the same as the number of face values present on the die."
+            )
+        weight_values = args.die_weights
+
+    else:
+        weight_values = [1 for _ in face_values]
+
+    return tuple(tuple(zip(face_values, weight_values)) for _ in range(args.num_dice))
 
 def get_multi_dice(args):
     """
@@ -860,16 +897,29 @@ def get_multi_dice(args):
             "The parameter '--multi-die-sides' is a required parameter for multi-die-type rolls"
         )
 
+    if (
+        isinstance(args.multi_die_weights, (list, tuple)) and
+        args.multi_die_weights and
+        len(args.multi_die_weights) != sum(args.multi_die_sides)
+    ):
+        raise Exception(
+            "The number of weights given should be equal to the facees on all dies that will be rolled."
+        )
+
     if isinstance(args.multi_die_values, (list, tuple)) and args.multi_die_values:
         """
         Process args to return dice were each die has unique specified values
         Values are specified from 'args.multi_die_values' and values are grouped
         into sections specified by args.multi_die_sides.
         """
+        if isinstance(args.multi_die_weights, (list, tuple)) and args.multi_die_weights:
+            iterator = zip(args.multi_die_values, args.multi_die_weights)
+        else:
+            iterator = zip(args.multi_die_values, itertools.repeat(1))
 
         die = []
-        for value in args.multi_die_values:
-            die.append(value)
+        for die_face in iterator:
+            die.append(die_face)
             if len(die) == args.multi_die_sides[len(dice)]:
                 dice.append(tuple(die))
                 die = []
@@ -903,8 +953,17 @@ def get_multi_dice(args):
         else:
             step_values = tuple(1 for _ in args.multi_die_sides)
 
-        for start, step, size in zip(start_values, step_values, args.multi_die_sides):
-            dice.append(range(start, start + step * size, step))
+        if isinstance(args.multi_die_weights, (list, tuple)) and args.multi_die_weights:
+            weight_value_sets = []
+            temp_list = list(args.multi_die_weights)
+            for nn in args.multi_die_sides:
+                weight_value_sets.append(temp_list[:nn])
+                temp_list = temp_list[nn:]
+        else:
+            weight_value_sets = [[1]*nn for nn in args.multi_die_sides]
+
+        for start, step, size, weights in zip(start_values, step_values, args.multi_die_sides, weight_value_sets):
+            dice.append(tuple(zip(range(start, start + step * size, step), weights)))
 
     return tuple(dice)
 
@@ -1872,6 +1931,8 @@ def load_data(file_path):
                 if not all(isinstance(entry, int) for entry in new_key):
                     raise Exception("Key in file is not valid")
 
+                new_key = tuple(zip(new_key, itertools.repeat(1)))
+
         if not isinstance(value, int):
             raise Exception("Values given in file are not integers.")
 
@@ -1988,9 +2049,10 @@ def main():
 
     counter_dict = Counter()
 
-    # the next two lines is the majority of the program run time for larger values
-    for item, count in iterator:
-        counter_dict[_operator(item)] += count
+    # the next few lines is the majority of the program run time for larger values
+    for dice, count in iterator:
+        dice_pool, weight_values = zip(*dice)
+        counter_dict[_operator(dice_pool)] += count * functools.reduce(operator.mul, weight_values, 1)
 
     if args.save_file_path is not None:
         save_data(counter_dict, args.save_file_path)
