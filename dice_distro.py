@@ -979,15 +979,9 @@ def determine_compare_func(param_list):
     for item in param_list:
         did_parse = False
         for bracket in BRACKET_CHARS:
-            if item.startswith(bracket):
+            if item == bracket:
                 _add_group()
                 param_groups_1.append(bracket)
-                if len(item) > len(bracket): _var['group'].append(item[len(bracket):])
-                did_parse = True
-            elif item.endswith(bracket):
-                _add_group()
-                param_groups_1.append(bracket)
-                if len(item) > len(bracket): _var['group'].append(item[:-len(bracket)])
                 did_parse = True
 
         if did_parse:
