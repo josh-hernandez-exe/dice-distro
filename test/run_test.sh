@@ -100,9 +100,7 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -n 2 --die-values 0 10 100 -1000 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --die-weights 6 5 4 3 2 1 --apply sum && \
     # Test custom multi-die type options
-    $python_exe $dice_distro_file $test_params --multi-die-sides 12 8 6 --apply sum && \
-    $python_exe $dice_distro_file $test_params --multi-die-sides 8 6 4 --apply reroll if lt 3 && \
-    $python_exe $dice_distro_file $test_params --multi-die-sides 8 6 4 --apply reroll if lt 5 4 && \
+    $python_exe $dice_distro_file $test_params --multi-die-sides 12 8 6 && \
     $python_exe $dice_distro_file $test_params --multi-die-sides 4 3 2 --multi-die-start -1 0 1 --multi-die-step 3 2 1 && \
     $python_exe $dice_distro_file $test_params --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200 && \
     $python_exe $dice_distro_file $test_params --multi-die-sides 2 3 4 --multi-die-weights 1 2 3 4 5 6 7 8 9 && \
@@ -110,8 +108,16 @@ echo "Starting Test with $python_exe" && \
     # Test file save and load with distrobution product
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --save /tmp/2d6.json && \
     $python_exe $dice_distro_file $test_params --load /tmp/2d6.json /tmp/2d6.json --apply sum && \
-    # Test simulate
-    $python_exe $dice_distro_file $test_params -d 40 -n 6 --apply max --simulate 100000 && \
+    # Test simulate (with different dice generation options)
+    $python_exe $dice_distro_file $test_params --simulate 10000 -d 6 -n 2 && \
+    $python_exe $dice_distro_file $test_params --simulate 10000 -d 10 -n 2 --die-start 0 --die-step 10 && \
+    $python_exe $dice_distro_file $test_params --simulate 10000 -n 2 --die-values 0 10 100 -1000 && \
+    $python_exe $dice_distro_file $test_params --simulate 10000 -d 6 -n 2 --die-weights 6 5 4 3 2 1 --apply sum && \
+    $python_exe $dice_distro_file $test_params --simulate 10000 --multi-die-sides 12 8 6 && \
+    $python_exe $dice_distro_file $test_params --simulate 10000 --multi-die-sides 4 3 2 --multi-die-start -1 0 1 --multi-die-step 3 2 1 && \
+    $python_exe $dice_distro_file $test_params --simulate 10000 --multi-die-sides 4 3 2 --multi-die-values 0 1 2 3 10 20 30 100 200 && \
+    $python_exe $dice_distro_file $test_params --simulate 10000 --multi-die-sides 2 3 4 --multi-die-weights 1 2 3 4 5 6 7 8 9 && \
+    $python_exe $dice_distro_file $test_params --simulate 10000 --multi-die-sides 2 3 4 --multi-die-values 9 8 7 6 5 4 3 2 1 --multi-die-weights 1 2 3 4 5 6 7 8 9 && \
     # Test display options
     $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 && \
     $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum --show-counts && \
