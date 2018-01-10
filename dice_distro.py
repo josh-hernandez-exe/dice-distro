@@ -637,6 +637,12 @@ def docstring_format(*args, **kwargs):
         return func
     return decorator
 
+def indent_text(text,indent=4*" "):
+    if not text:
+        return ''
+
+    return "\n".join(indent + line for line in text.split("\n"))
+
 def dice_input_checker(func):
     func_str_info = "\n".join([
         "Func Name: {}".format(func.__name__),
@@ -697,6 +703,90 @@ def memorize(func):
 
     return wrapper
 
+def find_max_digits(iterable):
+    if not all(isinstance(xx, (int, float)) for xx in iterable):
+        raise Exception('All items in the iterable must be ints or floats.')
+
+    return max(len(str(xx)) for xx in iterable)
+
+def intersperse(lst, item):
+    result = [item] * (len(lst) * 2 - 1)
+    result[0::2] = lst
+    return result
+
+def simple_clean_params(param_list):
+    """
+    This function expects the parameter list
+    It will split up the brackets so that each bracket is it's own entry
+    as well as remove any extra white space
+    """
+    temp_list = list(param_list)
+    for bracket in BRACKET_CHARS:
+        _temp_list = []
+        for item1 in temp_list:
+            if bracket in item1:
+                item2 = item1.split(bracket)
+                _temp_list.extend(
+                    item3
+                    for item3 in intersperse(item2, bracket) if item3
+                )
+            elif item1:
+                _temp_list.append(item1)
+
+        temp_list = _temp_list
+
+    return temp_list
+
+def custom_func_wrapper(
+    custom_func,
+    cur_params=tuple(),
+    should_validate=True,
+):
+    @functools.wraps(custom_func)
+    def custom_operation(xx):
+        result = custom_func(xx, *cur_params)
+
+        if not should_validate:
+            # short ciruit the checks
+            pass
+
+        elif isinstance(result, int):
+            result = (result,)
+        elif isinstance(result, list):
+            result = tuple(result)
+        elif not isinstance(result, tuple):
+            raise Exception("Custom function has returned a value that is not supported.")
+
+        if should_validate and any(not isinstance(item, int) for item in result):
+            raise Exception("Values passed are not all ints.")
+
+        return result
+
+    return custom_operation
+
+def composed_func_wrapper(
+    first_func,
+    second_func,
+):
+    @docstring_format(
+        indent_text(first_func.__doc__),
+        indent_text(second_func.__doc__),
+    )
+    def composite_operation(xx):
+        """
+        Composite Operation
+        --------------------
+        First Operation Doc:
+        {}
+        --------------------
+        Second Operation Doc:
+        {}
+        --------------------
+        """
+        return second_func(first_func(xx))
+
+    return composite_operation
+
 def load_custom_files(file_paths):
     custom_dirs = set()
     file_names = set()
@@ -731,58 +821,6 @@ def load_custom_files(file_paths):
                     raise Exception('operation_name collision, please make sure you ')
 
                 CUSTOM_OPERATIONS_DICT[attr_name] = attr_object
-
-
-def custom_func_wrapper(
-    custom_func,
-    cur_params=tuple(),
-    should_validate=True,
-):
-    @functools.wraps(custom_func)
-    def custom_operation(xx):
-        result = custom_func(xx, *cur_params)
-
-        if not should_validate:
-            # short ciruit the checks
-            pass
-
-        elif isinstance(result, int):
-            result = (result,)
-        elif isinstance(result, list):
-            result = tuple(result)
-        elif not isinstance(result, tuple):
-            raise Exception("Custom function has returned a value that is not supported.")
-
-        if should_validate and any(not isinstance(item, int) for item in result):
-            raise Exception("Values passed are not all ints.")
-
-        return result
-
-    return custom_operation
-
-
-def composed_func_wrapper(
-    first_func,
-    second_func,
-):
-    @docstring_format(
-        first_func.__doc__,
-        second_func.__doc__,
-    )
-    def composite_operation(xx):
-        """
-        --------------------
-        First Operation Doc:
-        {}
-        --------------------
-        Second Operation Doc:
-        {}
-        --------------------
-        """
-        return second_func(first_func(xx))
-
-    return composite_operation
-
 
 def get_single_dice(args):
     """
@@ -920,17 +958,6 @@ def get_outcome_generator(args):
     # an iterator that yields (dice_outcome, count)
     return zip(iterator, itertools.repeat(1))
 
-def find_max_digits(iterable):
-    if not all(isinstance(xx, (int, float)) for xx in iterable):
-        raise Exception('All items in the iterable must be ints or floats.')
-
-    max_abs = max(abs(xx) for xx in iterable)
-    any_neg = any(xx < 0 for xx in iterable)
-
-    return 1*any_neg + int(
-        math.ceil(
-            math.log10(max_abs)
-    ))
 
 def determine_compare_func(param_list):
     if not param_list: return always_true
@@ -1074,7 +1101,7 @@ def _parse_param_logic(logic_param_groups):
     return param_groups_3[0]
 
 def determine_compare_func_helper(param_list):
-    if not param_list: return always_true
+    if not param_list: return None
 
     _vars = {
         'param_list': list(param_list),
@@ -1137,6 +1164,22 @@ def determine_compare_func_helper(param_list):
 
     return compare_func
 
+def get_iterator(xx, *parameter_collection):
+    """
+    This get iterator function is specific to if-else-able
+    operations
+    """
+    zip_list = []
+    zip_list.append(xx)
+
+    for parameter_list in parameter_collection:
+        if len(parameter_list) == 1:
+            zip_list.append(itertools.repeat(parameter_list[0], len(xx)))
+        else:
+            zip_list.append(parameter_list)
+
+    return zip(*zip_list)
+
 def get_basic_operation(operation_str, param_list = []):
     """
     The following operations are basic and normally do not need parameters
@@ -1145,7 +1188,12 @@ def get_basic_operation(operation_str, param_list = []):
     """
 
     if not param_list:
-        _operator = OPERATIONS_DICT[operation_str]
+        @docstring_format(operation_str)
+        def basic_operation(xx):
+            """Basic Operation: {}"""
+            return OPERATIONS_DICT[operation_str](xx)
+
+        _operator = basic_operation
 
     elif len(param_list) == 1:
         # parse dice in groups
@@ -1161,13 +1209,11 @@ def get_basic_operation(operation_str, param_list = []):
 
     return _operator
 
-def get_add_operation(param_list, conditoinal_func, else_operation):
+def get_add_operation(param_list):
     if len(param_list) < 1:
         raise Exception(
             "The 'add' operation requires at least one parameter to determine add value."
         )
-
-    only_one_param = len(param_list) == 1
 
     try:
         add_values = tuple(int(item) for item in param_list)
@@ -1179,33 +1225,19 @@ def get_add_operation(param_list, conditoinal_func, else_operation):
     )
     def add_func(xx):
         """
-        Shift Function
-        Shift Values: {add_values}
+        Add Function
+        Add Values: {add_values}
         """
-        if only_one_param:
-            iterable = zip(
-                xx,
-                itertools.repeat(add_values[0], len(xx)),
-            )
-        else:
-            iterable = zip(xx, add_values)
 
-        else_results = else_operation(xx)
-
-        return tuple(
-            item+add if conditoinal_func(item, index) else else_results[index]
-            for index, (item, add) in enumerate(iterable)
-        )
+        return tuple(item+add for item, add in get_iterator(xx, add_values))
 
     return add_func
 
-def get_set_to_operation(param_list, conditoinal_func, else_operation):
+def get_set_to_operation(param_list):
     if len(param_list) < 1:
         raise Exception(
             "The 'set-to' operation requires at least one parameter to determine set value."
         )
-
-    only_one_param = len(param_list) == 1
 
     try:
         set_to_values = tuple(int(item) for item in param_list)
@@ -1220,24 +1252,12 @@ def get_set_to_operation(param_list, conditoinal_func, else_operation):
         Set-To Function
         Shift Values: {set_to_values}
         """
-        if only_one_param:
-            iterable = zip(
-                xx,
-                itertools.repeat(set_to_values[0], len(xx)),
-            )
-        else:
-            iterable = zip(xx, set_to_values)
 
-        else_results = else_operation(xx)
-
-        return tuple(
-            set_value if conditoinal_func(item, index) else else_results[index]
-            for index, (item, set_value) in enumerate(iterable)
-        )
+        return tuple(set_value for _, set_value in get_iterator(xx, set_to_values))
 
     return set_to_func
 
-def get_scale_operation(param_list, conditoinal_func, else_operation):
+def get_scale_operation(param_list):
     if len(param_list) < 1:
         raise Exception(
             "The 'scale' operation requires at least one parameter to determine add value."
@@ -1261,34 +1281,23 @@ def get_scale_operation(param_list, conditoinal_func, else_operation):
         if not scale_values:
             raise Exception("No parameters passed apply the scale operation")
 
-    only_one_param = len(scale_values) == 1
-
     @docstring_format(
         scale_values=str(scale_values),
     )
     def scale_func(xx):
         """
-        Shift Function
-        Shift Values: {scale_values}
+        Scale Function
+        Scale Values: {scale_values}
         """
-        if only_one_param:
-            iterable = zip(
-                xx,
-                itertools.repeat(scale_values[0], len(xx)),
-            )
-        else:
-            iterable = zip(xx, scale_values)
-
-        else_results = else_operation(xx)
 
         return tuple(
-            scale_operation(item, scale_factor) if conditoinal_func(item, index) else else_results[index]
-            for index, (item, scale_factor) in enumerate(iterable)
+            scale_operation(item, scale_factor)
+            for item, scale_factor in get_iterator(xx, scale_values)
         )
 
     return scale_func
 
-def get_exp_operation(param_list, conditoinal_func, else_operation):
+def get_exp_operation(param_list):
     if len(param_list) < 1:
         raise Exception(
             "The 'exp' operation requires at least one parameter to determine set value."
@@ -1326,8 +1335,6 @@ def get_exp_operation(param_list, conditoinal_func, else_operation):
         if not exp_values:
             raise Exception("No parameters passed apply the exponentiation operation")
 
-    only_one_param = len(exp_values) == 1
-
     @docstring_format(
         exp_values=str(exp_values),
     )
@@ -1336,24 +1343,13 @@ def get_exp_operation(param_list, conditoinal_func, else_operation):
         Exp Function
         Shift Values: {exp_values}
         """
-        if only_one_param:
-            iterable = zip(
-                xx,
-                itertools.repeat(exp_values[0], len(xx)),
-            )
-        else:
-            iterable = zip(xx, exp_values)
-
-        else_results = else_operation(xx)
-
         return tuple(
-            exp_op_round(item, exp_val) if conditoinal_func(item, index) else else_results[index]
-            for index, (item, exp_val) in enumerate(iterable)
+            exp_op_round(item, exp_val) for item, exp_val in get_iterator(xx, exp_values)
         )
 
     return exp_func
 
-def get_bound_operation(param_list, conditoinal_func, else_operation):
+def get_bound_operation(param_list):
     if len(param_list) < 2:
         raise Exception(
             "The 'bound' operation requires at least two parameters to determine min/max bounds."
@@ -1363,8 +1359,6 @@ def get_bound_operation(param_list, conditoinal_func, else_operation):
         raise Exception(
             "The 'bound' operation requires parameters in pairs to determine min/max bounds."
         )
-
-    only_one_pair = len(param_list) == 2
 
     try:
         temp_value = tuple(int(item) for item in param_list)
@@ -1393,27 +1387,15 @@ def get_bound_operation(param_list, conditoinal_func, else_operation):
         lower_bounds=str(lower_bounds),
         upper_bounds=str(upper_bounds),
     )
-    def bound_func(xx):
+    def bound_func(xx, start_index=0):
         """
         Bound Function
         Lower Bounds: {lower_bounds}
         Upper Bounds: {upper_bounds}
         """
-
-        if only_one_pair:
-            iterable = zip(
-                xx,
-                itertools.repeat(lower_bounds[0], len(xx)),
-                itertools.repeat(upper_bounds[0], len(xx)),
-            )
-        else:
-            iterable = zip(xx, lower_bounds, upper_bounds)
-
-        else_results = else_operation(xx)
-
         return tuple(
-            bound_value_func(item, lower, upper) if conditoinal_func(item, index) else else_results[index]
-            for index, (item, lower, upper) in enumerate(iterable)
+            bound_value_func(item, lower, upper)
+            for item, lower, upper in get_iterator(xx, lower_bounds, upper_bounds)
         )
 
     return bound_func
@@ -1493,51 +1475,67 @@ def get_slice_apply_operation(
 
     # only grab info for the second function
     # since it is this function that will be split off
-    second_operator_str = other_param_list[0]
-    second_operator_params = list(itertools.takewhile(
-        lambda xx: xx not in OPERATIONS_DICT,
-        other_param_list[1:],
-    ))
-    second_operator = get_operator(
+
+    (
         second_operator_str,
-        param_list=second_operator_params,
+        second_operator_params,
+        _param_list,
+        second_bracketed_operation,
+    ) = parse_next_command(
+        other_param_list,
         should_memorize=should_memorize,
         should_validate=should_validate,
     )
 
-    # third operation is needed to be considered so that each subsequent
-    # operation acts on the conmbined data, rather than having branching processing
-    num_params_related_to_second = len(second_operator_params) + 1
-    if num_params_related_to_second < len(other_param_list):
-        # there is a third operation
-        third_operator_str = other_param_list[num_params_related_to_second]
-        third_operator_params = other_param_list[num_params_related_to_second+1:]
-        third_operator = get_operator(
-            third_operator_str,
-            param_list=third_operator_params,
+    if second_bracketed_operation is not None:
+        second_operator = second_bracketed_operation
+    else:
+        second_operator = get_operator(
+            param_list=[second_operator_str]+second_operator_params,
             should_memorize=should_memorize,
             should_validate=should_validate,
         )
+
+    # third operation is needed to be considered so that each subsequent
+    # operation acts on the conmbined data, rather than having branching processing
+    if len(_param_list) > 0:
+        (
+            third_operator_str,
+            third_operator_params,
+            _param_list,
+            third_bracketed_operation,
+        ) = parse_next_command(
+            _param_list,
+            should_memorize=should_memorize,
+            should_validate=should_validate,
+        )
+
+        if third_bracketed_operation is not None:
+            third_operator = third_bracketed_operation
+        else:
+            third_operator = get_operator(
+                param_list=[second_operator_str]+second_operator_params,
+                should_memorize=should_memorize,
+                should_validate=should_validate,
+            )
     else:
         third_operator_str = 'id'
         third_operator_params = []
-        third_operator = get_operator(third_operator_str)
+        third_operator = OPERATIONS_DICT[third_operator_str]
 
     @docstring_format(
-        slice_size=str(slice_size),
-        second_operator_str=second_operator_str,
-        second_operator_params=str(second_operator_params),
-        third_operator_str=third_operator_str,
-        third_operator_params=str(third_operator_params),
+        str(slice_size),
+        indent_text(second_operator.__doc__),
+        indent_text(third_operator.__doc__),
     )
     def slice_apply_func(xx):
         """
         Slice Apply Function
-        Slice Size: {slice_size}
-        Second Operation: {second_operator_str}
-        Second Operation Parameters: {second_operator_params}
-        Third Operation: {third_operator_str}
-        Third Operation Parameters: {third_operator_params}
+        Slice Size: {}
+        ----------------
+        Second Operation Doc: {}
+        ----------------
+        Third Operation Doc: {}
         """
         dice = []
         results = []
@@ -1552,6 +1550,107 @@ def get_slice_apply_operation(
         return third_operator(tuple(results))
 
     return slice_apply_func
+
+def get_if_else_operation(
+    conditoinal_func,
+    if_operation,
+    else_operation=None,
+    should_validate=True,
+):
+    _else_operation = else_operation or OPERATIONS_DICT['id']
+
+    @docstring_format(
+        indent_text(conditoinal_func.__doc__),
+        indent_text(if_operation.__doc__),
+        indent_text(_else_operation.__doc__),
+    )
+    def apply_op_if_else_compare(xx):
+        """
+        IF-ELSE operation wrapper
+        -------------------
+        Conditional func doc: {}
+
+        -------------------
+        IF operation doc: {}
+
+        -------------------
+        ELSE operation doc: {}
+        """
+        if_results = if_operation(xx)
+        else_results = _else_operation(xx)
+
+        if should_validate and not (len(if_results) == len(else_results) == len(xx)):
+            raise Exception("\n".join([
+                'Operations given within an if-else-block do not yeild results with matching sizes.',
+                'Function Doc: {}'.format(apply_op_if_else_compare.__doc__),
+            ]))
+
+        return tuple(
+            if_results[index] if conditoinal_func(item, index) else else_results[index]
+            for index,item in enumerate(xx)
+        )
+
+    return apply_op_if_else_compare
+
+def parse_next_command(
+    param_list,
+    should_memorize=False,
+    should_validate=False,
+):
+    if not param_list:
+        raise Exception("Parsing Error.")
+
+    _param_list = list(param_list)
+    cur_params = []
+    bracketed_operation = None
+
+    if param_list[0] == BRACKET_CHARS[0]:
+        stack = []
+        for index, item in enumerate(param_list):
+
+            if item == BRACKET_CHARS[0]:
+                stack.append(index)
+
+            elif item == BRACKET_CHARS[1]:
+                start_index = stack.pop()
+
+                if (index - start_index) < 2:
+                    raise Exception("No contents inside brackets.")
+
+                if not stack:
+                    bracketed_operation = get_operator(
+                        param_list=param_list[start_index+1:index],
+                        should_memorize=should_memorize,
+                        should_validate=should_validate,
+                    )
+                    operation_str = "bracketed-operation"
+                    _param_list = param_list[index+1:]
+                    break
+
+        if stack:
+            raise Exception("Parsing Error. Bracket Mismatch.")
+
+    else:
+        operation_str = param_list[0]
+
+        # parse parameters for current operation
+        cur_params = list(itertools.takewhile(
+            lambda xx: (
+                xx not in OPERATIONS_DICT and
+                xx not in CUSTOM_OPERATIONS_DICT and
+                xx not in LOGIC_KEYWORDS
+            ),
+            _param_list[1:],
+        ))
+        _param_list = _param_list[len(cur_params)+1:]
+
+    return (
+        operation_str,
+        cur_params,
+        _param_list,
+        bracketed_operation,
+    )
+
 
 def parse_next_conditional_syntax(
     param_list,
@@ -1585,30 +1684,18 @@ def parse_next_conditional_syntax(
         else_parameters = full_conditional_params[len(cur_conditional_params):]
 
         if else_parameters and else_parameters[0] == LOGIC_ELSE_KEYWORD:
-            else_operation_str = else_parameters[1]
+            token = else_parameters[1]
 
-            if else_operation_str not in ELSE_ABLE_OPERATIONS:
+            if token in ELSE_ABLE_OPERATIONS or token == BRACKET_CHARS[0]:
+                else_operation = get_operator(
+                    param_list=else_parameters[1:],
+                    should_memorize=should_memorize,
+                    should_validate=should_validate,
+                )
+
+            else:
                 raise Exception('Operation cannot be in an else')
 
-            _else_operation = get_operator(
-                operation_str=else_parameters[1],
-                param_list=else_parameters[2:],
-                should_memorize=should_memorize,
-                should_validate=should_validate,
-            )
-
-            @functools.wraps(_else_operation)
-            def else_wrapper(xx):
-                result = _else_operation(xx)
-
-                if should_validate and len(result) != len(xx):
-                    raise Exception(
-                        "Operations in 'else' statement result size do not match input size of 'if'"
-                    )
-
-                return result
-
-            else_operation = else_wrapper
 
         # remove the if
         _param_list = _param_list[1+len(full_conditional_params):]
@@ -1624,25 +1711,26 @@ def parse_next_conditional_syntax(
     )
 
 def get_operator(
-    operation_str,
     param_list=[],
     should_memorize=True,
     should_validate=True,
     is_first_operation=False,
+    is_nested=False,
 ):
     # make a shallow copy
     _param_list = list(param_list)
+    _operator = None
 
-    # parse parameters for current operation
-    cur_params = list(itertools.takewhile(
-        lambda xx: (
-            xx not in OPERATIONS_DICT and
-            xx not in CUSTOM_OPERATIONS_DICT and
-            xx not in LOGIC_KEYWORDS
-        ),
+    (
+        operation_str,
+        cur_params,
         _param_list,
-    ))
-    _param_list = _param_list[len(cur_params):]
+        bracketed_operation,
+    ) = parse_next_command(
+        _param_list,
+        should_memorize=should_memorize,
+        should_validate=should_validate,
+    )
 
     (
         conditoinal_func,
@@ -1654,18 +1742,28 @@ def get_operator(
         should_validate=should_validate,
     )
 
-    if operation_str in IF_ABLE_OPERATIONS and not hasattr(conditoinal_func, "__call__"):
-        conditoinal_func = always_true
-    elif operation_str not in IF_ABLE_OPERATIONS and hasattr(conditoinal_func, "__call__"):
-        raise Exception('This operation is not if-able.')
+    if not bracketed_operation:
+        # skip these checks if we have a bracketed_operation
+        if hasattr(conditoinal_func, "__call__") and operation_str not in IF_ABLE_OPERATIONS:
+            raise Exception('This operation is not if-able: "{}"'.format(param_list))
 
-    if operation_str in ELSE_ABLE_OPERATIONS and not hasattr(else_operation, "__call__"):
-        else_operation = OPERATIONS_DICT['id']
+        if hasattr(else_operation, "__call__") and operation_str not in ELSE_ABLE_OPERATIONS:
+            raise Exception('This operation is not else-able: "{}"'.format(param_list))
 
     apply_nested_operation = True
 
+    if bracketed_operation is not None:
+        if conditoinal_func is None:
+            _operator = bracketed_operation
+        else:
+            _operator = get_if_else_operation(
+                conditoinal_func=conditoinal_func,
+                if_operation=bracketed_operation,
+                else_operation=else_operation,
+                should_validate=should_validate,
+            )
 
-    if operation_str in CUSTOM_OPERATIONS_DICT:
+    elif operation_str in CUSTOM_OPERATIONS_DICT:
         # consider user defined operations before built-in one
         # so if they name a operation as one built in, we use theirs
         # instead
@@ -1678,23 +1776,36 @@ def get_operator(
     elif operation_str in BASIC_OPERATIONS:
         _operator = get_basic_operation(operation_str, cur_params)
 
-    elif operation_str == 'add':
-        _operator = get_add_operation(cur_params, conditoinal_func, else_operation)
+    elif operation_str in IF_ABLE_OPERATIONS and operation_str in ELSE_ABLE_OPERATIONS:
 
-    elif operation_str == 'scale':
-        _operator = get_scale_operation(cur_params, conditoinal_func, else_operation)
+        if operation_str == 'add':
+            _operator = get_add_operation(cur_params)
 
-    elif operation_str == 'exp':
-        _operator = get_exp_operation(cur_params, conditoinal_func, else_operation)
+        elif operation_str == 'scale':
+            _operator = get_scale_operation(cur_params)
 
-    elif operation_str == 'set-to':
-        _operator = get_set_to_operation(cur_params, conditoinal_func, else_operation)
+        elif operation_str == 'exp':
+            _operator = get_exp_operation(cur_params)
 
-    elif operation_str == 'bound':
-        _operator = get_bound_operation(cur_params, conditoinal_func, else_operation)
+        elif operation_str == 'set-to':
+            _operator = get_set_to_operation(cur_params)
+
+        elif operation_str == 'bound':
+            _operator = get_bound_operation(cur_params)
+
+        else:
+            raise Exception('Error while parsing.')
+
+        if hasattr(conditoinal_func, "__call__"):
+            _operator = get_if_else_operation(
+                conditoinal_func=conditoinal_func,
+                if_operation=_operator,
+                else_operation=else_operation,
+                should_validate=should_validate,
+            )
 
     elif operation_str == 'reroll':
-        _operator = get_reroll_operation(cur_params, conditoinal_func)
+        _operator = get_reroll_operation(cur_params, conditoinal_func or always_true)
 
     elif operation_str == 'select':
         _operator = get_select_operation(cur_params)
@@ -1714,12 +1825,8 @@ def get_operator(
     if apply_nested_operation and _param_list:
         # Apply a nested operation
 
-        other_operator_str = _param_list[0]
-        other_operator_params = _param_list[1:]
-
         other_operator = get_operator(
-            other_operator_str,
-            param_list=other_operator_params,
+            param_list=_param_list,
             should_memorize=should_memorize,
             should_validate=should_validate,
         )
@@ -1889,9 +1996,8 @@ def main():
         load_custom_files(args.custom)
 
     _operator = get_operator(
-        operation_str=args.apply[0],
         # remove any entries that are empty strings
-        param_list=list(item for item in args.apply[1:] if item),
+        param_list=simple_clean_params(args.apply),
         should_memorize=args.memorize_input,
         should_validate=args.should_valdiate_input,
         is_first_operation=True,

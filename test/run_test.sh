@@ -81,7 +81,8 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params -d 10 -n 1 --apply add 100 if mod 5 eq 2 else add 10 if mod 2 eq 1 else scale 0 && \
     $python_exe $dice_distro_file $test_params -d 10 -n 2 --apply add 100 if mod 5 eq 2 else add 10 if mod 2 eq 1 else scale 0 then sum && \
     # Test complex if-block with nested boolean logic
-    $python_exe $dice_distro_file $test_params -d 10 --apply add 100 if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8 ]&& \
+    $python_exe $dice_distro_file $test_params -d 10 --apply add 100 if eq 1 or not [ ge 2 and le 3 ] and [ gt 5 and lt 8 ] && \
+    $python_exe $dice_distro_file $test_params -d 10 --apply [ add 2 scale 2 ] if mod 3 eq 1 else scale -1 add -1 && \
     # Test Reroll
     $python_exe $dice_distro_file $test_params -d 6 -n 2 --apply reroll if lt 4 && \
     $python_exe $dice_distro_file $test_params -d 6 -n 4 --apply sum 2 reroll if lt 7 && \
