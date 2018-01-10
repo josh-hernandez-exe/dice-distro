@@ -1894,11 +1894,12 @@ def save_data(counter_dict, save_file_path):
     save_dict = dict()
 
     for key, value in counter_dict.items():
-        new_key = None
-        if isinstance(key, (list, tuple)):
-            new_key = json.dumps(key)
-        elif isinstance(key, int):
-            new_key = key
+        new_key = key
+        if isinstance(new_key, int):
+            new_key = [key]
+
+        if isinstance(new_key, (list, tuple)):
+            new_key = json.dumps(new_key)
         else:
             raise Exception("Unexpected key to save: {}".format(key))
 
@@ -1920,18 +1921,14 @@ def load_data(file_path):
         new_key = None
 
         try:
-            new_key = int(key)
+            new_key = tuple(json.loads(key))
         except:
-            # key is not a int
-            try:
-                new_key = tuple(json.loads(key))
-            except:
+            raise Exception("Key in file is not valid")
+        else:
+            if not all(isinstance(entry, int) for entry in new_key):
                 raise Exception("Key in file is not valid")
-            else:
-                if not all(isinstance(entry, int) for entry in new_key):
-                    raise Exception("Key in file is not valid")
 
-                new_key = tuple(zip(new_key, itertools.repeat(1)))
+            new_key = tuple(zip(new_key, itertools.repeat(1)))
 
         if not isinstance(value, int):
             raise Exception("Values given in file are not integers.")
