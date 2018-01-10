@@ -977,26 +977,9 @@ def determine_compare_func(param_list):
             _var['group'] = []
 
     for item in param_list:
-        did_parse = False
-        for bracket in BRACKET_CHARS:
-            if item.startswith(bracket):
-                _add_group()
-                param_groups_1.append(bracket)
-                if len(item) > len(bracket): _var['group'].append(item[len(bracket):])
-                did_parse = True
-            elif item.endswith(bracket):
-                _add_group()
-                param_groups_1.append(bracket)
-                if len(item) > len(bracket): _var['group'].append(item[:-len(bracket)])
-                did_parse = True
-
-        if did_parse:
-            # we parsed so continue on to the next item
-            continue
-        elif item in BOOLEAN_LOGIC_OPERATORS:
+        if item in BRACKET_CHARS or item in BOOLEAN_LOGIC_OPERATORS:
             _add_group()
             param_groups_1.append(item)
-
         else:
             _var['group'].append(item)
 
