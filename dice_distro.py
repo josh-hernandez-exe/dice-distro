@@ -703,7 +703,6 @@ def memorize(func):
 
     return wrapper
 
-
 def find_max_digits(iterable):
     if not all(isinstance(xx, (int, float)) for xx in iterable):
         raise Exception('All items in the iterable must be ints or floats.')
@@ -716,6 +715,11 @@ def intersperse(lst, item):
     return result
 
 def simple_clean_params(param_list):
+    """
+    This function expects the parameter list
+    It will split up the brackets so that each bracket is it's own entry
+    as well as remove any extra white space
+    """
     temp_list = list(param_list)
     for bracket in BRACKET_CHARS:
         _temp_list = []
