@@ -994,8 +994,10 @@ def get_outcome_simulator(dice, num_iterations):
     """
     Return an iterator that randomly selects dice a fixed number of times
     """
-    return zip(*(itertools.starmap(
-            random.choice, itertools.repeat((die,), num_iterations)
+    return zip(*(
+        itertools.starmap(
+            random.choice,
+            itertools.repeat((die,), num_iterations)
         )
         for die in dice
     ))
