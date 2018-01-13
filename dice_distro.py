@@ -1211,7 +1211,7 @@ def determine_compare_func_helper(param_list):
 
     return compare_func
 
-def get_iterator(xx, *parameter_collection):
+def _get_param_iterator(xx, *parameter_collection):
     """
     This get iterator function is specific to if-else-able
     operations
@@ -1276,7 +1276,7 @@ def get_add_operation(param_list):
         Add Values: {add_values}
         """
 
-        return tuple(item+add for item, add in get_iterator(xx, add_values))
+        return tuple(item+add for item, add in _get_param_iterator(xx, add_values))
 
     return add_func
 
@@ -1300,7 +1300,7 @@ def get_set_to_operation(param_list):
         Shift Values: {set_to_values}
         """
 
-        return tuple(set_value for _, set_value in get_iterator(xx, set_to_values))
+        return tuple(set_value for _, set_value in _get_param_iterator(xx, set_to_values))
 
     return set_to_func
 
@@ -1339,7 +1339,7 @@ def get_scale_operation(param_list):
 
         return tuple(
             scale_operation(item, scale_factor)
-            for item, scale_factor in get_iterator(xx, scale_values)
+            for item, scale_factor in _get_param_iterator(xx, scale_values)
         )
 
     return scale_func
@@ -1391,7 +1391,7 @@ def get_exp_operation(param_list):
         Shift Values: {exp_values}
         """
         return tuple(
-            exp_op_round(item, exp_val) for item, exp_val in get_iterator(xx, exp_values)
+            exp_op_round(item, exp_val) for item, exp_val in _get_param_iterator(xx, exp_values)
         )
 
     return exp_func
@@ -1442,7 +1442,7 @@ def get_bound_operation(param_list):
         """
         return tuple(
             bound_value_func(item, lower, upper)
-            for item, lower, upper in get_iterator(xx, lower_bounds, upper_bounds)
+            for item, lower, upper in _get_param_iterator(xx, lower_bounds, upper_bounds)
         )
 
     return bound_func
