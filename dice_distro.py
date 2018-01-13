@@ -1,9 +1,9 @@
 from __future__ import print_function
 
-import importlib
 import argparse
 import decimal
 import functools
+import importlib
 import itertools
 import json
 import math
