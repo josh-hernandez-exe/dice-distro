@@ -2020,13 +2020,14 @@ def main():
     if args.show_args:
         print(args)
 
+    # load dice values
     if isinstance(args.load_file_paths, (list, tuple)) and args.load_file_paths:
-        iterator = counter_dict_product(*(
+        dice_iterator = counter_dict_product(*(
             load_data(file_path)
             for file_path in args.load_file_paths
         ))
     else:
-        iterator = get_outcome_generator(args)
+        dice_iterator = get_outcome_generator(args)
 
     if isinstance(args.custom, (list, tuple)) and args.custom:
         load_custom_files(args.custom)
@@ -2042,7 +2043,7 @@ def main():
     counter_dict = Counter()
 
     # the next few lines is the majority of the program run time for larger values
-    for dice, count in iterator:
+    for dice, count in dice_iterator:
         dice_pool, weight_values = zip(*dice)
         counter_dict[_operator(dice_pool)] += count * prod_values(weight_values)
 
