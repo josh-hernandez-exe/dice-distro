@@ -630,6 +630,8 @@ The example is encompases the following instructions:
 - If the value is less than 3 reroll, repeat to a max of three rolls.
 - Record the value.
 - Repeat the whole process two more times (distinguishable) value.
+
+<!-- New line needed to break list -->
 The above is the equvalent in saying:
 - Roll nine independent D4
 - Make groups of three:
@@ -909,6 +911,8 @@ The function signature should be:
 - Parameters passed in from `--apply`
 	- Note that your parameters should **NOT** be any function name or logical keyword
 		- The parser will assume it is not a parameter
+
+<!-- New line needed to break list -->
 The return value should be any of:
 - An `int`
 - A `list` or `tuple` where all the entries are `int`
