@@ -39,8 +39,8 @@ We apply the sum operation on the dice.
 
 You can change the output to show a different number of decimal places (default is 2).
 ```
-➔ # python dice_distro.py -d 6 -n 2 --percent-decimal-place 4 --apply sum
-➔ python dice_distro.py -d 6 -n 2 -pdp 4 --apply sum
+➔ # python dice_distro.py -d 6 -n 2 --result-decimal-place 4 --apply sum
+➔ python dice_distro.py -d 6 -n 2 -rdp 4 --apply sum
  2:   2.7778 % |=====
  3:   5.5556 % |===========
  4:   8.3333 % |================
@@ -56,6 +56,8 @@ You can change the output to show a different number of decimal places (default 
 
 You can also change the output to show the counts.
 The module is trying every combination of output, treating each die as distinguishable.
+Note that if you have a weighted die, the counts can be floating point values,
+in that case it is possible to use `--result-decimal-place` to control the number of decimal places shown.
 ```
 ➔ python dice_distro.py -d 6 -n 2 --show-counts --apply sum
  2: 1 |=====
@@ -711,7 +713,7 @@ The above is the equvalent in saying:
 
 ### Two Ways to Roll Two Sets of D6, Summing Then Taking Max
 ```
-➔ python dice_distro.py -d 6 -n 4 -pdp 4 --apply sum 2 max
+➔ python dice_distro.py -d 6 -n 4 -rdp 4 --apply sum 2 max
  2:   0.0772 % |
  3:   0.6173 % |=
  4:   2.0833 % |====
@@ -725,7 +727,7 @@ The above is the equvalent in saying:
 12:   5.4784 % |==========
 ```
 ```
-➔ python dice_distro.py -d 6 -n 4 -pdp 4 --apply slice-apply 2 sum max
+➔ python dice_distro.py -d 6 -n 4 -rdp 4 --apply slice-apply 2 sum max
  2:   0.0772 % |
  3:   0.6173 % |=
  4:   2.0833 % |====
@@ -740,11 +742,7 @@ The above is the equvalent in saying:
 ```
 
 ### Weighted Dice
-Since this program uses enumeration to calculate the distribution,
-weighted dice can't simply be added with a parameter with weights using floating points values.
-The weights must be integers as they are just considered as being counted extra times.
-
-The following example shows a weighted D6.
+The following example shows a weighted D6. The weights can be integers or floats.
 ```
 ➔ python dice_distro.py -d 6 --die-weights 6 5 4 3 2 1
 1:  28.57 % |=========================================================
@@ -969,7 +967,7 @@ An example of simulating 100000 rolls of ten D30, taking the two largest values 
 Ten D30's has `30^10` or `5.904900e+14` distinct outcomes if you treat each die as distinguishable.
 Enumerating all the outcomes would take quite a while.
 ```
-➔ python dice_distro.py -d 30 -n 10 -pdp 3 --apply select -1 -2 sum --simulate 100000
+➔ python dice_distro.py -d 30 -n 10 -rdp 3 --apply select -1 -2 sum --simulate 100000
 20:   0.001 % |
 21:   0.003 % |
 22:   0.007 % |
