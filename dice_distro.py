@@ -112,6 +112,10 @@ COMPARE_KEYWORDS_SET = set.union(
 
 BRACKET_CHARS = ["[", "]"]
 
+# Die defaults
+DEFAULT_DIE_START = int(1)
+DEFAULT_DIE_STEP = int(1)
+DEFAULT_DIE_WEIGHT = int(1)
 
 class CustomFormatter(argparse.HelpFormatter):
     """
@@ -162,21 +166,25 @@ class CustomFormatter(argparse.HelpFormatter):
                     _help += ' (default: %(default)s)'
         return _help
 
-def parse_int(compare_func, type_string):
-    if not hasattr(compare_func, '__call__'):
-        raise Exception('A function must be passed to parse_int.')
+def parse_number(compare_func, type_string, type=int):
+    if not issubclass(type, (int, float)):
+        raise Exception('Type passed must be either int or float')
 
-    def parse_int_compare(value):
-        ivalue = int(value)
+    if not hasattr(compare_func, '__call__'):
+        raise Exception('A function must be passed to parse_number.')
+
+    def parse_number_compare(value):
+        ivalue = type(value)
         if not compare_func(ivalue):
             raise argparse.ArgumentTypeError(
-                "{} is an invalid {} int value".format(
+                "{} is an invalid {} value of type {}".format(
                     value,
                     type_string,
+                    str(type),
             ))
         return ivalue
 
-    return parse_int_compare
+    return parse_number_compare
 
 parser = argparse.ArgumentParser(
     formatter_class=CustomFormatter,
@@ -210,7 +218,7 @@ single_type_group = parser.add_argument_group(
 
 single_type_group.add_argument(
     "--num-dice", "-n",
-    type=parse_int(lambda xx: xx > 0, 'positive'),
+    type=parse_number(lambda xx: xx > 0, 'positive'),
     default=1,
     help="Number of dice simulated",
 )
@@ -219,7 +227,7 @@ single_type_group_side_option = single_type_group.add_mutually_exclusive_group()
 
 single_type_group_side_option.add_argument(
     "--die-sides", "-d",
-    type=parse_int(lambda xx: xx > 0, 'positive'),
+    type=parse_number(lambda xx: xx > 0, 'positive'),
     help=" ".join([
         "Number of sides the dice simulated should have.",
         "The value given must be a positive integer.",
@@ -232,7 +240,7 @@ single_type_group_side_option.add_argument(
 single_type_group.add_argument(
     "--die-start",
     type=int,
-    default=1,
+    default=DEFAULT_DIE_START,
     help=" ".join([
         "If using '--die-sides' this defines the lowest value of the die.",
         "This option is ignored if '--die-sides' is not used.",
@@ -243,7 +251,7 @@ single_type_group.add_argument(
 single_type_group.add_argument(
     "--die-step",
     type=int,
-    default=1,
+    default=DEFAULT_DIE_STEP,
     help=" ".join([
         "If using '--die-sides' this defines the increments",
         "between values on the sides of the die.",
@@ -265,13 +273,12 @@ single_type_group_side_option.add_argument(
 
 single_type_group.add_argument(
     "--die-weights",
-    type=int,
+    type=parse_number(lambda xx: xx > 0, 'positive', float),
     nargs="+",
     default=[],
     help=" ".join([
-        "The number of times a die resulted will be counted.",
-        "In other words the weighting of a die.",
-        "Values are expected to be integers.",
+        "The weighting of the sides a die.",
+        "Values are expected to be integers or floats.",
     ]),
 )
 
@@ -291,7 +298,7 @@ multi_type_group = parser.add_argument_group(
 
 multi_type_group.add_argument(
     "--multi-die-sides",
-    type=parse_int(lambda xx: xx > 0, 'positive'),
+    type=parse_number(lambda xx: xx > 0, 'positive'),
     nargs="+",
     help=" ".join([
         "Number of sides the dice simulated should have.",
@@ -342,13 +349,12 @@ multi_type_group.add_argument(
 
 multi_type_group.add_argument(
     "--multi-die-weights",
-    type=int,
+    type=parse_number(lambda xx: xx > 0, 'positive', float),
     nargs="+",
     default=[],
     help=" ".join([
-        "The number of times a die resulted will be counted.",
-        "In other words the weighting of a die.",
-        "Values are expected to be integers.",
+        " The weighting of the sides a dice.",
+        "Values are expected to be integers or floats.",
         "If using this option, '--multi-die-sides' must set.",
         "The values are grabed in order.",
     ]),
@@ -506,7 +512,7 @@ bar_group = parser.add_argument_group(
 
 bar_group.add_argument(
     "--bar-size",
-    type=parse_int(lambda xx: xx >= 0, 'non-negative'),
+    type=parse_number(lambda xx: xx >= 0, 'non-negative'),
     default=2,
     help=" ".join([
         "The approximate number of '--bar-char'(s) that count as 1 percent.",
@@ -569,10 +575,14 @@ display_output_group.add_argument(
 display_format_exclusive_options = display_output_group.add_mutually_exclusive_group()
 
 display_format_exclusive_options.add_argument(
-    "--percent-decimal-place", "-pdp",
-    type=parse_int(lambda xx: xx > 0, 'positive'),
+    "--result-decimal-place", "-rdp",
+    type=parse_number(lambda xx: xx > 0, 'positive'),
     default=2,
-    help="The number of digits that will be displayed after the decimal place.",
+    help=" ".join([
+        "The number of digits that will be displayed after the decimal place.",
+        "Can be used when displaying percentages or floating point counts",
+        "(which only happen when the die weights are floating point values).",
+    ]),
 )
 
 display_format_exclusive_options.add_argument(
@@ -600,7 +610,7 @@ simulate_group = parser.add_argument_group(
 simulate_group.add_argument(
     '--simulate',
     dest='simulate_num_iterations',
-    type=parse_int(lambda xx: xx > 0, 'positive'),
+    type=parse_number(lambda xx: xx > 0, 'positive'),
     default=None,
     help=" ".join([
         "The number of simulated dice rols that will occur.",
@@ -884,7 +894,7 @@ def get_single_dice(args):
         weight_values = args.die_weights
 
     else:
-        weight_values = [1 for _ in face_values]
+        weight_values = [DEFAULT_DIE_WEIGHT for _ in face_values]
 
     return tuple(tuple(zip(face_values, weight_values)) for _ in range(args.num_dice))
 
@@ -918,7 +928,7 @@ def get_multi_dice(args):
         if isinstance(args.multi_die_weights, (list, tuple)) and args.multi_die_weights:
             iterator = zip(args.multi_die_values, args.multi_die_weights)
         else:
-            iterator = zip(args.multi_die_values, itertools.repeat(1))
+            iterator = zip(args.multi_die_values, itertools.repeat(DEFAULT_DIE_WEIGHT))
 
         die = []
         for die_face in iterator:
@@ -946,7 +956,7 @@ def get_multi_dice(args):
 
             start_values = args.multi_die_start
         else:
-            start_values = tuple(1 for _ in args.multi_die_sides)
+            start_values = tuple(DEFAULT_DIE_START for _ in args.multi_die_sides)
 
         if isinstance(args.multi_die_step, (list, tuple)) and args.multi_die_step:
             if len(args.multi_die_step) != len(args.multi_die_step):
@@ -954,7 +964,7 @@ def get_multi_dice(args):
 
             step_values = args.multi_die_step
         else:
-            step_values = tuple(1 for _ in args.multi_die_sides)
+            step_values = tuple(DEFAULT_DIE_STEP for _ in args.multi_die_sides)
 
         if isinstance(args.multi_die_weights, (list, tuple)) and args.multi_die_weights:
             weight_value_sets = []
@@ -963,7 +973,7 @@ def get_multi_dice(args):
                 weight_value_sets.append(temp_list[:nn])
                 temp_list = temp_list[nn:]
         else:
-            weight_value_sets = [[1]*nn for nn in args.multi_die_sides]
+            weight_value_sets = [[DEFAULT_DIE_WEIGHT]*nn for nn in args.multi_die_sides]
 
         for start, step, size, weights in zip(start_values, step_values, args.multi_die_sides, weight_value_sets):
             dice.append(tuple(zip(range(start, start + step * size, step), weights)))
@@ -1020,7 +1030,7 @@ def get_outcome_generator(args):
         raise Exception('The number of simulation iterations must be a positive integer')
 
     # an iterator that yields (dice_outcome, count)
-    return zip(iterator, itertools.repeat(1))
+    return zip(iterator, itertools.repeat(DEFAULT_DIE_WEIGHT))
 
 
 def determine_compare_func(param_list):
@@ -1954,8 +1964,12 @@ def display_data(args, counter_dict):
     num_items_in_key = len(_temp_key)
 
     all_keys = []
-    for key_set in counter_dict:
+    values_has_float = False
+
+    for key_set, count_value in counter_dict.items():
         all_keys.extend(key_set)
+        values_has_float+= isinstance(count_value, float)
+
     num_key_digits = find_max_digits(all_keys)
 
     sub_key_formater = "{{key:{num_key_digits}d}}".format(
@@ -1972,14 +1986,15 @@ def display_data(args, counter_dict):
     num_count_digits = find_max_digits(counter_dict.values())
 
     if args.show_counts:
-        value_formater = "{{value:{num_count_digits}d}}".format(
+        value_formater = "{{value:{num_count_digits}{type}}}".format(
             num_count_digits=num_count_digits,
+            type='d' if not values_has_float else '.{}f'.format(args.result_decimal_place),
         )
     else:
         value_formater = "{{value:{percent_formatter}}} %".format(
             percent_formatter="{}.{}f".format(
-                len("100.") + args.percent_decimal_place,
-                args.percent_decimal_place,
+                len("100.") + args.result_decimal_place,
+                args.result_decimal_place,
             ),
         )
 
