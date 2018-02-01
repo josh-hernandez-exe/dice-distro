@@ -82,18 +82,30 @@ BASIC_OPERATIONS = set(
     key for key, value in OPERATIONS_DICT.items() if value is not None
 )
 
+def rounding_half_up(xx,
+    # the following are done for runtime optimizations
+    Decimal=decimal.Decimal,
+    quantize=decimal.Decimal.quantize,
+    one=decimal.Decimal('1'),
+    rounding=decimal.ROUND_HALF_UP,
+):
+    return quantize(Decimal(xx), one,rounding=rounding)
+
+def rounding_half_down(xx,
+    # the following are done for runtime optimizations
+    Decimal=decimal.Decimal,
+    quantize=decimal.Decimal.quantize,
+    one=decimal.Decimal('1'),
+    rounding=decimal.ROUND_HALF_DOWN,
+):
+    return quantize(Decimal(xx), one,rounding=rounding)
+
 ROUNDING_OPTIONS = {
     'r-ceil': math.ceil,
     'r-floor': math.floor,
     'r-truncate': int,
-    'r-half-up': lambda xx: decimal.Decimal(xx).quantize(
-        decimal.Decimal('1'),
-        rounding = decimal.ROUND_HALF_UP,
-    ),
-    'r-half-down': lambda xx: decimal.Decimal(xx).quantize(
-        decimal.Decimal('1'),
-        rounding = decimal.ROUND_HALF_DOWN,
-    ),
+    'r-half-up': rounding_half_up,
+    'r-half-down': rounding_half_down,
 }
 
 # set of operations that support an if-block
