@@ -17,8 +17,12 @@ from collections import Counter
 if (2, 0) <= sys.version_info < (3, 0):
     zip = itertools.izip
 
-def prod_values(xx):
-    return functools.reduce(operator.mul, xx, 1)
+def prod_values(xx,
+    # the following are done for runtime optimizations
+    mul=operator.mul,
+    reduce=functools.reduce,
+):
+    return reduce(mul, xx, 1)
 
 OPERATIONS_DICT = {
     'id':lambda xx: xx,
@@ -1246,9 +1250,12 @@ def get_basic_operation(operation_str, param_list = []):
 
     if not param_list:
         @docstring_format(operation_str)
-        def basic_operation(xx):
+        def basic_operation(xx,
+            # Run time optimizations with variable loopup speed
+            operation=OPERATIONS_DICT[operation_str],
+        ):
             """Basic Operation: {}"""
-            return OPERATIONS_DICT[operation_str](xx)
+            return operation(xx)
 
         _operator = basic_operation
 
@@ -1280,7 +1287,12 @@ def get_add_operation(param_list):
     @docstring_format(
         add_values=str(add_values),
     )
-    def add_func(xx):
+    def add_func(xx,
+        # Run time optimizations with variable loopup speed
+        tuple=tuple,
+        _get_param_iterator=_get_param_iterator,
+        add_values=add_values,
+    ):
         """
         Add Function
         Add Values: {add_values}
@@ -1304,7 +1316,12 @@ def get_set_to_operation(param_list):
     @docstring_format(
         set_to_values=str(set_to_values),
     )
-    def set_to_func(xx):
+    def set_to_func(xx,
+        # Run time optimizations with variable loopup speed
+        tuple=tuple,
+        _get_param_iterator=_get_param_iterator,
+        set_to_values=set_to_values,
+    ):
         """
         Set-To Function
         Shift Values: {set_to_values}
@@ -1341,7 +1358,13 @@ def get_scale_operation(param_list):
     @docstring_format(
         scale_values=str(scale_values),
     )
-    def scale_func(xx):
+    def scale_func(xx,
+        # Run time optimizations with variable loopup speed
+        tuple=tuple,
+        _get_param_iterator=_get_param_iterator,
+        scale_operation=scale_operation,
+        scale_values=scale_values,
+    ):
         """
         Scale Function
         Scale Values: {scale_values}
@@ -1395,7 +1418,13 @@ def get_exp_operation(param_list):
     @docstring_format(
         exp_values=str(exp_values),
     )
-    def exp_func(xx):
+    def exp_func(xx,
+        # Run time optimizations with variable loopup speed
+        tuple=tuple,
+        _get_param_iterator=_get_param_iterator,
+        exp_op_round=exp_op_round,
+        exp_values=exp_values,
+    ):
         """
         Exp Function
         Shift Values: {exp_values}
@@ -1444,7 +1473,14 @@ def get_bound_operation(param_list):
         lower_bounds=str(lower_bounds),
         upper_bounds=str(upper_bounds),
     )
-    def bound_func(xx, start_index=0):
+    def bound_func(xx,
+        # Run time optimizations with variable loopup speed
+        tuple=tuple,
+        _get_param_iterator=_get_param_iterator,
+        bound_value_func=bound_value_func,
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+    ):
         """
         Bound Function
         Lower Bounds: {lower_bounds}
@@ -1465,13 +1501,18 @@ def get_reroll_operation(param_list, comparison_func):
         param_list=str(param_list),
         conditional_info=comparison_func.__doc__,
     )
-    def reroll_func(xx):
+    def reroll_func(xx,
+        # Run time optimizations with variable loopup speed
+        enumerate=enumerate,
+        comparison_func=comparison_func,
+    ):
         """
         Reroll If Contitional Function
         Conditional: {conditional_info}
         """
+        x_len = len(xx)
         for index, item in enumerate(xx):
-            if index + 1 == len(xx):
+            if index + 1 == x_len:
                 # last item, can't reroll anymore
                 return (item,)
 
@@ -1500,7 +1541,13 @@ def get_select_operation(param_list):
     @docstring_format(
         select_indices=str(select_indices),
     )
-    def multi_select_func(xx):
+    def multi_select_func(xx,
+        # Run time optimizations with variable loopup speed
+        tuple=tuple,
+        list=list,
+        sorted=sorted,
+        select_indices=select_indices,
+    ):
         """
         Multi Select Function
         Select Indices: {select_indices}
@@ -1585,7 +1632,13 @@ def get_slice_apply_operation(
         indent_text(second_operator.__doc__),
         indent_text(third_operator.__doc__),
     )
-    def slice_apply_func(xx):
+    def slice_apply_func(xx,
+        # Run time optimizations with variable loopup speed
+        tuple=tuple,
+        second_operator=second_operator,
+        third_operator=third_operator,
+        slice_size=slice_size,
+    ):
         """
         Slice Apply Function
         Slice Size: {}
@@ -1596,13 +1649,21 @@ def get_slice_apply_operation(
         """
         dice = []
         results = []
+
+        # some runtime optimizations
+        dice_len = dice.__len__
+        dice_append = dice.append
+        results_extend = results.extend
+
         for ii in xx:
-            dice.append(ii)
-            if len(dice) < slice_size:
+            dice_append(ii)
+            if dice_len() < slice_size:
                 continue
             else:
-                results.extend(second_operator(tuple(dice)))
+                results_extend(second_operator(tuple(dice)))
                 dice = []
+                dice_append = dice.append
+                dice_len = dice.__len__
 
         return third_operator(tuple(results))
 
@@ -1614,14 +1675,23 @@ def get_if_else_operation(
     else_operation=None,
     should_validate=True,
 ):
-    _else_operation = else_operation or OPERATIONS_DICT['id']
+
+    _else_operation=else_operation or OPERATIONS_DICT['id']
 
     @docstring_format(
         indent_text(conditoinal_func.__doc__),
         indent_text(if_operation.__doc__),
         indent_text(_else_operation.__doc__),
     )
-    def apply_op_if_else_compare(xx):
+    def apply_op_if_else_compare(xx,
+        # Run time optimizations with variable loopup speed
+        tuple=tuple,
+        enumerate=enumerate,
+        if_operation=if_operation,
+        _else_operation=_else_operation,
+        conditoinal_func=conditoinal_func,
+        should_validate=should_validate,
+    ):
         """
         IF-ELSE operation wrapper
         -------------------
