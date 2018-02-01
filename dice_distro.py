@@ -24,16 +24,48 @@ def prod_values(xx,
 ):
     return reduce(mul, xx, 1)
 
+"""
+The following are definitions of "basic operations"
+used for dice output manipulation
+"""
+def _id(xx): return xx
+def _sum(xx,sum=sum): return sum(xx),
+def _min(xx,min=min): return min(xx),
+def _max(xx,max=max): return max(xx),
+def _prod(xx, prod_values=prod_values): return prod_values(xx),
+def _sort(xx,tuple=tuple,sorted=sorted): return tuple(sorted(xx))
+
+def _bit_or(xx,
+    # the following are done for runtime optimizations
+    or_=operator.or_,
+    reduce=functools.reduce,
+):
+    return reduce(or_, xx, 0),
+
+def _bit_xor(xx,
+    # the following are done for runtime optimizations
+    xor=operator.xor,
+    reduce=functools.reduce,
+):
+    return reduce(xor, xx),
+
+def _bit_and(xx,
+    # the following are done for runtime optimizations
+    and_=operator.and_,
+    reduce=functools.reduce,
+):
+    return reduce(and_, xx),
+
 OPERATIONS_DICT = {
-    'id':lambda xx: xx,
-    'sum':lambda xx: (sum(xx),),
-    'min':lambda xx: (min(xx),),
-    'max':lambda xx: (max(xx),),
-    'sort':lambda xx: tuple(sorted(xx)),
-    'prod':lambda xx: (prod_values(xx),),
-    'bit-or':lambda xx: (functools.reduce(operator.or_, xx, 0),),
-    'bit-xor':lambda xx: (functools.reduce(operator.xor, xx),),
-    'bit-and':lambda xx: (functools.reduce(operator.and_, xx),),
+    'id':_id,
+    'sum':_sum,
+    'min':_min,
+    'max':_max,
+    'sort':_sort,
+    'prod':_prod,
+    'bit-or': _bit_or,
+    'bit-xor': _bit_xor,
+    'bit-and': _bit_and,
     'add': None, # This will get defined later if used
     'scale': None, # This will get defined later if used
     'exp': None, # This will get defined later if used
