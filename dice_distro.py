@@ -126,13 +126,20 @@ ELSE_ABLE_OPERATIONS = set([
     'bound',
 ])
 
+def _ne(aa, bb, cc=None): return aa != bb
+def _eq(aa, bb, cc=None): return aa == bb
+def _gt(aa, bb, cc=None): return aa > bb
+def _ge(aa, bb, cc=None): return aa >= bb
+def _lt(aa, bb, cc=None): return aa < bb
+def _le(aa, bb, cc=None): return aa <= bb
+
 BASIC_COMPARE_DICT = {
-    'ne':lambda aa, bb, cc=None: aa != bb,
-    'eq':lambda aa, bb, cc=None: aa == bb,
-    'gt':lambda aa, bb, cc=None: aa > bb,
-    'ge':lambda aa, bb, cc=None: aa >= bb,
-    'lt':lambda aa, bb, cc=None: aa < bb,
-    'le':lambda aa, bb, cc=None: aa <= bb,
+    'ne': _ne,
+    'eq': _eq,
+    'gt': _gt,
+    'ge': _ge,
+    'lt': _lt,
+    'le': _le,
 }
 
 LOGIC_START_KEYWORD = 'if'
