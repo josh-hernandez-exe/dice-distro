@@ -710,13 +710,15 @@ def apply_not(func):
     return not_func
 
 def apply_and(*funcs):
+    _all=all # For runtime optimizations
     def and_func(*args, **kwargs):
-        return all(func(*args, **kwargs) for func in funcs)
+        return _all(func(*args, **kwargs) for func in funcs)
     return and_func
 
 def apply_or(*funcs):
+    _any=any # For runtime optimizations
     def or_func(*args, **kwargs):
-        return any(func(*args, **kwargs) for func in funcs)
+        return _any(func(*args, **kwargs) for func in funcs)
     return or_func
 
 def docstring_format(*args, **kwargs):
@@ -762,7 +764,12 @@ def dice_input_checker(func):
             )
 
     @functools.wraps(func)
-    def wrapper(xx):
+    def wrapper(xx,
+        # the following are done for runtime optimizations
+        func=func,
+        check_is_tuple=check_is_tuple,
+        check_all_int=check_all_int,
+    ):
         check_is_tuple(xx, 'input')
         check_all_int(xx, 'input')
 
@@ -775,7 +782,11 @@ def dice_input_checker(func):
 
     return wrapper
 
-def memorize(func):
+def memorize(func,
+    # the following are done for runtime optimizations
+    tuple=tuple,
+    frozenset=frozenset,
+):
     cashe = dict()
 
     @functools.wraps(func)
@@ -830,8 +841,19 @@ def custom_func_wrapper(
     cur_params=tuple(),
     should_validate=True,
 ):
+
     @functools.wraps(custom_func)
-    def custom_operation(xx):
+    def custom_operation(xx,
+        # the following are done for runtime optimizations
+        any=any,
+        int=int,
+        list=list,
+        tuple=tuple,
+        isinstance=isinstance,
+        custom_func=custom_func,
+        cur_params=cur_params,
+        should_validate=should_validate,
+    ):
         result = custom_func(xx, *cur_params)
 
         if not should_validate:
@@ -860,7 +882,11 @@ def composed_func_wrapper(
         indent_text(first_func.__doc__),
         indent_text(second_func.__doc__),
     )
-    def composite_operation(xx):
+    def composite_operation(xx,
+        # the following are done for runtime optimizations
+        first_func=first_func,
+        second_func=second_func,
+    ):
         """
         Composite Operation
         --------------------
@@ -1238,9 +1264,19 @@ def determine_compare_func_helper(param_list):
             other_comparison = _determine_compare_func()
 
             if len(mod_values) == 1:
-                return lambda aa, bb, cc=None: other_comparison(aa % mod_values[0], bb)
+                def _compre_func(aa, bb, cc=None,
+                    other_comparison=other_comparison,
+                    mod_value=mod_values[0],
+                ):
+                    return other_comparison(aa % mod_value, bb)
             else:
-                return lambda aa, bb, cc=None: other_comparison(aa % mod_values[cc], bb)
+                def _compre_func(aa, bb, cc=None,
+                    other_comparison=other_comparison,
+                    mod_values=mod_values,
+                ):
+                    return other_comparison(aa % mod_values[cc], bb)
+
+            return _compre_func
         else:
             raise Exception('Comparison string invalid')
 
@@ -1257,14 +1293,20 @@ def determine_compare_func_helper(param_list):
     @docstring_format(
         param_list=str(param_list),
     )
-    def compare_func(value, index):
+    def compare_func(value, index,
+        # Run time optimizations with variable loopup speed
+        compare_values=compare_values,
+        compare_func_helper=compare_func_helper,
+        is_single_compare=len(compare_values) == 1,
+        is_many_compare=len(compare_values) > 1,
+    ):
         """
         Compare Func
         params: {param_list}
         """
-        if len(compare_values) == 1:
+        if is_single_compare:
             return compare_func_helper(value, compare_values[0], index)
-        elif len(compare_values) > 1:
+        elif is_many_compare:
             return compare_func_helper(value, compare_values[index], index)
 
     return compare_func
@@ -1274,14 +1316,19 @@ def _get_param_iterator(xx, *parameter_collection):
     This get iterator function is specific to if-else-able
     operations
     """
+    # Run time optimizations with variable loopup speed
+    len=tuple.__len__
+    repeat=itertools.repeat
+
     zip_list = []
-    zip_list.append(xx)
+    zip_list_append = zip_list.append
+    zip_list_append(xx)
 
     for parameter_list in parameter_collection:
         if len(parameter_list) == 1:
-            zip_list.append(itertools.repeat(parameter_list[0], len(xx)))
+            zip_list_append(repeat(parameter_list[0]))
         else:
-            zip_list.append(parameter_list)
+            zip_list_append(parameter_list)
 
     return zip(*zip_list)
 
@@ -1383,13 +1430,17 @@ def get_scale_operation(param_list):
 
     param_list_copy = list(param_list)
 
-    # set default value
-    round_options = 'r-truncate'
+    round_options = 'r-truncate' # set default value
+
     if param_list_copy[0] in ROUNDING_OPTIONS:
         round_options = param_list_copy.pop(0)
 
-    round_func = ROUNDING_OPTIONS[round_options]
-    scale_operation = lambda aa, bb: int(round_func(aa*bb))
+    def scale_operation_round(aa,bb,
+        # Run time optimizations with variable loopup speed
+        int=int,
+        round_func=ROUNDING_OPTIONS[round_options],
+    ):
+        return int(round_func(aa*bb))
 
     try:
         scale_values = tuple(float(item) for item in param_list_copy)
@@ -1406,7 +1457,7 @@ def get_scale_operation(param_list):
         # Run time optimizations with variable loopup speed
         tuple=tuple,
         _get_param_iterator=_get_param_iterator,
-        scale_operation=scale_operation,
+        scale_operation_round=scale_operation_round,
         scale_values=scale_values,
     ):
         """
@@ -1415,7 +1466,7 @@ def get_scale_operation(param_list):
         """
 
         return tuple(
-            scale_operation(item, scale_factor)
+            scale_operation_round(item, scale_factor)
             for item, scale_factor in _get_param_iterator(xx, scale_values)
         )
 
@@ -1432,14 +1483,19 @@ def get_exp_operation(param_list):
     # determin if there are extra optional parameters
     done_extra_parsing = False
     round_func = None
-    exp_operation = lambda aa, bb: aa**bb # default operation
+
+    def exp_operation(aa,bb): return aa**bb # default operation
+
     while not done_extra_parsing:
         item = param_list_copy[0]
 
         if item == 'as-base':
             # apply the operation where the parameters passed are treated as the base
             param_list_copy.pop(0)
-            exp_operation = lambda aa, bb: bb**aa
+
+            # redefine the exp operation
+            def exp_operation(aa,bb): return bb**aa
+
         elif item in ROUNDING_OPTIONS:
             param_list_copy.pop(0)
             round_func = ROUNDING_OPTIONS[item]
@@ -1449,7 +1505,13 @@ def get_exp_operation(param_list):
     if round_func is None:
         round_func = ROUNDING_OPTIONS['r-truncate']
 
-    exp_op_round = lambda aa, bb: int(round_func(exp_operation(aa, bb)))
+    def exp_op_round(aa,bb,
+        # Run time optimizations with variable loopup speed
+        int=int,
+        round_func=round_func,
+        exp_operation=exp_operation,
+    ):
+        return int(round_func(exp_operation(aa, bb)))
 
     try:
         exp_values = tuple(float(item) for item in param_list_copy)
@@ -1547,6 +1609,7 @@ def get_reroll_operation(param_list, comparison_func):
     )
     def reroll_func(xx,
         # Run time optimizations with variable loopup speed
+        len=tuple.__len__,
         enumerate=enumerate,
         comparison_func=comparison_func,
     ):
@@ -1730,6 +1793,7 @@ def get_if_else_operation(
     def apply_op_if_else_compare(xx,
         # Run time optimizations with variable loopup speed
         tuple=tuple,
+        len=tuple.__len__,
         enumerate=enumerate,
         if_operation=if_operation,
         _else_operation=_else_operation,
