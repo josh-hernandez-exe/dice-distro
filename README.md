@@ -784,7 +784,7 @@ After which you can load up and speed up future calculations using your weighted
 Operations that that only change a single die value can be applied conditinoally.
 These operations are `add`, `scale`, `bound`, `select`, `reroll`.
 In this example we:
-- Roll two D6
+- Roll two D4
 - For the first die, if it is an even number, subtract 10
 - For the second die, if it is equivalent to 1 mod 3, add 100
 ```
