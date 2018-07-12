@@ -1014,6 +1014,7 @@ Enumerating all the outcomes would take quite a while.
 # Future Plans
 
 If I find time in the future, I plan to (in no specific order):
+- Allow modual to be installable
 - Add parallelization the work so that options with a large enumeration set can be computed faster
     - also allowing larger numbers of simulated dice throws.
     - there are current issues with pickeling the operation function applied to the dice roll
