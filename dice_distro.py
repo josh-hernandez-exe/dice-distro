@@ -1472,7 +1472,7 @@ def get_bound_operation(param_list):
         lower_bounds=str(lower_bounds),
         upper_bounds=str(upper_bounds),
     )
-    def bound_func(xx, start_index=0):
+    def bound_func(xx):
         """
         Bound Function
         Lower Bounds: {lower_bounds}
