@@ -503,15 +503,6 @@ op_group.add_argument(
     ]),
 )
 
-op_group.add_argument(
-    "--average",
-    action='store_true',
-    help=" ".join([
-        "Calculated weighted average of dice outcome.",
-        "If the outcomes are multi-valued, the values are added like vectors.",
-    ]),
-)
-
 
 
 """
@@ -604,6 +595,25 @@ display_format_exclusive_options.add_argument(
     action="store_true",
     help=" ".join([
         "This flag will cause the counts to be displayed instead of the percentage.",
+    ]),
+)
+
+display_output_group.add_argument(
+    "--average",
+    action='store_true',
+    help=" ".join([
+        "Calculated weighted average of dice outcome.",
+        "If the outcomes are multi-valued, the values are added like vectors.",
+    ]),
+)
+
+display_output_group.add_argument(
+    "--cumulative",
+    action='store_true',
+    help=" ".join([
+        "Display cumulative distrobution.",
+        "Only available with data outcomes that are singletons.",
+        "This the outcome must be well ordered."
     ]),
 )
 
@@ -1971,8 +1981,9 @@ def counter_dict_product(*counter_dicts):
         keys, values = zip(*items)
         yield tuple(itertools.chain(*keys)), prod_values(values)
 
-def display_data(args, counter_dict):
-    total = sum(counter_dict.values())
+def display_data(args, counter_dict, total=None):
+    if total is None:
+        total = sum(counter_dict.values())
 
     _temp_key = list(counter_dict.keys())[0]
     num_items_in_key = len(_temp_key)
@@ -2092,7 +2103,46 @@ def display_weighted_average(counter_dict):
             ", ".join("{:g}".format(vv) for vv in weighted_average)
         ))
 
+def calc_cumulative_data(counter_dict):
+    cumulative_counter_dict = Counter()
+    temp_counter = Counter()
 
+    for outcome, count in counter_dict.items():
+        temp_outcome = outcome
+        while isinstance(temp_outcome, ITERABLE_TYPES) and len(temp_outcome) == 1:
+            temp_outcome = temp_outcome[0]
+        
+        if isinstance(temp_outcome, NUMERIC_TYPES):
+     
+            temp_counter[temp_outcome] = count
+        else:
+            raise Exception("Outcome data has more than one value. Cannot create cumalative data.")
+
+    for outcome in reversed(sorted(temp_counter)):
+        count = temp_counter[outcome]
+        # update all previous keys
+        for key in cumulative_counter_dict:
+            cumulative_counter_dict[key] += count
+        # add new key
+        cumulative_counter_dict[outcome] = count
+
+    # modify keys to be as expected for `counter_dict`
+    result = Counter()
+    for key, value in cumulative_counter_dict.items():
+        result[(key,)] = value
+    
+    # import pdb;pdb.set_trace()
+    return result
+
+
+
+
+def display_cumulative_data(args, counter_dict):
+    cumulative_counter_dict = calc_cumulative_data(counter_dict)
+
+    print()
+    print("Cumulative Data")
+    display_data(args, cumulative_counter_dict, total=sum(counter_dict.values()))
 
 def main():
     args = parser.parse_args()
@@ -2133,8 +2183,11 @@ def main():
     if args.display_output:
         display_data(args, counter_dict)
 
-    if args.average:
-        display_weighted_average(counter_dict)
+        if args.average:
+            display_weighted_average(counter_dict)
+
+        if args.cumulative:
+            display_cumulative_data(args, counter_dict)
 
 if __name__ == '__main__':
     main()
