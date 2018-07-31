@@ -20,6 +20,9 @@ if (2, 0) <= sys.version_info < (3, 0):
 def prod_values(xx):
     return functools.reduce(operator.mul, xx, 1)
 
+ITERABLE_TYPES = (list, tuple)
+NUMERIC_TYPES = (int, float)
+
 OPERATIONS_DICT = {
     'id':lambda xx: xx,
     'sum':lambda xx: (sum(xx),),
@@ -167,7 +170,7 @@ class CustomFormatter(argparse.HelpFormatter):
         return _help
 
 def parse_number(compare_func, type_string, type=int):
-    if not issubclass(type, (int, float)):
+    if not issubclass(type, NUMERIC_TYPES):
         raise Exception('Type passed must be either int or float')
 
     if not hasattr(compare_func, '__call__'):
@@ -500,6 +503,17 @@ op_group.add_argument(
     ]),
 )
 
+op_group.add_argument(
+    "--average",
+    action='store_true',
+    help=" ".join([
+        "Calculated weighted average of dice outcome.",
+        "If the outcomes are multi-valued, the values are added like vectors.",
+    ]),
+)
+
+
+
 """
 ========================================================================================
 Bar Options
@@ -744,7 +758,7 @@ def memorize(func):
     return wrapper
 
 def find_max_digits(iterable):
-    if not all(isinstance(xx, (int, float)) for xx in iterable):
+    if not all(isinstance(xx, NUMERIC_TYPES) for xx in iterable):
         raise Exception('All items in the iterable must be ints or floats.')
 
     return max(len(str(xx)) for xx in iterable)
@@ -869,7 +883,7 @@ def get_single_dice(args):
     """
     if all([
         isinstance(args.die_sides, int) and args.die_sides > 0,
-        isinstance(args.die_values, (list, tuple)) and args.die_values,
+        isinstance(args.die_values, ITERABLE_TYPES) and args.die_values,
     ]):
         raise Exception("Both die sides are given and die values are given. Only pass one")
 
@@ -886,7 +900,7 @@ def get_single_dice(args):
     else:
         raise Exception('Must pass in one of \'--die\' or \'--die-values\'')
 
-    if isinstance(args.die_weights, (list, tuple)) and args.die_weights:
+    if isinstance(args.die_weights, ITERABLE_TYPES) and args.die_weights:
         if len(face_values) != len(args.die_weights):
             raise Exception(
                 "The number of die counts must the same as the number of face values present on the die."
@@ -905,13 +919,13 @@ def get_multi_dice(args):
     """
     dice = []
 
-    if not isinstance(args.multi_die_sides, (list, tuple)) or not args.multi_die_sides:
+    if not isinstance(args.multi_die_sides, ITERABLE_TYPES) or not args.multi_die_sides:
         raise Exception(
             "The parameter '--multi-die-sides' is a required parameter for multi-die-type rolls"
         )
 
     if (
-        isinstance(args.multi_die_weights, (list, tuple)) and
+        isinstance(args.multi_die_weights, ITERABLE_TYPES) and
         args.multi_die_weights and
         len(args.multi_die_weights) != sum(args.multi_die_sides)
     ):
@@ -919,13 +933,13 @@ def get_multi_dice(args):
             "The number of weights given should be equal to the facees on all dies that will be rolled."
         )
 
-    if isinstance(args.multi_die_values, (list, tuple)) and args.multi_die_values:
+    if isinstance(args.multi_die_values, ITERABLE_TYPES) and args.multi_die_values:
         """
         Process args to return dice were each die has unique specified values
         Values are specified from 'args.multi_die_values' and values are grouped
         into sections specified by args.multi_die_sides.
         """
-        if isinstance(args.multi_die_weights, (list, tuple)) and args.multi_die_weights:
+        if isinstance(args.multi_die_weights, ITERABLE_TYPES) and args.multi_die_weights:
             iterator = zip(args.multi_die_values, args.multi_die_weights)
         else:
             iterator = zip(args.multi_die_values, itertools.repeat(DEFAULT_DIE_WEIGHT))
@@ -950,7 +964,7 @@ def get_multi_dice(args):
         - increment vlaue
         - number of steps to take (number of sides on the die)
         """
-        if isinstance(args.multi_die_start, (list, tuple)) and args.multi_die_start:
+        if isinstance(args.multi_die_start, ITERABLE_TYPES) and args.multi_die_start:
             if len(args.multi_die_start) != len(args.multi_die_sides):
                 raise Exception("Multi die starts must have parallel values to multi die sides")
 
@@ -958,7 +972,7 @@ def get_multi_dice(args):
         else:
             start_values = tuple(DEFAULT_DIE_START for _ in args.multi_die_sides)
 
-        if isinstance(args.multi_die_step, (list, tuple)) and args.multi_die_step:
+        if isinstance(args.multi_die_step, ITERABLE_TYPES) and args.multi_die_step:
             if len(args.multi_die_step) != len(args.multi_die_step):
                 raise Exception("Multi die steps must have parallel values to multi die sides")
 
@@ -966,7 +980,7 @@ def get_multi_dice(args):
         else:
             step_values = tuple(DEFAULT_DIE_STEP for _ in args.multi_die_sides)
 
-        if isinstance(args.multi_die_weights, (list, tuple)) and args.multi_die_weights:
+        if isinstance(args.multi_die_weights, ITERABLE_TYPES) and args.multi_die_weights:
             weight_value_sets = []
             temp_list = list(args.multi_die_weights)
             for nn in args.multi_die_sides:
@@ -982,11 +996,11 @@ def get_multi_dice(args):
 
 def get_dice(args):
     is_using_single_type = any([
-        isinstance(args.die_values, (list, tuple)) and args.die_values,
+        isinstance(args.die_values, ITERABLE_TYPES) and args.die_values,
         isinstance(args.die_sides, int) and args.die_sides > 0,
     ])
 
-    is_using_multi_type = isinstance(args.multi_die_sides, (list, tuple)) and args.multi_die_sides
+    is_using_multi_type = isinstance(args.multi_die_sides, ITERABLE_TYPES) and args.multi_die_sides
 
     if is_using_single_type and is_using_multi_type:
         raise Exception(" ".join([
@@ -1061,7 +1075,7 @@ def determine_compare_func(param_list):
 
     # turn parameters into functions
     param_group_funcs = [
-        determine_compare_func_helper(item) if isinstance(item, (list, tuple)) else item
+        determine_compare_func_helper(item) if isinstance(item, ITERABLE_TYPES) else item
         for item in param_groups_1
     ]
 
@@ -1107,7 +1121,7 @@ def _parse_param_logic(logic_param_groups):
     while param_groups_2:
         item = param_groups_2.pop(0)
 
-        if isinstance(item, (list, tuple)):
+        if isinstance(item, ITERABLE_TYPES):
             param_groups_3.append(_parse_param_logic(item))
         else:
             param_groups_3.append(item)
@@ -1913,7 +1927,7 @@ def save_data(counter_dict, save_file_path):
         if isinstance(new_key, int):
             new_key = [key]
 
-        if isinstance(new_key, (list, tuple)):
+        if isinstance(new_key, ITERABLE_TYPES):
             new_key = json.dumps(new_key)
         else:
             raise Exception("Unexpected key to save: {}".format(key))
@@ -2029,6 +2043,57 @@ def display_data(args, counter_dict):
             bar=bar_string,
         ))
 
+def add_outputs(aa, bb):
+    if isinstance(aa, NUMERIC_TYPES) and isinstance(bb, NUMERIC_TYPES):
+        return aa + bb
+
+    if isinstance(aa, ITERABLE_TYPES) and isinstance(bb, ITERABLE_TYPES) and len(aa) == len(bb):
+        return tuple( ii + jj for ii, jj in zip(aa, bb))
+
+    else:
+        raise Exception("Vector sizes do not match, cannot add.")
+
+def scale_output(aa, scale):
+    if not isinstance(scale, NUMERIC_TYPES):
+        raise Exception("Scale must be a numeric type.")
+
+    if isinstance(aa, NUMERIC_TYPES):
+        return aa*scale
+
+    if isinstance(aa, ITERABLE_TYPES):
+        return tuple( ii*scale  for ii in aa)
+
+    else:
+        raise Exception("Vector sizes do not match, cannot add.")
+
+def calc_weighted_vector_average(counter_dict):
+    total_count = 0
+    weighted_sum = None
+
+    for outcome, count in counter_dict.items():
+        total_count += count
+        if weighted_sum is None:
+            weighted_sum = outcome
+        else:
+            weighted_sum = add_outputs(weighted_sum, scale_output(outcome, count))
+
+    return scale_output(weighted_sum, 1/float(total_count))
+
+def display_weighted_average(counter_dict):
+    weighted_average = calc_weighted_vector_average(counter_dict)
+
+    print()
+
+    if isinstance(weighted_average, NUMERIC_TYPES):
+        print("Weighted Average: {}".format(weighted_average))
+
+    elif isinstance(weighted_average, ITERABLE_TYPES):
+        print("Weighted Average: {}".format(
+            ", ".join("{:g}".format(vv) for vv in weighted_average)
+        ))
+
+
+
 def main():
     args = parser.parse_args()
 
@@ -2036,7 +2101,7 @@ def main():
         print(args)
 
     # load dice values
-    if isinstance(args.load_file_paths, (list, tuple)) and args.load_file_paths:
+    if isinstance(args.load_file_paths, ITERABLE_TYPES) and args.load_file_paths:
         dice_iterator = counter_dict_product(*(
             load_data(file_path)
             for file_path in args.load_file_paths
@@ -2044,7 +2109,7 @@ def main():
     else:
         dice_iterator = get_outcome_generator(args)
 
-    if isinstance(args.custom, (list, tuple)) and args.custom:
+    if isinstance(args.custom, ITERABLE_TYPES) and args.custom:
         load_custom_files(args.custom)
 
     _operator = get_operator(
@@ -2067,6 +2132,9 @@ def main():
 
     if args.display_output:
         display_data(args, counter_dict)
+
+    if args.average:
+        display_weighted_average(counter_dict)
 
 if __name__ == '__main__':
     main()
