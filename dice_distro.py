@@ -516,7 +516,7 @@ bar_group = parser.add_argument_group(
 
 bar_group.add_argument(
     "--bar-size",
-    type=parse_number(lambda xx: xx >= 0, 'non-negative'),
+    type=parse_number(lambda xx: xx >= 0, 'non-negative', float),
     default=2,
     help=" ".join([
         "The approximate number of '--bar-char'(s) that count as 1 percent.",
