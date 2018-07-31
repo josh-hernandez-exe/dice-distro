@@ -371,6 +371,37 @@ The default operation is to show the results of the dice as if the results are d
 20:   0.25 % |
 ```
 
+### Finding the Weighted Average
+
+This takes the output values and scales them by how likely they are to occur.
+If the outcome values are "array-like", then they are added like vectors.
+
+```
+➔ python dice_distro.py -d 20 -n 2 --average --apply max
+ 1:   0.25 % |
+ 2:   0.75 % |=
+ 3:   1.25 % |==
+ 4:   1.75 % |===
+ 5:   2.25 % |====
+ 6:   2.75 % |=====
+ 7:   3.25 % |======
+ 8:   3.75 % |=======
+ 9:   4.25 % |========
+10:   4.75 % |=========
+11:   5.25 % |==========
+12:   5.75 % |===========
+13:   6.25 % |============
+14:   6.75 % |=============
+15:   7.25 % |==============
+16:   7.75 % |===============
+17:   8.25 % |================
+18:   8.75 % |=================
+19:   9.25 % |==================
+20:   9.75 % |===================
+
+Weighted Average: 13.825
+```
+
 ### Rolling D6 Shifting the Value but Bounding the Results
 We roll a D6, add 2, but don't let the value exceed the values that can be possibly rolled.
 ```
