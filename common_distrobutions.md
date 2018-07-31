@@ -1,6 +1,8 @@
 ### Sum of 2 D6
 ```
 ➔ python dice_distro.py -d 6 -n 2 --apply sum
+```
+```
  2:   2.78 % |=====
  3:   5.56 % |===========
  4:   8.33 % |================
@@ -32,6 +34,8 @@ Cumulative Data
 ### Sum of 3 D6
 ```
 ➔ python dice_distro.py -d 6 -n 3 --apply sum
+```
+```
  3:   0.46 % |
  4:   1.39 % |==
  5:   2.78 % |=====
@@ -73,6 +77,8 @@ Cumulative Data
 ### Max of 2 D20
 ```
 ➔ python dice_distro.py -d 20 -n 2 --apply max
+```
+```
  1:   0.25 % |
  2:   0.75 % |=
  3:   1.25 % |==
@@ -122,6 +128,8 @@ Cumulative Data
 ### Min of 2 D20
 ```
 ➔ python dice_distro.py -d 20 -n 2 --average --apply min
+```
+```
  1:   9.75 % |===================
  2:   9.25 % |==================
  3:   8.75 % |=================
@@ -149,6 +157,8 @@ Weighted Average: 7.08
 ### Max of 3 D20
 ```
 ➔ python dice_distro.py -d 20 -n 3 --average --apply max
+```
+```
  1:   0.01 % |
  2:   0.09 % |
  3:   0.24 % |
@@ -198,6 +208,8 @@ Cumulative Data
 ### Min of 3 D20
 ```
 ➔ python dice_distro.py -d 20 -n 3 --average --apply min
+```
+```
  2:  12.84 % |=========================
  3:  11.49 % |======================
  4:  10.21 % |====================
