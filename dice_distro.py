@@ -247,7 +247,6 @@ single_type_group.add_argument(
     help=" ".join([
         "If using '--die-sides' this defines the lowest value of the die.",
         "This option is ignored if '--die-sides' is not used.",
-
     ]),
 )
 
@@ -607,13 +606,18 @@ display_output_group.add_argument(
     ]),
 )
 
+CUMULATIVE_CHOICES = ["normal", "reversed"]
 display_output_group.add_argument(
     "--cumulative",
-    action='store_true',
+    const=CUMULATIVE_CHOICES[0],
+    choices=CUMULATIVE_CHOICES,
+    nargs='?',
+    default=None,
     help=" ".join([
         "Display cumulative distrobution.",
         "Only available with data outcomes that are singletons.",
-        "This the outcome must be well ordered."
+        "This the outcome must be well ordered.",
+        "If flag is passed without a choice, then 'normal' is used."
     ]),
 )
 
@@ -2103,7 +2107,7 @@ def display_weighted_average(counter_dict):
             ", ".join("{:g}".format(vv) for vv in weighted_average)
         ))
 
-def calc_cumulative_data(counter_dict):
+def calc_cumulative_data(counter_dict, _reversed=False):
     cumulative_counter_dict = Counter()
     temp_counter = Counter()
 
@@ -2118,7 +2122,11 @@ def calc_cumulative_data(counter_dict):
         else:
             raise Exception("Outcome data has more than one value. Cannot create cumalative data.")
 
-    for outcome in reversed(sorted(temp_counter)):
+    iterator = sorted(temp_counter)
+    if not _reversed:
+        iterator = reversed(iterator)
+
+    for outcome in iterator:
         count = temp_counter[outcome]
         # update all previous keys
         for key in cumulative_counter_dict:
@@ -2130,18 +2138,20 @@ def calc_cumulative_data(counter_dict):
     result = Counter()
     for key, value in cumulative_counter_dict.items():
         result[(key,)] = value
-    
-    # import pdb;pdb.set_trace()
+
     return result
 
-
-
-
 def display_cumulative_data(args, counter_dict):
-    cumulative_counter_dict = calc_cumulative_data(counter_dict)
+    is_reversed=args.cumulative==CUMULATIVE_CHOICES[1]
+
+    cumulative_counter_dict = calc_cumulative_data(counter_dict,_reversed=is_reversed)
+
+    title = "Cumulative Data"
+    if is_reversed:
+        title = "Reversed {}".format(title)
 
     print()
-    print("Cumulative Data")
+    print(title)
     display_data(args, cumulative_counter_dict, total=sum(counter_dict.values()))
 
 def main():

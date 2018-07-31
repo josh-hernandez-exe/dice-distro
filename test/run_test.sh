@@ -132,4 +132,5 @@ echo "Starting Test with $python_exe" && \
     $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum 2 --average && \
     ## Test cumulative distrobution
     $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum 2 --cumulative && \
+    $python_exe $dice_distro_file $test_params_with_output -d 6 -n 2 --apply sum 2 --cumulative reversed && \
     echo "End of Test with $python_exe"
